@@ -4741,8 +4741,8 @@ msgstr "Base de datos local de las claves de confianza de archivos Debian"
 
 #. type: Content of: <refentry><refsect1><variablelist><varlistentry><term>
 #: apt-key.8.xml:165
-msgid "<filename>/usr/share/keyrings/debian-archive-keyring.gpg</filename>"
-msgstr "<filename>/usr/share/keyrings/debian-archive-keyring.gpg</filename>"
+msgid "<filename>/usr/share/keyrings/skerlet-archive-keyring.gpg</filename>"
+msgstr "<filename>/usr/share/keyrings/skerlet-archive-keyring.gpg</filename>"
 
 #. type: Content of: <refentry><refsect1><variablelist><varlistentry><listitem><para>
 #: apt-key.8.xml:166
@@ -4752,9 +4752,9 @@ msgstr "Registro de las claves de confianza del archivo de Debian."
 #. type: Content of: <refentry><refsect1><variablelist><varlistentry><term>
 #: apt-key.8.xml:169
 msgid ""
-"<filename>/usr/share/keyrings/debian-archive-removed-keys.gpg</filename>"
+"<filename>/usr/share/keyrings/skerlet-archive-removed-keys.gpg</filename>"
 msgstr ""
-"<filename>/usr/share/keyrings/debian-archive-removed-keys.gpg</filename>"
+"<filename>/usr/share/keyrings/skerlet-archive-removed-keys.gpg</filename>"
 
 #. type: Content of: <refentry><refsect1><variablelist><varlistentry><listitem><para>
 #: apt-key.8.xml:170

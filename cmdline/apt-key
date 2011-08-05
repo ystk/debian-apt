@@ -10,11 +10,11 @@ GPG="$GPG_CMD"
 
 MASTER_KEYRING=""
 ARCHIVE_KEYRING_URI=""
-#MASTER_KEYRING=/usr/share/keyrings/debian-master-keyring.gpg
-#ARCHIVE_KEYRING_URI=http://ftp.debian.org/debian/debian-archive-keyring.gpg
+#MASTER_KEYRING=/usr/share/keyrings/skerlet-master-keyring.gpg
+#ARCHIVE_KEYRING_URI=http://skerlet.swc.toshiba.co.jp/skerlet/skerlet-archive-keyring.gpg
 
-ARCHIVE_KEYRING=/usr/share/keyrings/debian-archive-keyring.gpg
-REMOVED_KEYS=/usr/share/keyrings/debian-archive-removed-keys.gpg
+ARCHIVE_KEYRING=/usr/share/keyrings/skerlet-archive-keyring.gpg
+REMOVED_KEYS=/usr/share/keyrings/skerlet-archive-removed-keys.gpg
 
 add_keys_with_verify_against_master_keyring() {
     ADD_KEYRING=$1
@@ -58,7 +58,7 @@ net_update() {
 	exit 1
     fi
     # in theory we would need to depend on wget for this, but this feature
-    # isn't useable in debian anyway as we have no keyring uri nor a master key
+    # isn't useable in skerlet anyway as we have no keyring uri nor a master key
     if ! which wget >/dev/null 2>&1; then
 	echo "ERROR: an installed wget is required for a network-based update"
 	exit 1
@@ -85,7 +85,7 @@ net_update() {
 update() {
     if [ ! -f $ARCHIVE_KEYRING ]; then
 	echo >&2 "ERROR: Can't find the archive-keyring"
-	echo >&2 "Is the debian-archive-keyring package installed?"
+	echo >&2 "Is the skerlet-archive-keyring package installed?"
 	exit 1
     fi
 

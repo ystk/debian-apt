@@ -5,7 +5,7 @@ Maintainer: APT Development Team <deity@lists.debian.org>
 Installed-Size: 5244
 Replaces: libapt-pkg-dev (<< 0.3.7), libapt-pkg-doc (<< 0.3.7)
 Provides: libapt-pkg-libc6.9-6-4.8
-Depends: libc6 (>= 2.3.4), libgcc1 (>= 1:4.1.1), libstdc++6 (>= 4.4.0), debian-archive-keyring
+Depends: libc6 (>= 2.3.4), libgcc1 (>= 1:4.1.1), libstdc++6 (>= 4.4.0), skerlet-archive-keyring
 Suggests: aptitude | synaptic | wajig, dpkg-dev, apt-doc, bzip2, lzma, python-apt
 Filename: pool/main/a/apt/apt_0.7.25.3_i386.deb
 Size: 1750610
