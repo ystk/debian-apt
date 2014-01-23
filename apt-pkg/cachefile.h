@@ -17,14 +17,24 @@
 #ifndef PKGLIB_CACHEFILE_H
 #define PKGLIB_CACHEFILE_H
 
-
 #include <apt-pkg/depcache.h>
+#include <apt-pkg/macros.h>
+
+#ifndef APT_8_CLEANER_HEADERS
 #include <apt-pkg/acquire.h>
 #include <apt-pkg/policy.h>
 #include <apt-pkg/sourcelist.h>
+#endif
+
+class pkgPolicy;
+class pkgSourceList;
+class OpProgress;
 
 class pkgCacheFile
 {
+   /** \brief dpointer placeholder (for later in case we need it) */
+   void *d;
+
    protected:
    
    MMap *Map;
@@ -57,6 +67,7 @@ class pkgCacheFile
    bool Open(OpProgress *Progress = NULL, bool WithLock = true);
    inline bool ReadOnlyOpen(OpProgress *Progress = NULL) { return Open(Progress, false); };
    __deprecated bool Open(OpProgress &Progress,bool const &WithLock = true) { return Open(&Progress, WithLock); };
+   static void RemoveCaches();
    void Close();
 
    inline pkgCache* GetPkgCache() { BuildCaches(NULL, false); return Cache; };

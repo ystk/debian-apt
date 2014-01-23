@@ -9,14 +9,19 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/deblistparser.h>
 #include <apt-pkg/debsrcrecords.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/configuration.h>
+#include <apt-pkg/aptconfiguration.h>
 
 using std::max;
 									/*}}}*/
+
+using std::string;
 
 // SrcRecordParser::Binaries - Return the binaries field		/*{{{*/
 // ---------------------------------------------------------------------
@@ -27,25 +32,32 @@ using std::max;
    used during scanning to find the right package */
 const char **debSrcRecordParser::Binaries()
 {
-   // This should use Start/Stop too, it is supposed to be efficient after all.
-   string Bins = Sect.FindS("Binary");
-   if (Bins.empty() == true || Bins.length() >= 102400)
-      return 0;
-   
-   if (Bins.length() >= BufSize)
-   {
-      delete [] Buffer;
-      // allocate new size based on buffer (but never smaller than 4000)
-      BufSize = max((unsigned int)4000, max((unsigned int)Bins.length()+1,2*BufSize));
-      Buffer = new char[BufSize];
-   }
+   const char *Start, *End;
+   if (Sect.Find("Binary", Start, End) == false)
+      return NULL;
+   for (; isspace(*Start) != 0; ++Start);
+   if (Start >= End)
+      return NULL;
 
-   strcpy(Buffer,Bins.c_str());
-   if (TokSplitString(',',Buffer,StaticBinList,
-		      sizeof(StaticBinList)/sizeof(StaticBinList[0])) == false)
-      return 0;
+   StaticBinList.clear();
+   free(Buffer);
+   Buffer = strndup(Start, End - Start);
 
-   return (const char **)StaticBinList;
+   char* bin = Buffer;
+   do {
+      char* binStartNext = strchrnul(bin, ',');
+      char* binEnd = binStartNext - 1;
+      for (; isspace(*binEnd) != 0; --binEnd)
+	 binEnd = '\0';
+      StaticBinList.push_back(bin);
+      if (*binStartNext != ',')
+	 break;
+      *binStartNext = '\0';
+      for (bin = binStartNext + 1; isspace(*bin) != 0; ++bin);
+   } while (*bin != '\0');
+   StaticBinList.push_back(NULL);
+
+   return (const char **) &StaticBinList[0];
 }
 									/*}}}*/
 // SrcRecordParser::BuildDepends - Return the Build-Depends information	/*{{{*/
@@ -54,7 +66,7 @@ const char **debSrcRecordParser::Binaries()
    package/version records representing the build dependency. The returned 
    array need not be freed and will be reused by the next call to this 
    function */
-bool debSrcRecordParser::BuildDepends(vector<pkgSrcRecords::Parser::BuildDepRec> &BuildDeps,
+bool debSrcRecordParser::BuildDepends(std::vector<pkgSrcRecords::Parser::BuildDepRec> &BuildDeps,
 					bool const &ArchOnly, bool const &StripMultiArch)
 {
    unsigned int I;
@@ -99,7 +111,7 @@ bool debSrcRecordParser::BuildDepends(vector<pkgSrcRecords::Parser::BuildDepRec>
 // ---------------------------------------------------------------------
 /* This parses the list of files and returns it, each file is required to have
    a complete source package */
-bool debSrcRecordParser::Files(vector<pkgSrcRecords::File> &List)
+bool debSrcRecordParser::Files(std::vector<pkgSrcRecords::File> &List)
 {
    List.erase(List.begin(),List.end());
    
@@ -111,7 +123,9 @@ bool debSrcRecordParser::Files(vector<pkgSrcRecords::File> &List)
    string Base = Sect.FindS("Directory");
    if (Base.empty() == false && Base[Base.length()-1] != '/')
       Base += '/';
-   
+
+   std::vector<std::string> const compExts = APT::Configuration::getCompressorExtensions();
+
    // Iterate over the entire list grabbing each triplet
    const char *C = Files.c_str();
    while (*C != 0)
@@ -144,7 +158,8 @@ bool debSrcRecordParser::Files(vector<pkgSrcRecords::File> &List)
 	 }
 	 F.Type = string(F.Path,Tmp+1,Pos-Tmp);
 	 
-	 if (F.Type == "gz" || F.Type == "bz2" || F.Type == "lzma" || F.Type == "tar")
+	 if (std::find(compExts.begin(), compExts.end(), std::string(".").append(F.Type)) != compExts.end() ||
+	     F.Type == "tar")
 	 {
 	    Pos = Tmp-1;
 	    continue;

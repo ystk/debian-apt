@@ -1,10 +1,13 @@
 // Includes									/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/mmap.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/acquire-method.h>
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/hashes.h>
+#include <apt-pkg/configuration.h>
 
 #include <sys/stat.h>
 #include <sys/uio.h>
@@ -33,10 +36,10 @@ class RredMethod : public pkgAcqMethod {
 	// return values
 	enum State {ED_OK, ED_ORDERING, ED_PARSER, ED_FAILURE, MMAP_FAILED};
 
-	State applyFile(FILE *ed_cmds, FILE *in_file, FILE *out_file,
+	State applyFile(FileFd &ed_cmds, FileFd &in_file, FileFd &out_file,
 	             unsigned long &line, char *buffer, Hashes *hash) const;
-	void ignoreLineInFile(FILE *fin, char *buffer) const;
-	void copyLinesFromFileToFile(FILE *fin, FILE *fout, unsigned int lines,
+	void ignoreLineInFile(FileFd &fin, char *buffer) const;
+	void copyLinesFromFileToFile(FileFd &fin, FileFd &fout, unsigned int lines,
 	                            Hashes *hash, char *buffer) const;
 
 	State patchFile(FileFd &Patch, FileFd &From, FileFd &out_file, Hashes *hash) const;
@@ -47,7 +50,7 @@ protected:
 	virtual bool Fetch(FetchItem *Itm);
 
 public:
-	RredMethod() : pkgAcqMethod("1.1",SingleInstance | SendConfig) {};
+	RredMethod() : pkgAcqMethod("1.1",SingleInstance | SendConfig), Debug(false) {};
 };
 										/*}}}*/
 /** \brief applyFile - in reverse order with a tail recursion			{{{
@@ -65,10 +68,10 @@ public:
  *  \param hash the created file for correctness
  *  \return the success State of the ed command executor
  */
-RredMethod::State RredMethod::applyFile(FILE *ed_cmds, FILE *in_file, FILE *out_file,
+RredMethod::State RredMethod::applyFile(FileFd &ed_cmds, FileFd &in_file, FileFd &out_file,
 			unsigned long &line, char *buffer, Hashes *hash) const {
 	// get the current command and parse it
-	if (fgets(buffer, BUF_SIZE, ed_cmds) == NULL) {
+	if (ed_cmds.ReadLine(buffer, BUF_SIZE) == NULL) {
 		if (Debug == true)
 			std::clog << "rred: encounter end of file - we can start patching now." << std::endl;
 		line = 0;
@@ -123,7 +126,7 @@ RredMethod::State RredMethod::applyFile(FILE *ed_cmds, FILE *in_file, FILE *out_
 	unsigned char mode = *idx;
 
 	// save the current position
-	unsigned const long pos = ftell(ed_cmds);
+	unsigned const long long pos = ed_cmds.Tell();
 
 	// if this is add or change then go to the next full stop
 	unsigned int data_length = 0;
@@ -157,7 +160,7 @@ RredMethod::State RredMethod::applyFile(FILE *ed_cmds, FILE *in_file, FILE *out_
 
 	// include data from ed script
 	if (mode == MODE_CHANGED || mode == MODE_ADDED) {
-		fseek(ed_cmds, pos, SEEK_SET);
+		ed_cmds.Seek(pos);
 		copyLinesFromFileToFile(ed_cmds, out_file, data_length, hash, buffer);
 	}
 
@@ -171,23 +174,24 @@ RredMethod::State RredMethod::applyFile(FILE *ed_cmds, FILE *in_file, FILE *out_
 	return ED_OK;
 }
 										/*}}}*/
-void RredMethod::copyLinesFromFileToFile(FILE *fin, FILE *fout, unsigned int lines,/*{{{*/
+void RredMethod::copyLinesFromFileToFile(FileFd &fin, FileFd &fout, unsigned int lines,/*{{{*/
 					Hashes *hash, char *buffer) const {
 	while (0 < lines--) {
 		do {
-			fgets(buffer, BUF_SIZE, fin);
-			size_t const written = fwrite(buffer, 1, strlen(buffer), fout);
-			hash->Add((unsigned char*)buffer, written);
+			fin.ReadLine(buffer, BUF_SIZE);
+			unsigned long long const towrite = strlen(buffer);
+			fout.Write(buffer, towrite);
+			hash->Add((unsigned char*)buffer, towrite);
 		} while (strlen(buffer) == (BUF_SIZE - 1) &&
 		       buffer[BUF_SIZE - 2] != '\n');
 	}
 }
 										/*}}}*/
-void RredMethod::ignoreLineInFile(FILE *fin, char *buffer) const {		/*{{{*/
-	fgets(buffer, BUF_SIZE, fin);
+void RredMethod::ignoreLineInFile(FileFd &fin, char *buffer) const {		/*{{{*/
+	fin.ReadLine(buffer, BUF_SIZE);
 	while (strlen(buffer) == (BUF_SIZE - 1) &&
 	       buffer[BUF_SIZE - 2] != '\n') {
-		fgets(buffer, BUF_SIZE, fin);
+		fin.ReadLine(buffer, BUF_SIZE);
 		buffer[0] = ' ';
 	}
 }
@@ -195,26 +199,25 @@ void RredMethod::ignoreLineInFile(FILE *fin, char *buffer) const {		/*{{{*/
 RredMethod::State RredMethod::patchFile(FileFd &Patch, FileFd &From,		/*{{{*/
 					FileFd &out_file, Hashes *hash) const {
    char buffer[BUF_SIZE];
-   FILE* fFrom = fdopen(From.Fd(), "r");
-   FILE* fPatch = fdopen(Patch.Fd(), "r");
-   FILE* fTo = fdopen(out_file.Fd(), "w");
 
    /* we do a tail recursion to read the commands in the right order */
    unsigned long line = -1; // assign highest possible value
-   State const result = applyFile(fPatch, fFrom, fTo, line, buffer, hash);
+   State const result = applyFile(Patch, From, out_file, line, buffer, hash);
    
    /* read the rest from infile */
    if (result == ED_OK) {
-      while (fgets(buffer, BUF_SIZE, fFrom) != NULL) {
-         size_t const written = fwrite(buffer, 1, strlen(buffer), fTo);
-         hash->Add((unsigned char*)buffer, written);
+      while (From.ReadLine(buffer, BUF_SIZE) != NULL) {
+	 unsigned long long const towrite = strlen(buffer);
+	 out_file.Write(buffer, towrite);
+	 hash->Add((unsigned char*)buffer, towrite);
       }
-      fflush(fTo);
    }
    return result;
 }
 										/*}}}*/
-struct EdCommand {								/*{{{*/
+/* struct EdCommand								{{{*/
+#ifdef _POSIX_MAPPED_FILES
+struct EdCommand {
   size_t data_start;
   size_t data_end;
   size_t data_lines;
@@ -223,6 +226,22 @@ struct EdCommand {								/*{{{*/
   char type;
 };
 #define IOV_COUNT 1024 /* Don't really want IOV_MAX since it can be arbitrarily large */
+static ssize_t retry_writev(int fd, const struct iovec *iov, int iovcnt) {
+	ssize_t Res;
+	errno = 0;
+	ssize_t i = 0;
+	do {
+		Res = writev(fd, iov + i, iovcnt);
+		if (Res < 0 && errno == EINTR)
+			continue;
+		if (Res < 0)
+			return _error->Errno("writev",_("Write error"));
+		iovcnt -= Res;
+		i += Res;
+	} while (Res > 0 && iovcnt > 0);
+	return i;
+}
+#endif
 										/*}}}*/
 RredMethod::State RredMethod::patchMMap(FileFd &Patch, FileFd &From,		/*{{{*/
 					FileFd &out_file, Hashes *hash) const {
@@ -230,7 +249,9 @@ RredMethod::State RredMethod::patchMMap(FileFd &Patch, FileFd &From,		/*{{{*/
 	MMap ed_cmds(Patch, MMap::ReadOnly);
 	MMap in_file(From, MMap::ReadOnly);
 
-	if (ed_cmds.Size() == 0 || in_file.Size() == 0)
+	unsigned long long const ed_size = ed_cmds.Size();
+	unsigned long long const in_size = in_file.Size();
+	if (ed_size == 0 || in_size == 0)
 		return MMAP_FAILED;
 
 	EdCommand* commands = 0;
@@ -239,10 +260,10 @@ RredMethod::State RredMethod::patchMMap(FileFd &Patch, FileFd &From,		/*{{{*/
 
 	const char* begin = (char*) ed_cmds.Data();
 	const char* end = begin;
-	const char* ed_end = (char*) ed_cmds.Data() + ed_cmds.Size();
+	const char* ed_end = (char*) ed_cmds.Data() + ed_size;
 
 	const char* input = (char*) in_file.Data();
-	const char* input_end = (char*) in_file.Data() + in_file.Size();
+	const char* input_end = (char*) in_file.Data() + in_size;
 
 	size_t i;
 
@@ -326,7 +347,12 @@ RredMethod::State RredMethod::patchMMap(FileFd &Patch, FileFd &From,		/*{{{*/
 		}
 		if(command_count == command_alloc) {
 			command_alloc = (command_alloc + 64) * 3 / 2;
-			commands = (EdCommand*) realloc(commands, command_alloc * sizeof(EdCommand));
+			EdCommand* newCommands = (EdCommand*) realloc(commands, command_alloc * sizeof(EdCommand));
+			if (newCommands == NULL) {
+				free(commands);
+				return MMAP_FAILED;
+			}
+			commands = newCommands;
 		}
 		commands[command_count++] = cmd;
 	}
@@ -365,7 +391,7 @@ RredMethod::State RredMethod::patchMMap(FileFd &Patch, FileFd &From,		/*{{{*/
 			hash->Add((const unsigned char*) begin, input - begin);
 
 			if(++iov_size == IOV_COUNT) {
-				writev(out_file.Fd(), iov, IOV_COUNT);
+				retry_writev(out_file.Fd(), iov, IOV_COUNT);
 				iov_size = 0;
 			}
 		}
@@ -390,7 +416,7 @@ RredMethod::State RredMethod::patchMMap(FileFd &Patch, FileFd &From,		/*{{{*/
 				iov[iov_size].iov_len);
 
 				if(++iov_size == IOV_COUNT) {
-					writev(out_file.Fd(), iov, IOV_COUNT);
+					retry_writev(out_file.Fd(), iov, IOV_COUNT);
 					iov_size = 0;
 				}
 			}
@@ -405,15 +431,15 @@ RredMethod::State RredMethod::patchMMap(FileFd &Patch, FileFd &From,		/*{{{*/
 	}
 
 	if(iov_size) {
-		writev(out_file.Fd(), iov, iov_size);
+		retry_writev(out_file.Fd(), iov, iov_size);
 		iov_size = 0;
 	}
 
 	for(i = 0; i < iov_size; i += IOV_COUNT) {
 		if(iov_size - i < IOV_COUNT)
-			writev(out_file.Fd(), iov + i, iov_size - i);
+			retry_writev(out_file.Fd(), iov + i, iov_size - i);
 		else
-			writev(out_file.Fd(), iov + i, IOV_COUNT);
+			retry_writev(out_file.Fd(), iov + i, IOV_COUNT);
 	}
 
 	delete [] iov;
@@ -429,7 +455,7 @@ bool RredMethod::Fetch(FetchItem *Itm)						/*{{{*/
 {
    Debug = _config->FindB("Debug::pkgAcquire::RRed", false);
    URI Get = Itm->Uri;
-   string Path = Get.Host + Get.Path; // To account for relative paths
+   std::string Path = Get.Host + Get.Path; // To account for relative paths
 
    FetchResult Res;
    Res.Filename = Itm->DestFile;
@@ -445,7 +471,7 @@ bool RredMethod::Fetch(FetchItem *Itm)						/*{{{*/
    // Open the source and destination files (the d'tor of FileFd will do 
    // the cleanup/closing of the fds)
    FileFd From(Path,FileFd::ReadOnly);
-   FileFd Patch(Path+".ed",FileFd::ReadOnly);
+   FileFd Patch(Path+".ed",FileFd::ReadOnly, FileFd::Gzip);
    FileFd To(Itm->DestFile,FileFd::WriteAtomic);   
    To.EraseOnFailure();
    if (_error->PendingError() == true)
@@ -456,8 +482,8 @@ bool RredMethod::Fetch(FetchItem *Itm)						/*{{{*/
    State const result = patchMMap(Patch, From, To, &Hash);
    if (result == MMAP_FAILED) {
       // retry with patchFile
-      lseek(Patch.Fd(), 0, SEEK_SET);
-      lseek(From.Fd(), 0, SEEK_SET);
+      Patch.Seek(0);
+      From.Seek(0);
       To.Open(Itm->DestFile,FileFd::WriteAtomic);
       if (_error->PendingError() == true)
          return false;
@@ -482,7 +508,7 @@ bool RredMethod::Fetch(FetchItem *Itm)						/*{{{*/
       and use the access time from the "old" file */
    struct stat BufBase, BufPatch;
    if (stat(Path.c_str(),&BufBase) != 0 ||
-       stat(string(Path+".ed").c_str(),&BufPatch) != 0)
+       stat(std::string(Path+".ed").c_str(),&BufPatch) != 0)
       return _error->Errno("stat",_("Failed to stat"));
 
    struct utimbuf TimeBuf;

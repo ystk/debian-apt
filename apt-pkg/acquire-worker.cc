@@ -12,6 +12,8 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/acquire-worker.h>
 #include <apt-pkg/acquire-item.h>
 #include <apt-pkg/configuration.h>
@@ -19,18 +21,18 @@
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/strutl.h>
 
-#include <apti18n.h>
-
 #include <iostream>
 #include <sstream>
 #include <fstream>
-    
+
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <errno.h>
+
+#include <apti18n.h>
 									/*}}}*/
 
 using namespace std;
@@ -199,6 +201,17 @@ bool pkgAcquire::Worker::RunMessages()
       pkgAcquire::Queue::QItem *Itm = 0;
       if (URI.empty() == false)
 	 Itm = OwnerQ->FindItem(URI,this);
+
+      // update used mirror
+      string UsedMirror = LookupTag(Message,"UsedMirror", "");
+      if (!UsedMirror.empty() && 
+          Itm && 
+          Itm->Description.find(" ") != string::npos) 
+      {
+         Itm->Description.replace(0, Itm->Description.find(" "), UsedMirror);
+         // FIXME: will we need this as well?
+         //Itm->ShortDesc = UsedMirror;
+      }
       
       // Determine the message number and dispatch
       switch (Number)
@@ -231,6 +244,21 @@ bool pkgAcquire::Worker::RunMessages()
  
             string NewURI = LookupTag(Message,"New-URI",URI.c_str());
             Itm->URI = NewURI;
+
+	    ItemDone();
+
+	    pkgAcquire::Item *Owner = Itm->Owner;
+	    pkgAcquire::ItemDesc Desc = *Itm;
+
+	    // Change the status so that it can be dequeued
+	    Owner->Status = pkgAcquire::Item::StatIdle;
+	    // Mark the item as done (taking care of all queues)
+	    // and then put it in the main queue again
+	    OwnerQ->ItemDone(Itm);
+	    OwnerQ->Owner->Enqueue(Desc);
+
+	    if (Log != 0)
+	       Log->Done(Desc);
             break;
          }
    
@@ -245,9 +273,9 @@ bool pkgAcquire::Worker::RunMessages()
 	    
 	    CurrentItem = Itm;
 	    CurrentSize = 0;
-	    TotalSize = atoi(LookupTag(Message,"Size","0").c_str());
-	    ResumePoint = atoi(LookupTag(Message,"Resume-Point","0").c_str());
-	    Itm->Owner->Start(Message,atoi(LookupTag(Message,"Size","0").c_str()));
+	    TotalSize = strtoull(LookupTag(Message,"Size","0").c_str(), NULL, 10);
+	    ResumePoint = strtoull(LookupTag(Message,"Resume-Point","0").c_str(), NULL, 10);
+	    Itm->Owner->Start(Message,strtoull(LookupTag(Message,"Size","0").c_str(), NULL, 10));
 
 	    // Display update before completion
 	    if (Log != 0 && Log->MorePulses == true)
@@ -276,10 +304,18 @@ bool pkgAcquire::Worker::RunMessages()
 	       Log->Pulse(Owner->GetOwner());
 	    
 	    OwnerQ->ItemDone(Itm);
-	    if (TotalSize != 0 &&
-		(unsigned)atoi(LookupTag(Message,"Size","0").c_str()) != TotalSize)
-	       _error->Warning("Bizarre Error - File size is not what the server reported %s %lu",
-			       LookupTag(Message,"Size","0").c_str(),TotalSize);
+	    unsigned long long const ServerSize = strtoull(LookupTag(Message,"Size","0").c_str(), NULL, 10);
+            bool isHit = StringToBool(LookupTag(Message,"IMS-Hit"),false) ||
+                         StringToBool(LookupTag(Message,"Alt-IMS-Hit"),false);
+            // Using the https method the server might return 200, but the
+            // If-Modified-Since condition is not satsified, libcurl will
+            // discard the download. In this case, however, TotalSize will be
+            // set to the actual size of the file, while ServerSize will be set
+            // to 0. Therefore, if the item is marked as a hit and the
+            // downloaded size (ServerSize) is 0, we ignore TotalSize.
+	    if (TotalSize != 0 && (!isHit || ServerSize != 0) && ServerSize != TotalSize)
+	       _error->Warning("Size of file %s is not what the server reported %s %llu",
+			       Owner->DestFile.c_str(), LookupTag(Message,"Size","0").c_str(),TotalSize);
 
 	    // see if there is a hash to verify
 	    string RecivedHash;
@@ -298,15 +334,13 @@ bool pkgAcquire::Worker::RunMessages()
 		       << endl << endl;
 	       }
 	    }
-	    Owner->Done(Message,atoi(LookupTag(Message,"Size","0").c_str()),
-			RecivedHash.c_str(), Config);
+	    Owner->Done(Message, ServerSize, RecivedHash.c_str(), Config);
 	    ItemDone();
 	    
 	    // Log that we are done
 	    if (Log != 0)
 	    {
-	       if (StringToBool(LookupTag(Message,"IMS-Hit"),false) == true ||
-		   StringToBool(LookupTag(Message,"Alt-IMS-Hit"),false) == true)
+	       if (isHit)
 	       {
 		  /* Hide 'hits' for local only sources - we also manage to
 		     hide gets */
@@ -419,7 +453,9 @@ bool pkgAcquire::Worker::MediaChange(string Message)
 	     << Drive  << ":"     // drive
 	     << msg.str()         // l10n message
 	     << endl;
-      write(status_fd, status.str().c_str(), status.str().size());
+
+      std::string const dlstatus = status.str();
+      FileFd::Write(status_fd, dlstatus.c_str(), dlstatus.size());
    }
 
    if (Log == 0 || Log->MediaChange(LookupTag(Message,"Media"),
@@ -453,40 +489,19 @@ bool pkgAcquire::Worker::SendConfiguration()
 
    if (OutFd == -1)
       return false;
-   
-   string Message = "601 Configuration\n";
-   Message.reserve(2000);
 
-   /* Write out all of the configuration directives by walking the 
+   /* Write out all of the configuration directives by walking the
       configuration tree */
-   const Configuration::Item *Top = _config->Tree(0);
-   for (; Top != 0;)
-   {
-      if (Top->Value.empty() == false)
-      {
-	 string Line = "Config-Item: " + QuoteString(Top->FullTag(),"=\"\n") + "=";
-	 Line += QuoteString(Top->Value,"\n") + '\n';
-	 Message += Line;
-      }
-      
-      if (Top->Child != 0)
-      {
-	 Top = Top->Child;
-	 continue;
-      }
-      
-      while (Top != 0 && Top->Next == 0)
-	 Top = Top->Parent;
-      if (Top != 0)
-	 Top = Top->Next;
-   }   
-   Message += '\n';
+   std::ostringstream Message;
+   Message << "601 Configuration\n";
+   _config->Dump(Message, NULL, "Config-Item: %F=%V\n", false);
+   Message << '\n';
 
    if (Debug == true)
-      clog << " -> " << Access << ':' << QuoteString(Message,"\n") << endl;
-   OutQueue += Message;
-   OutReady = true; 
-   
+      clog << " -> " << Access << ':' << QuoteString(Message.str(),"\n") << endl;
+   OutQueue += Message.str();
+   OutReady = true;
+
    return true;
 }
 									/*}}}*/
@@ -524,10 +539,10 @@ bool pkgAcquire::Worker::OutFdReady()
       Res = write(OutFd,OutQueue.c_str(),OutQueue.length());
    }
    while (Res < 0 && errno == EINTR);
-   
+
    if (Res <= 0)
       return MethodFailure();
-   
+
    OutQueue.erase(0,Res);
    if (OutQueue.empty() == true)
       OutReady = false;

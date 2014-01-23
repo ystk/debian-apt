@@ -1,5 +1,6 @@
 /*
  */
+#include<config.h>
 
 #include<apt-pkg/init.h>
 #include<apt-pkg/error.h>
@@ -7,11 +8,11 @@
 #include<apt-pkg/strutl.h>
 #include<apt-pkg/cdrom.h>
 #include<apt-pkg/aptconfiguration.h>
+#include<apt-pkg/configuration.h>
+#include<apt-pkg/fileutl.h>
 
 #include<sstream>
 #include<fstream>
-#include<config.h>
-#include<apti18n.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -21,6 +22,8 @@
 #include <dlfcn.h>
 
 #include "indexcopy.h"
+
+#include<apti18n.h>
 
 using namespace std;
 
@@ -55,66 +58,91 @@ bool pkgCdrom::FindPackages(string CD,
       return _error->Errno("chdir","Unable to change to %s",CD.c_str());
 
    // Look for a .disk subdirectory
-   struct stat Buf;
-   if (stat(".disk",&Buf) == 0)
+   if (DirectoryExists(".disk") == true)
    {
       if (InfoDir.empty() == true)
 	 InfoDir = CD + ".disk/";
    }
 
    // Don't look into directories that have been marked to ingore.
-   if (stat(".aptignr",&Buf) == 0)
+   if (RealFileExists(".aptignr") == true)
       return true;
-
 
    /* Check _first_ for a signature file as apt-cdrom assumes that all files
       under a Packages/Source file are in control of that file and stops 
       the scanning
    */
-   if (stat("Release.gpg",&Buf) == 0)
+   if (RealFileExists("Release.gpg") == true || RealFileExists("InRelease") == true)
    {
       SigList.push_back(CD);
    }
+
    /* Aha! We found some package files. We assume that everything under 
       this dir is controlled by those package files so we don't look down
       anymore */
-   if (stat("Packages",&Buf) == 0 || stat("Packages.gz",&Buf) == 0)
+   std::vector<APT::Configuration::Compressor> const compressor = APT::Configuration::getCompressors();
+   for (std::vector<APT::Configuration::Compressor>::const_iterator c = compressor.begin();
+	c != compressor.end(); ++c)
    {
+      if (RealFileExists(std::string("Packages").append(c->Extension).c_str()) == false)
+	 continue;
+
+      if (_config->FindB("Debug::aptcdrom",false) == true)
+	 std::clog << "Found Packages in " << CD << std::endl;
       List.push_back(CD);
-      
+
       // Continue down if thorough is given
       if (_config->FindB("APT::CDROM::Thorough",false) == false)
 	 return true;
+      break;
    }
-   if (stat("Sources.gz",&Buf) == 0 || stat("Sources",&Buf) == 0)
+   for (std::vector<APT::Configuration::Compressor>::const_iterator c = compressor.begin();
+	c != compressor.end(); ++c)
    {
+      if (RealFileExists(std::string("Sources").append(c->Extension).c_str()) == false)
+	 continue;
+
+      if (_config->FindB("Debug::aptcdrom",false) == true)
+	 std::clog << "Found Sources in " << CD << std::endl;
       SList.push_back(CD);
-      
+
       // Continue down if thorough is given
       if (_config->FindB("APT::CDROM::Thorough",false) == false)
 	 return true;
+      break;
    }
 
-   // see if we find translatin indexes
-   if (stat("i18n",&Buf) == 0)
+   // see if we find translation indices
+   if (DirectoryExists("i18n") == true)
    {
       D = opendir("i18n");
       for (struct dirent *Dir = readdir(D); Dir != 0; Dir = readdir(D))
       {
-	 if(strstr(Dir->d_name,"Translation") != NULL) 
+	 if(strncmp(Dir->d_name, "Translation-", strlen("Translation-")) != 0)
+	    continue;
+	 string file = Dir->d_name;
+	 for (std::vector<APT::Configuration::Compressor>::const_iterator c = compressor.begin();
+	      c != compressor.end(); ++c)
 	 {
-	    if (_config->FindB("Debug::aptcdrom",false) == true)
-	       std::clog << "found translations: " << Dir->d_name << "\n";
-	    string file = Dir->d_name;
-	    if(file.substr(file.size()-3,file.size()) == ".gz")
-	       file = file.substr(0,file.size()-3);
-	    TransList.push_back(CD+"i18n/"+ file);
+	    string fileext = flExtension(file);
+	    if (file == fileext)
+	       fileext.clear();
+	    else if (fileext.empty() == false)
+	       fileext = "." + fileext;
+
+	    if (c->Extension == fileext)
+	    {
+	       if (_config->FindB("Debug::aptcdrom",false) == true)
+		  std::clog << "Found translation " << Dir->d_name << " in " << CD << "i18n/" << std::endl;
+	       file.erase(file.size() - fileext.size());
+	       TransList.push_back(CD + "i18n/" + file);
+	       break;
+	    }
 	 }
       }
       closedir(D);
    }
 
-   
    D = opendir(".");
    if (D == 0)
       return _error->Errno("opendir","Unable to read %s",CD.c_str());
@@ -155,7 +183,11 @@ bool pkgCdrom::FindPackages(string CD,
 	 break;
 
       if (chdir(CD.c_str()) != 0)
-	 return _error->Errno("chdir","Unable to change to %s",CD.c_str());
+      {
+	 _error->Errno("chdir","Unable to change to %s", CD.c_str());
+	 closedir(D);
+	 return false;
+      }
    };
 
    closedir(D);
@@ -198,7 +230,7 @@ int pkgCdrom::Score(string Path)
    // a symlink gets a big penalty
    struct stat Buf;
    string statPath = flNotFile(Path);
-   string cdromPath = _config->FindDir("Acquire::cdrom::mount","/cdrom/");
+   string cdromPath = _config->FindDir("Acquire::cdrom::mount");
    while(statPath != cdromPath && statPath != "./") {
       statPath.resize(statPath.size()-1);  // remove the trailing '/'
       if (lstat(statPath.c_str(),&Buf) == 0) {
@@ -240,33 +272,71 @@ bool pkgCdrom::DropBinaryArch(vector<string> &List)
    return true;
 }
 									/*}}}*/
+// DropTranslation - Dump unwanted Translation-<lang> files		/*{{{*/
+// ---------------------------------------------------------------------
+/* Here we drop everything that is not configured in Acquire::Languages */
+bool pkgCdrom::DropTranslation(vector<string> &List)
+{
+   for (unsigned int I = 0; I < List.size(); I++)
+   {
+      const char *Start;
+      if ((Start = strstr(List[I].c_str(), "/Translation-")) == NULL)
+	 continue;
+      Start += strlen("/Translation-");
+
+      if (APT::Configuration::checkLanguage(Start, true) == true)
+	 continue;
+
+      // not accepted -> Erase it
+      List.erase(List.begin() + I);
+      --I; // the next entry is at the same index after the erase
+   }
+
+   return true;
+}
+									/*}}}*/
 // DropRepeats - Drop repeated files resulting from symlinks		/*{{{*/
 // ---------------------------------------------------------------------
 /* Here we go and stat every file that we found and strip dup inodes. */
 bool pkgCdrom::DropRepeats(vector<string> &List,const char *Name)
 {
+   bool couldFindAllFiles = true;
    // Get a list of all the inodes
    ino_t *Inodes = new ino_t[List.size()];
-   for (unsigned int I = 0; I != List.size(); I++)
+   for (unsigned int I = 0; I != List.size(); ++I)
    {
       struct stat Buf;
-      if (stat((List[I] + Name).c_str(),&Buf) != 0 &&
-	  stat((List[I] + Name + ".gz").c_str(),&Buf) != 0)
-	 _error->Errno("stat","Failed to stat %s%s",List[I].c_str(),
-		       Name);
-      Inodes[I] = Buf.st_ino;
+      bool found = false;
+
+      std::vector<APT::Configuration::Compressor> const compressor = APT::Configuration::getCompressors();
+      for (std::vector<APT::Configuration::Compressor>::const_iterator c = compressor.begin();
+	   c != compressor.end(); ++c)
+      {
+	 std::string filename = std::string(List[I]).append(Name).append(c->Extension);
+         if (stat(filename.c_str(), &Buf) != 0)
+	    continue;
+	 Inodes[I] = Buf.st_ino;
+	 found = true;
+	 break;
+      }
+
+      if (found == false)
+      {
+	 _error->Errno("stat","Failed to stat %s%s",List[I].c_str(), Name);
+	 couldFindAllFiles = false;
+	 Inodes[I] = 0;
+      }
    }
-   
-   if (_error->PendingError() == true)
-      return false;
-   
+
    // Look for dups
    for (unsigned int I = 0; I != List.size(); I++)
    {
+      if (Inodes[I] == 0)
+	 continue;
       for (unsigned int J = I+1; J < List.size(); J++)
       {
 	 // No match
-	 if (Inodes[J] != Inodes[I])
+	 if (Inodes[J] == 0 || Inodes[J] != Inodes[I])
 	    continue;
 	 
 	 // We score the two paths.. and erase one
@@ -292,7 +362,7 @@ bool pkgCdrom::DropRepeats(vector<string> &List,const char *Name)
 	 List.erase(List.begin()+I);
    }
    
-   return true;
+   return couldFindAllFiles;
 }
 									/*}}}*/
 // ReduceSourceList - Takes the path list and reduces it		/*{{{*/
@@ -304,7 +374,7 @@ void pkgCdrom::ReduceSourcelist(string CD,vector<string> &List)
    sort(List.begin(),List.end());
    
    // Collect similar entries
-   for (vector<string>::iterator I = List.begin(); I != List.end(); I++)
+   for (vector<string>::iterator I = List.begin(); I != List.end(); ++I)
    {
       // Find a space..
       string::size_type Space = (*I).find(' ');
@@ -316,7 +386,8 @@ void pkgCdrom::ReduceSourcelist(string CD,vector<string> &List)
 
       string Word1 = string(*I,Space,SSpace-Space);
       string Prefix = string(*I,0,Space);
-      for (vector<string>::iterator J = List.begin(); J != I; J++)
+      string Component = string(*I,SSpace);
+      for (vector<string>::iterator J = List.begin(); J != I; ++J)
       {
 	 // Find a space..
 	 string::size_type Space2 = (*J).find(' ');
@@ -330,9 +401,11 @@ void pkgCdrom::ReduceSourcelist(string CD,vector<string> &List)
 	    continue;
 	 if (string(*J,Space2,SSpace2-Space2) != Word1)
 	    continue;
-	 
-	 *J += string(*I,SSpace);
-	 *I = string();
+
+	 string Component2 = string(*J, SSpace2) + " ";
+	 if (Component2.find(Component + " ") == std::string::npos)
+	    *J += Component;
+	 I->clear();
       }
    }   
 
@@ -362,28 +435,12 @@ bool pkgCdrom::WriteDatabase(Configuration &Cnf)
    
    /* Write out all of the configuration directives by walking the
       configuration tree */
-   const Configuration::Item *Top = Cnf.Tree(0);
-   for (; Top != 0;)
-   {
-      // Print the config entry
-      if (Top->Value.empty() == false)
-	 Out <<  Top->FullTag() + " \"" << Top->Value << "\";" << endl;
-      
-      if (Top->Child != 0)
-      {
-	 Top = Top->Child;
-	 continue;
-      }
-      
-      while (Top != 0 && Top->Next == 0)
-	 Top = Top->Parent;
-      if (Top != 0)
-	 Top = Top->Next;
-   }   
+   Cnf.Dump(Out, NULL, "%f \"%v\";\n", false);
 
    Out.close();
-   
-   link(DFile.c_str(),string(DFile + '~').c_str());
+
+   if (FileExists(DFile) == true)
+      rename(DFile.c_str(), string(DFile + '~').c_str());
    if (rename(NewFile.c_str(),DFile.c_str()) != 0)
       return _error->Errno("rename","Failed to rename %s.new to %s",
 			   DFile.c_str(),DFile.c_str());
@@ -399,7 +456,7 @@ bool pkgCdrom::WriteDatabase(Configuration &Cnf)
    that were the same. */
 bool pkgCdrom::WriteSourceList(string Name,vector<string> &List,bool Source)
 {
-   if (List.size() == 0)
+   if (List.empty() == true)
       return true;
 
    string File = _config->FindFile("Dir::Etc::sourcelist");
@@ -449,7 +506,7 @@ bool pkgCdrom::WriteSourceList(string Name,vector<string> &List,bool Source)
 
       if (First == true)
       {
-	 for (vector<string>::iterator I = List.begin(); I != List.end(); I++)
+	 for (vector<string>::iterator I = List.begin(); I != List.end(); ++I)
 	 {
 	    string::size_type Space = (*I).find(' ');
 	    if (Space == string::npos)
@@ -483,7 +540,7 @@ bool pkgCdrom::WriteSourceList(string Name,vector<string> &List,bool Source)
    // Just in case the file was empty
    if (First == true)
    {
-      for (vector<string>::iterator I = List.begin(); I != List.end(); I++)
+      for (vector<string>::iterator I = List.begin(); I != List.end(); ++I)
       {
 	 string::size_type Space = (*I).find(' ');
 	 if (Space == string::npos)
@@ -509,11 +566,12 @@ bool pkgCdrom::Ident(string &ident, pkgCdromStatus *log)		/*{{{*/
    stringstream msg;
 
    // Startup
-   string CDROM = _config->FindDir("Acquire::cdrom::mount","/cdrom/");
+   string CDROM = _config->FindDir("Acquire::cdrom::mount");
    if (CDROM[0] == '.')
       CDROM= SafeGetCWD() + '/' + CDROM;
 
-   if(log) {
+   if (log != NULL)
+   {
       msg.str("");
       ioprintf(msg, _("Using CD-ROM mount point %s\nMounting CD-ROM\n"),
 		      CDROM.c_str());
@@ -523,7 +581,7 @@ bool pkgCdrom::Ident(string &ident, pkgCdromStatus *log)		/*{{{*/
       return _error->Error("Failed to mount the cdrom.");
 
    // Hash the CD to get an ID
-   if(log) 
+   if (log != NULL)
       log->Update(_("Identifying.. "));
    
 
@@ -533,10 +591,12 @@ bool pkgCdrom::Ident(string &ident, pkgCdromStatus *log)		/*{{{*/
       return false;
    }
 
-   msg.str("");
-   ioprintf(msg, "[%s]\n",ident.c_str());
-   log->Update(msg.str());
-
+   if (log != NULL)
+   {
+      msg.str("");
+      ioprintf(msg, "[%s]\n",ident.c_str());
+      log->Update(msg.str());
+   }
 
    // Read the database
    Configuration Database;
@@ -547,7 +607,8 @@ bool pkgCdrom::Ident(string &ident, pkgCdromStatus *log)		/*{{{*/
 	 return _error->Error("Unable to read the cdrom database %s",
 			      DFile.c_str());
    }
-   if(log) {
+   if (log != NULL)
+   {
       msg.str("");
       ioprintf(msg, _("Stored label: %s\n"),
       Database.Find("CD::"+ident).c_str());
@@ -555,8 +616,10 @@ bool pkgCdrom::Ident(string &ident, pkgCdromStatus *log)		/*{{{*/
    }
 
    // Unmount and finish
-   if (_config->FindB("APT::CDROM::NoMount",false) == false) {
-      log->Update(_("Unmounting CD-ROM...\n"), STEP_LAST);
+   if (_config->FindB("APT::CDROM::NoMount",false) == false)
+   {
+      if (log != NULL)
+	 log->Update(_("Unmounting CD-ROM...\n"), STEP_LAST);
       UnmountCdrom(CDROM);
    }
 
@@ -568,11 +631,12 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
    stringstream msg;
 
    // Startup
-   string CDROM = _config->FindDir("Acquire::cdrom::mount","/cdrom/");
+   string CDROM = _config->FindDir("Acquire::cdrom::mount");
    if (CDROM[0] == '.')
       CDROM= SafeGetCWD() + '/' + CDROM;
    
-   if(log) {
+   if(log != NULL)
+   {
       log->SetTotal(STEP_LAST);
       msg.str("");
       ioprintf(msg, _("Using CD-ROM mount point %s\n"), CDROM.c_str());
@@ -592,11 +656,12 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
    // Unmount the CD and get the user to put in the one they want
    if (_config->FindB("APT::CDROM::NoMount",false) == false)
    {
-      if(log)
+      if(log != NULL)
 	 log->Update(_("Unmounting CD-ROM\n"), STEP_UNMOUNT);
       UnmountCdrom(CDROM);
 
-      if(log) {
+      if(log != NULL)
+      {
 	 log->Update(_("Waiting for disc...\n"), STEP_WAIT);
 	 if(!log->ChangeCdrom()) {
 	    // user aborted
@@ -605,26 +670,29 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
       }
 
       // Mount the new CDROM
-      log->Update(_("Mounting CD-ROM...\n"), STEP_MOUNT);
+      if(log != NULL)
+	 log->Update(_("Mounting CD-ROM...\n"), STEP_MOUNT);
+
       if (MountCdrom(CDROM) == false)
 	 return _error->Error("Failed to mount the cdrom.");
    }
    
    // Hash the CD to get an ID
-   if(log)
+   if(log != NULL)
       log->Update(_("Identifying.. "), STEP_IDENT);
    string ID;
    if (IdentCdrom(CDROM,ID) == false)
    {
-      log->Update("\n");
+      if (log != NULL)
+	 log->Update("\n");
       return false;
    }
-   if(log) 
+   if(log != NULL)
+   {
       log->Update("["+ID+"]\n");
-
-   if(log) 
       log->Update(_("Scanning disc for index files..\n"),STEP_SCAN);
-   
+   }
+
    // Get the CD structure
    vector<string> List;
    vector<string> SourceList;
@@ -634,22 +702,24 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
    string InfoDir;
    if (FindPackages(CDROM,List,SourceList, SigList,TransList,InfoDir,log) == false)
    {
-      log->Update("\n");
+      if (log != NULL)
+	 log->Update("\n");
       return false;
    }
 
-   chdir(StartDir.c_str());
+   if (chdir(StartDir.c_str()) != 0)
+      return _error->Errno("chdir","Unable to change to %s", StartDir.c_str());
 
    if (_config->FindB("Debug::aptcdrom",false) == true)
    {
       cout << "I found (binary):" << endl;
-      for (vector<string>::iterator I = List.begin(); I != List.end(); I++)
+      for (vector<string>::iterator I = List.begin(); I != List.end(); ++I)
 	 cout << *I << endl;
       cout << "I found (source):" << endl;
-      for (vector<string>::iterator I = SourceList.begin(); I != SourceList.end(); I++)
+      for (vector<string>::iterator I = SourceList.begin(); I != SourceList.end(); ++I)
 	 cout << *I << endl;
       cout << "I found (Signatures):" << endl;
-      for (vector<string>::iterator I = SigList.begin(); I != SigList.end(); I++)
+      for (vector<string>::iterator I = SigList.begin(); I != SigList.end(); ++I)
 	 cout << *I << endl;
    }   
 
@@ -659,9 +729,17 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
    DropBinaryArch(List);
    DropRepeats(List,"Packages");
    DropRepeats(SourceList,"Sources");
+   // FIXME: We ignore stat() errors here as we usually have only one of those in use
+   // This has little potencial to drop 'valid' stat() errors as we know that one of these
+   // files need to exist, but it would be better if we would check it here
+   _error->PushToStack();
    DropRepeats(SigList,"Release.gpg");
+   DropRepeats(SigList,"InRelease");
+   _error->RevertToStack();
    DropRepeats(TransList,"");
-   if(log) {
+   if (_config->FindB("APT::CDROM::DropTranslation", true) == true)
+      DropTranslation(TransList);
+   if(log != NULL) {
       msg.str("");
       ioprintf(msg, _("Found %zu package indexes, %zu source indexes, "
 		      "%zu translation indexes and %zu signatures\n"), 
@@ -670,7 +748,7 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
       log->Update(msg.str(), STEP_SCAN);
    }
 
-   if (List.size() == 0 && SourceList.size() == 0) 
+   if (List.empty() == true && SourceList.empty() == true) 
    {
       if (_config->FindB("APT::CDROM::NoMount",false) == false) 
 	 UnmountCdrom(CDROM);
@@ -694,11 +772,12 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
 	 {
 	    // Escape special characters
 	    string::iterator J = Name.begin();
-	    for (; J != Name.end(); J++)
+	    for (; J != Name.end(); ++J)
 	       if (*J == '"' || *J == ']' || *J == '[')
 		  *J = '_';
 	    
-	    if(log) {
+	    if(log != NULL)
+	    {
 	       msg.str("");
 	       ioprintf(msg, _("Found label '%s'\n"), Name.c_str());
 	       log->Update(msg.str());
@@ -710,7 +789,7 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
       if (_config->FindB("APT::CDROM::Rename",false) == true ||
 	  Name.empty() == true)
       {
-	 if(!log) 
+	 if(log == NULL) 
          {
 	    if (_config->FindB("APT::CDROM::NoMount",false) == false) 
 	       UnmountCdrom(CDROM);
@@ -738,18 +817,18 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
 
    // Escape special characters
    string::iterator J = Name.begin();
-   for (; J != Name.end(); J++)
+   for (; J != Name.end(); ++J)
       if (*J == '"' || *J == ']' || *J == '[')
 	 *J = '_';
    
    Database.Set("CD::" + ID,Name);
-   if(log) {
+   if(log != NULL)
+   {
       msg.str("");
       ioprintf(msg, _("This disc is called: \n'%s'\n"), Name.c_str());
       log->Update(msg.str());
+      log->Update(_("Copying package lists..."), STEP_COPY);
    }
-
-   log->Update(_("Copying package lists..."), STEP_COPY);
    // take care of the signatures and copy them if they are ok
    // (we do this before PackageCopy as it modifies "List" and "SourceList")
    SigVerify SignVerify;
@@ -774,19 +853,18 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
       if (WriteDatabase(Database) == false)
 	 return false;
       
-      if(log) {
+      if(log != NULL)
 	 log->Update(_("Writing new source list\n"), STEP_WRITE);
-      }
       if (WriteSourceList(Name,List,false) == false ||
 	  WriteSourceList(Name,SourceList,true) == false)
 	 return false;
    }
 
    // Print the sourcelist entries
-   if(log) 
+   if(log != NULL)
       log->Update(_("Source list entries for this disc are:\n"));
 
-   for (vector<string>::iterator I = List.begin(); I != List.end(); I++)
+   for (vector<string>::iterator I = List.begin(); I != List.end(); ++I)
    {
       string::size_type Space = (*I).find(' ');
       if (Space == string::npos)
@@ -796,7 +874,8 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
 	 return _error->Error("Internal error");
       }
 
-      if(log) {
+      if(log != NULL)
+      {
 	 msg.str("");
 	 msg << "deb cdrom:[" << Name << "]/" << string(*I,0,Space) << 
 	    " " << string(*I,Space+1) << endl;
@@ -804,7 +883,7 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
       }
    }
 
-   for (vector<string>::iterator I = SourceList.begin(); I != SourceList.end(); I++)
+   for (vector<string>::iterator I = SourceList.begin(); I != SourceList.end(); ++I)
    {
       string::size_type Space = (*I).find(' ');
       if (Space == string::npos)
@@ -814,7 +893,7 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
 	 return _error->Error("Internal error");
       }
 
-      if(log) {
+      if(log != NULL) {
 	 msg.str("");
 	 msg << "deb-src cdrom:[" << Name << "]/" << string(*I,0,Space) << 
 	    " " << string(*I,Space+1) << endl;
@@ -824,7 +903,8 @@ bool pkgCdrom::Add(pkgCdromStatus *log)					/*{{{*/
 
    // Unmount and finish
    if (_config->FindB("APT::CDROM::NoMount",false) == false) {
-      log->Update(_("Unmounting CD-ROM...\n"), STEP_LAST);
+      if (log != NULL)
+	 log->Update(_("Unmounting CD-ROM...\n"), STEP_LAST);
       UnmountCdrom(CDROM);
    }
 
@@ -854,6 +934,7 @@ pkgUdevCdromDevices::Dlopen()                     		        /*{{{*/
    libudev_handle = h;
    udev_new = (udev* (*)(void)) dlsym(h, "udev_new");
    udev_enumerate_add_match_property = (int (*)(udev_enumerate*, const char*, const char*))dlsym(h, "udev_enumerate_add_match_property");
+   udev_enumerate_add_match_sysattr = (int (*)(udev_enumerate*, const char*, const char*))dlsym(h, "udev_enumerate_add_match_sysattr");
    udev_enumerate_scan_devices = (int (*)(udev_enumerate*))dlsym(h, "udev_enumerate_scan_devices");
    udev_enumerate_get_list_entry = (udev_list_entry* (*)(udev_enumerate*))dlsym(h, "udev_enumerate_get_list_entry");
    udev_device_new_from_syspath = (udev_device* (*)(udev*, const char*))dlsym(h, "udev_device_new_from_syspath");
@@ -867,8 +948,18 @@ pkgUdevCdromDevices::Dlopen()                     		        /*{{{*/
    return true;
 }
 									/*}}}*/
+                                                                        /*{{{*/
+// convenience interface, this will just call ScanForRemovable
 vector<CdromDevice>
-pkgUdevCdromDevices::Scan()                                             /*{{{*/
+pkgUdevCdromDevices::Scan()
+{ 
+   bool CdromOnly = _config->FindB("APT::cdrom::CdromOnly", true);
+   return ScanForRemovable(CdromOnly); 
+};
+									/*}}}*/
+                                                                        /*{{{*/
+vector<CdromDevice>
+pkgUdevCdromDevices::ScanForRemovable(bool CdromOnly)
 {
    vector<CdromDevice> cdrom_devices;
    struct udev_enumerate *enumerate;
@@ -880,7 +971,11 @@ pkgUdevCdromDevices::Scan()                                             /*{{{*/
 
    udev_ctx = udev_new();
    enumerate = udev_enumerate_new (udev_ctx);
-   udev_enumerate_add_match_property(enumerate, "ID_CDROM", "1");
+   if (CdromOnly)
+      udev_enumerate_add_match_property(enumerate, "ID_CDROM", "1");
+   else {
+      udev_enumerate_add_match_sysattr(enumerate, "removable", "1");
+   }
 
    udev_enumerate_scan_devices (enumerate);
    devices = udev_enumerate_get_list_entry (enumerate);
@@ -892,11 +987,18 @@ pkgUdevCdromDevices::Scan()                                             /*{{{*/
       if (udevice == NULL)
 	 continue;
       const char* devnode = udev_device_get_devnode(udevice);
-      const char* mountpath = udev_device_get_property_value(udevice, "FSTAB_DIR");
+
+      // try fstab_dir first
+      string mountpath;
+      const char* mp = udev_device_get_property_value(udevice, "FSTAB_DIR");
+      if (mp)
+         mountpath = string(mp);
+      else
+         mountpath = FindMountPointForDevice(devnode);
 
       // fill in the struct
       cdrom.DeviceName = string(devnode);
-      if (mountpath) {
+      if (mountpath != "") {
 	 cdrom.MountPath = mountpath;
 	 string s = string(mountpath);
 	 cdrom.Mounted = IsMounted(s);

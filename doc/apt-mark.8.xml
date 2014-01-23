@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+  "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 
 <!ENTITY % aptent SYSTEM "apt.ent">
 %aptent;
@@ -18,7 +18,7 @@
    &apt-email;
    &apt-product;
    <!-- The last update date -->
-   <date>9 August 2009</date>
+   <date>2012-06-09T00:00:00Z</date>
  </refentryinfo>
  
  <refmeta>
@@ -33,25 +33,8 @@
     <refpurpose>mark/unmark a package as being automatically-installed</refpurpose>
  </refnamediv>
 
- <!-- Arguments -->
- <refsynopsisdiv>
-   <cmdsynopsis>
-	<command>apt-mark</command>
-	<arg><option>-hv</option></arg>
-	<arg><option>-f=<replaceable>FILENAME</replaceable></option></arg>
-	<group choice="plain">
-		<arg choice="plain">
-			<group choice="req">
-				<arg choice="plain">markauto</arg>
-				<arg choice="plain">unmarkauto</arg>
-			</group>
-			<arg choice="plain" rep="repeat"><replaceable>package</replaceable></arg>
-		</arg>
-		<arg choice="plain">showauto</arg>
-	</group>
-   </cmdsynopsis>
- </refsynopsisdiv>
- 
+ &synopsis-command-apt-mark;
+
  <refsect1><title>Description</title>
    <para><command>apt-mark</command> will change whether a package has
    been marked as being automatically installed.
@@ -65,27 +48,60 @@
      <command>apt-get</command> or <command>aptitude</command>.
    </para>
      <variablelist>
-       <varlistentry><term>markauto</term>
-	 <listitem><para><literal>markauto</literal> is used to mark a
+     <varlistentry><term><option>auto</option></term>
+	 <listitem><para><literal>auto</literal> is used to mark a
      package as being automatically installed, which will cause the
      package to be removed when no more manually installed packages
      depend on this package.
        </para></listitem>
        </varlistentry>
 
-       <varlistentry><term>unmarkauto</term>
-	 <listitem><para><literal>unmarkauto</literal> is used to mark a
+     <varlistentry><term><option>manual</option></term>
+	 <listitem><para><literal>manual</literal> is used to mark a
      package as being manually installed, which will prevent the
      package from being automatically removed if no other packages
      depend on it.
        </para></listitem>
        </varlistentry>
 
-       <varlistentry><term>showauto</term>
-	 <listitem><para><literal>showauto</literal> is used to print a
-     list of automatically installed packages with each package on a new line.
+       <varlistentry><term><option>hold</option></term>
+	 <listitem><para><literal>hold</literal> is used to mark a
+       package as held back, which will prevent the package from being
+       automatically installed, upgraded or removed.
+       The command is only a wrapper around <command>dpkg --set-selections</command>
+       and the state is therefore maintained by &dpkg; and not affected
+       by the <option>--file</option> option.
        </para></listitem>
        </varlistentry>
+
+       <varlistentry><term><option>unhold</option></term>
+	 <listitem><para><literal>unhold</literal> is used to cancel a
+       previously set hold on a package to allow all actions again.
+       </para></listitem>
+       </varlistentry>
+
+       <varlistentry><term><option>showauto</option></term>
+	 <listitem><para><literal>showauto</literal> is used to print a
+     list of automatically installed packages with each package on a new line.
+     All automatically installed packages will be listed if no package is given.
+     If packages are given only those which are automatically installed will be shown.
+       </para></listitem>
+       </varlistentry>
+
+       <varlistentry><term><option>showmanual</option></term>
+	 <listitem><para><literal>showmanual</literal> can be used in
+     the same way as <literal>showauto</literal> except that it will print
+     a list of manually installed packages instead.
+       </para></listitem>
+       </varlistentry>
+
+       <varlistentry><term><option>showhold</option></term>
+	 <listitem><para><literal>showhold</literal> is used to print a list
+     of packages on hold in the same way as for the other show commands.
+       </para></listitem>
+       </varlistentry>
+
+
      </variablelist>
  </refsect1>
  
@@ -93,32 +109,16 @@
    
    <variablelist>
 	<varlistentry>
-		<term><option>-f=<filename><replaceable>FILENAME</replaceable></filename></option></term>
-		<term><option>--file=<filename><replaceable>FILENAME</replaceable></filename></option></term>
+	   <term><option>-f=&synopsis-param-filename;</option></term>
+	   <term><option>--file=&synopsis-param-filename;</option></term>
      <listitem><para>
-      
-     Read/Write package stats from <filename><replaceable>FILENAME</replaceable></filename>
-     instead of the default location, which
+     Read/Write package stats from the filename given with the parameter
+     &synopsis-param-filename; instead of from the default location, which
      is <filename>extended_status</filename> in the directory defined
      by the Configuration Item: <literal>Dir::State</literal>.</para></listitem>
      </varlistentry>
-   
-     <varlistentry><term><option>-h</option></term>
-     <term><option>--help</option></term>
-     <listitem><para>Show a short usage summary.
-     </para>
-     </listitem>
-     </varlistentry>
-     
-     <varlistentry>
-      <term><option>-v</option></term>
-      <term><option>--version</option></term>
-      <listitem><para>Show the program version.
-     </para>
-     </listitem>
-     </varlistentry>
 
-     
+     &apt-commonoptions;
    </variablelist>
  </refsect1>
 
@@ -129,7 +129,7 @@
  </refsect1>
 
  <refsect1><title>See Also</title>
-   <para>&apt-get;,&aptitude;,&apt-conf;</para>
+    <para><phrase>&apt-get;,&aptitude;,&apt-conf;</phrase></para>
  </refsect1>
 
  <refsect1><title>Diagnostics</title>

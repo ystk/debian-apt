@@ -8,6 +8,9 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
+#include <apt-pkg/aptconfiguration.h>
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/acquire-method.h>
 #include <apt-pkg/acquire-item.h>
@@ -15,12 +18,17 @@
 #include <apt-pkg/error.h>
 #include <apt-pkg/hashes.h>
 #include <apt-pkg/sourcelist.h>
+#include <apt-pkg/configuration.h>
+#include <apt-pkg/metaindex.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <dirent.h>
 
 using namespace std;
@@ -29,7 +37,7 @@ using namespace std;
 
 #include "mirror.h"
 #include "http.h"
-#include "apti18n.h"
+#include <apti18n.h>
 									/*}}}*/
 
 /* Done:
@@ -50,7 +58,7 @@ using namespace std;
  */
 
 MirrorMethod::MirrorMethod()
-   : HttpMethod(), DownloadedMirrorFile(false)
+   : HttpMethod(), DownloadedMirrorFile(false), Debug(false)
 {
 };
 
@@ -103,7 +111,7 @@ bool MirrorMethod::Clean(string Dir)
 	 continue;
 
       // see if we have that uri
-      for(I=list.begin(); I != list.end(); I++)
+      for(I=list.begin(); I != list.end(); ++I)
       {
 	 string uri = (*I)->GetURI();
 	 if(uri.find("mirror://") != 0)
@@ -116,30 +124,98 @@ bool MirrorMethod::Clean(string Dir)
       if (I == list.end())
 	 unlink(Dir->d_name);
    };
-   
-   chdir(StartDir.c_str());
+
    closedir(D);
+   if (chdir(StartDir.c_str()) != 0)
+      return _error->Errno("chdir",_("Unable to change to %s"),StartDir.c_str());
    return true;   
 }
 
 
 bool MirrorMethod::DownloadMirrorFile(string mirror_uri_str)
 {
-   if(Debug)
-      clog << "MirrorMethod::DownloadMirrorFile(): " << endl;
-
    // not that great to use pkgAcquire here, but we do not have 
    // any other way right now
    string fetch = BaseUri;
    fetch.replace(0,strlen("mirror://"),"http://");
 
+#if 0 // no need for this, the getArchitectures() will also include the main 
+      // arch
+   // append main architecture
+   fetch += "?arch=" + _config->Find("Apt::Architecture");
+#endif
+
+   // append all architectures
+   std::vector<std::string> vec = APT::Configuration::getArchitectures();
+   for (std::vector<std::string>::const_iterator I = vec.begin();
+        I != vec.end(); ++I)
+      if (I == vec.begin())
+         fetch += "?arch=" + (*I);
+      else
+         fetch += "&arch=" + (*I);
+
+   // append the dist as a query string
+   if (Dist != "")
+      fetch += "&dist=" + Dist;
+
+   if(Debug)
+      clog << "MirrorMethod::DownloadMirrorFile(): '" << fetch << "'"
+           << " to " << MirrorFile << endl;
+
    pkgAcquire Fetcher;
    new pkgAcqFile(&Fetcher, fetch, "", 0, "", "", "", MirrorFile);
    bool res = (Fetcher.Run() == pkgAcquire::Continue);
-   if(res)
+   if(res) {
       DownloadedMirrorFile = true;
+      chmod(MirrorFile.c_str(), 0644);
+   }
    Fetcher.Shutdown();
+
+   if(Debug)
+      clog << "MirrorMethod::DownloadMirrorFile() success: " << res << endl;
+   
    return res;
+}
+
+// Randomizes the lines in the mirror file, this is used so that
+// we spread the load on the mirrors evenly
+bool MirrorMethod::RandomizeMirrorFile(string mirror_file)
+{
+   vector<string> content;
+   string line;
+
+   if (!FileExists(mirror_file))
+      return false;
+
+   // read 
+   ifstream in(mirror_file.c_str());
+   while ( !in.eof() ) {
+      getline(in, line);
+      content.push_back(line);
+   }
+   
+   // we want the file to be random for each different machine, but also
+   // "stable" on the same machine. this is to avoid running into out-of-sync
+   // issues (i.e. Release/Release.gpg different on each mirror)
+   struct utsname buf;
+   int seed=1, i;
+   if(uname(&buf) == 0) {
+      for(i=0,seed=1; buf.nodename[i] != 0; i++) {
+         seed = seed * 31 + buf.nodename[i];
+      }
+   }
+   srand( seed );
+   random_shuffle(content.begin(), content.end());
+
+   // write
+   ofstream out(mirror_file.c_str());
+   while ( !content.empty()) {
+      line = content.back();
+      content.pop_back();
+      out << line << "\n";
+   }
+
+   return true;
 }
 
 /* convert a the Queue->Uri back to the mirror base uri and look
@@ -176,11 +252,15 @@ bool MirrorMethod::TryNextMirror()
 	 continue;
 
       vector<string>::const_iterator nextmirror = mirror + 1;
-      if (nextmirror != AllMirrors.end())
+      if (nextmirror == AllMirrors.end())
 	 break;
       Queue->Uri.replace(0, mirror->length(), *nextmirror);
       if (Debug)
 	 clog << "TryNextMirror: " << Queue->Uri << endl;
+
+      // inform parent
+      UsedMirror = *nextmirror;
+      Log("Switching mirror");
       return true;
    }
 
@@ -200,6 +280,13 @@ bool MirrorMethod::InitMirrors()
       return _error->Error(_("No mirror file '%s' found "), MirrorFile.c_str());
    }
 
+   if (access(MirrorFile.c_str(), R_OK) != 0)
+   {
+      // FIXME: fallback to a default mirror here instead 
+      //        and provide a config option to define that default
+      return _error->Error(_("Can not read mirror file '%s'"), MirrorFile.c_str());
+   }  
+
    // FIXME: make the mirror selection more clever, do not 
    //        just use the first one!
    // BUT: we can not make this random, the mirror has to be
@@ -211,8 +298,18 @@ bool MirrorMethod::InitMirrors()
    while (!in.eof()) 
    {
       getline(in, s);
-      if (s.size() > 0)
-	 AllMirrors.push_back(s);
+
+      // ignore lines that start with #
+      if (s.find("#") == 0)
+         continue;
+      // ignore empty lines
+      if (s.size() == 0)
+         continue;
+      // ignore non http lines
+      if (s.find("http://") != 0)
+         continue;
+
+      AllMirrors.push_back(s);
    }
    Mirror = AllMirrors[0];
    UsedMirror = Mirror;
@@ -253,7 +350,7 @@ string MirrorMethod::GetMirrorFileName(string mirror_uri_str)
    vector<metaIndex *>::const_iterator I;
    pkgSourceList list;
    list.ReadMainList();
-   for(I=list.begin(); I != list.end(); I++)
+   for(I=list.begin(); I != list.end(); ++I)
    {
       string uristr = (*I)->GetURI();
       if(Debug)
@@ -266,6 +363,7 @@ string MirrorMethod::GetMirrorFileName(string mirror_uri_str)
 	 if(Debug)
 	    std::cerr << "found BaseURI: " << uristr << std::endl;
 	 BaseUri = uristr.substr(0,uristr.size()-1);
+         Dist = (*I)->GetDist();
       }
    }
    // get new file
@@ -303,7 +401,8 @@ bool MirrorMethod::Fetch(FetchItem *Itm)
    if(Itm->IndexFile && !DownloadedMirrorFile)
    {
       Clean(_config->FindDir("Dir::State::mirrors"));
-      DownloadMirrorFile(Itm->Uri);
+      if (DownloadMirrorFile(Itm->Uri))
+         RandomizeMirrorFile(MirrorFile);
    }
 
    if(AllMirrors.empty()) {

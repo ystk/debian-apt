@@ -33,15 +33,20 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
-#include "contents.h"
+#include <config.h>
 
-#include <apti18n.h>
+#include <apt-pkg/debfile.h>
 #include <apt-pkg/extracttar.h>
 #include <apt-pkg/error.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>    
+#include <malloc.h>
+
+#include "contents.h"
+
+#include <apti18n.h>
 									/*}}}*/
 
 // GenContents::~GenContents - Free allocated memory			/*{{{*/
@@ -305,29 +310,7 @@ void GenContents::DoPrint(FILE *Out,GenContents::Node *Top, char *Buf)
 bool ContentsExtract::Read(debDebFile &Deb)
 {
    Reset();
-   
-   // Get the archive member and positition the file 
-   const ARArchive::Member *Member = Deb.GotoMember("data.tar.gz");
-   const char *Compressor = "gzip";
-   if (Member == 0) {
-      Member = Deb.GotoMember("data.tar.bz2");
-      Compressor = "bzip2";
-   }
-   if (Member == 0) {
-      Member = Deb.GotoMember("data.tar.lzma");
-      Compressor = "lzma";
-   }
-   if (Member == 0) {
-      _error->Error(_("Internal error, could not locate member %s"),
-		    "data.tar.{gz,bz2,lzma}");
-      return false;
-   }
-      
-   // Extract it.
-   ExtractTar Tar(Deb.GetFile(),Member->Size,Compressor);
-   if (Tar.Go(*this) == false)
-      return false;   
-   return true;   
+   return Deb.ExtractArchive(*this);
 }
 									/*}}}*/
 // ContentsExtract::DoItem - Extract an item				/*{{{*/
@@ -368,7 +351,7 @@ bool ContentsExtract::DoItem(Item &Itm,int &Fd)
 // ContentsExtract::TakeContents - Load the contents data		/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-bool ContentsExtract::TakeContents(const void *NewData,unsigned long Length)
+bool ContentsExtract::TakeContents(const void *NewData,unsigned long long Length)
 {
    if (Length == 0)
    {
@@ -399,7 +382,7 @@ bool ContentsExtract::TakeContents(const void *NewData,unsigned long Length)
 // ContentsExtract::Add - Read the contents data into the sorter	/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-void ContentsExtract::Add(GenContents &Contents,string const &Package)
+void ContentsExtract::Add(GenContents &Contents,std::string const &Package)
 {
    const char *Start = Data;
    char *Pkg = Contents.Mystrdup(Package.c_str());

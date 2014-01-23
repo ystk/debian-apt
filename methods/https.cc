@@ -10,11 +10,14 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/acquire-method.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/hashes.h>
 #include <apt-pkg/netrc.h>
+#include <apt-pkg/configuration.h>
 
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -25,12 +28,11 @@
 #include <errno.h>
 #include <string.h>
 #include <iostream>
-#include <apti18n.h>
 #include <sstream>
 
 #include "config.h"
 #include "https.h"
-
+#include <apti18n.h>
 									/*}}}*/
 using namespace std;
 
@@ -51,7 +53,7 @@ HttpsMethod::progress_callback(void *clientp, double dltotal, double dlnow,
 {
    HttpsMethod *me = (HttpsMethod *)clientp;
    if(dltotal > 0 && me->Res.Size == 0) {
-      me->Res.Size = (unsigned long)dltotal;
+      me->Res.Size = (unsigned long long)dltotal;
       me->URIStart(me->Res);
    }
    return 0;
@@ -98,7 +100,6 @@ void HttpsMethod::SetupProxy()  					/*{{{*/
    depth. */
 bool HttpsMethod::Fetch(FetchItem *Itm)
 {
-   stringstream ss;
    struct stat SBuf;
    struct curl_slist *headers=NULL;  
    char curl_errorstr[CURL_ERROR_SIZE];
@@ -143,13 +144,11 @@ bool HttpsMethod::Fetch(FetchItem *Itm)
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, peer_verify);
 
    // ... and hostname against cert CN or subjectAltName
-   int default_verify = 2;
    bool verify = _config->FindB("Acquire::https::Verify-Host",true);
    knob = "Acquire::https::"+remotehost+"::Verify-Host";
    verify = _config->FindB(knob.c_str(),verify);
-   if (!verify)
-      default_verify = 0;
-   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verify);
+   int const default_verify = (verify == true) ? 2 : 0;
+   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, default_verify);
 
    // Also enforce issuer of server certificate using its cert
    string issuercert = _config->Find("Acquire::https::IssuerCert","");
@@ -199,6 +198,7 @@ bool HttpsMethod::Fetch(FetchItem *Itm)
       if (_config->FindB("Acquire::https::No-Store",
 		_config->FindB("Acquire::http::No-Store",false)) == true)
 	 headers = curl_slist_append(headers,"Cache-Control: no-store");
+      stringstream ss;
       ioprintf(ss, "Cache-Control: max-age=%u", _config->FindI("Acquire::https::Max-Age",
 		_config->FindI("Acquire::http::Max-Age",0)));
       headers = curl_slist_append(headers, ss.str().c_str());
@@ -219,7 +219,7 @@ bool HttpsMethod::Fetch(FetchItem *Itm)
    curl_easy_setopt(curl, CURLOPT_USERAGENT,
 	_config->Find("Acquire::https::User-Agent",
 		_config->Find("Acquire::http::User-Agent",
-			"Debian APT-CURL/1.0 ("VERSION")").c_str()).c_str());
+			"Debian APT-CURL/1.0 (" PACKAGE_VERSION ")").c_str()).c_str());
 
    // set timeout
    int const timeout = _config->FindI("Acquire::https::Timeout",
@@ -242,15 +242,28 @@ bool HttpsMethod::Fetch(FetchItem *Itm)
    // error handling
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_errorstr);
 
+   // If we ask for uncompressed files servers might respond with content-
+   // negotation which lets us end up with compressed files we do not support,
+   // see 657029, 657560 and co, so if we have no extension on the request
+   // ask for text only. As a sidenote: If there is nothing to negotate servers
+   // seem to be nice and ignore it.
+   if (_config->FindB("Acquire::https::SendAccept", _config->FindB("Acquire::http::SendAccept", true)) == true)
+   {
+      size_t const filepos = Itm->Uri.find_last_of('/');
+      string const file = Itm->Uri.substr(filepos + 1);
+      if (flExtension(file) == file)
+	 headers = curl_slist_append(headers, "Accept: text/*");
+   }
+
    // if we have the file send an if-range query with a range header
    if (stat(Itm->DestFile.c_str(),&SBuf) >= 0 && SBuf.st_size > 0)
    {
       char Buf[1000];
-      sprintf(Buf,"Range: bytes=%li-\r\nIf-Range: %s\r\n",
-	      (long)SBuf.st_size - 1,
-	      TimeRFC1123(SBuf.st_mtime).c_str());
+      sprintf(Buf, "Range: bytes=%li-", (long) SBuf.st_size - 1);
       headers = curl_slist_append(headers, Buf);
-   } 
+      sprintf(Buf, "If-Range: %s", TimeRFC1123(SBuf.st_mtime).c_str());
+      headers = curl_slist_append(headers, Buf);
+   }
    else if(Itm->LastModified > 0)
    {
       curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
@@ -272,14 +285,22 @@ bool HttpsMethod::Fetch(FetchItem *Itm)
    long curl_servdate;
    curl_easy_getinfo(curl, CURLINFO_FILETIME, &curl_servdate);
 
+   // If the server returns 200 OK but the If-Modified-Since condition is not
+   // met, CURLINFO_CONDITION_UNMET will be set to 1
+   long curl_condition_unmet = 0;
+   curl_easy_getinfo(curl, CURLINFO_CONDITION_UNMET, &curl_condition_unmet);
+
+   File->Close();
+
    // cleanup
    if(success != 0) 
    {
       _error->Error("%s", curl_errorstr);
+      // unlink, no need keep 401/404 page content in partial/
+      unlink(File->Name().c_str());
       Fail();
       return true;
    }
-   File->Close();
 
    // Timestamp
    struct utimbuf UBuf;
@@ -296,7 +317,7 @@ bool HttpsMethod::Fetch(FetchItem *Itm)
       Res.Filename = File->Name();
       Res.LastModified = Buf.st_mtime;
       Res.IMSHit = false;
-      if (curl_responsecode == 304)
+      if (curl_responsecode == 304 || curl_condition_unmet)
       {
 	 unlink(File->Name().c_str());
 	 Res.IMSHit = true;
@@ -311,7 +332,7 @@ bool HttpsMethod::Fetch(FetchItem *Itm)
    // take hashes
    Hashes Hash;
    FileFd Fd(Res.Filename, FileFd::ReadOnly);
-   Hash.AddFD(Fd.Fd(), Fd.Size());
+   Hash.AddFD(Fd);
    Res.TakeHashes(Hash);
    
    // keep apt updated

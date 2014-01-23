@@ -8,19 +8,23 @@
    ##################################################################### */
 									/*}}}*/
 // Include files							/*{{{*/
+#include<config.h>
+
 #include <apt-pkg/init.h>
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/error.h>
+#include <apt-pkg/pkgsystem.h>
+#include <apt-pkg/configuration.h>
 
-#include <apti18n.h>
-#include <config.h>
 #include <cstdlib>
 #include <sys/stat.h>
+
+#include <apti18n.h>
 									/*}}}*/
 
 #define Stringfy_(x) # x
 #define Stringfy(x)  Stringfy_(x)
-const char *pkgVersion = VERSION;
+const char *pkgVersion = PACKAGE_VERSION;
 const char *pkgLibVersion = Stringfy(APT_PKG_MAJOR) "."
                             Stringfy(APT_PKG_MINOR) "." 
                             Stringfy(APT_PKG_RELEASE);
@@ -33,60 +37,64 @@ const char *pkgLibVersion = Stringfy(APT_PKG_MAJOR) "."
 bool pkgInitConfig(Configuration &Cnf)
 {
    // General APT things
-   Cnf.Set("APT::Architecture", COMMON_ARCH);
-   Cnf.Set("APT::Build-Essential::", "build-essential");
-   Cnf.Set("APT::Install-Recommends", true);
-   Cnf.Set("APT::Install-Suggests", false);
-   Cnf.Set("Dir","/");
+   Cnf.CndSet("APT::Architecture", COMMON_ARCH);
+   if (Cnf.Exists("APT::Build-Essential") == false)
+      Cnf.Set("APT::Build-Essential::", "build-essential");
+   Cnf.CndSet("APT::Install-Recommends", true);
+   Cnf.CndSet("APT::Install-Suggests", false);
+   Cnf.CndSet("Dir","/");
    
    // State   
-   Cnf.Set("Dir::State","var/lib/apt/");
+   Cnf.CndSet("Dir::State","var/lib/apt/");
    
    /* Just in case something goes horribly wrong, we can fall back to the
       old /var/state paths.. */
    struct stat St;   
    if (stat("/var/lib/apt/.",&St) != 0 &&
        stat("/var/state/apt/.",&St) == 0)
-      Cnf.Set("Dir::State","var/state/apt/");
+      Cnf.CndSet("Dir::State","var/state/apt/");
        
-   Cnf.Set("Dir::State::lists","lists/");
-   Cnf.Set("Dir::State::cdroms","cdroms.list");
-   Cnf.Set("Dir::State::mirrors","mirrors/");
-   
+   Cnf.CndSet("Dir::State::lists","lists/");
+   Cnf.CndSet("Dir::State::cdroms","cdroms.list");
+   Cnf.CndSet("Dir::State::mirrors","mirrors/");
+
    // Cache
-   Cnf.Set("Dir::Cache","var/cache/apt/");
-   Cnf.Set("Dir::Cache::archives","archives/");
-   Cnf.Set("Dir::Cache::srcpkgcache","srcpkgcache.bin");
-   Cnf.Set("Dir::Cache::pkgcache","pkgcache.bin");
+   Cnf.CndSet("Dir::Cache","var/cache/apt/");
+   Cnf.CndSet("Dir::Cache::archives","archives/");
+   Cnf.CndSet("Dir::Cache::srcpkgcache","srcpkgcache.bin");
+   Cnf.CndSet("Dir::Cache::pkgcache","pkgcache.bin");
    
    // Configuration
-   Cnf.Set("Dir::Etc","etc/apt/");
-   Cnf.Set("Dir::Etc::sourcelist","sources.list");
-   Cnf.Set("Dir::Etc::sourceparts","sources.list.d");
-   Cnf.Set("Dir::Etc::vendorlist","vendors.list");
-   Cnf.Set("Dir::Etc::vendorparts","vendors.list.d");
-   Cnf.Set("Dir::Etc::main","apt.conf");
-   Cnf.Set("Dir::Etc::netrc", "auth.conf");
-   Cnf.Set("Dir::Etc::parts","apt.conf.d");
-   Cnf.Set("Dir::Etc::preferences","preferences");
-   Cnf.Set("Dir::Etc::preferencesparts","preferences.d");
-   Cnf.Set("Dir::Etc::trusted", "trusted.gpg");
-   Cnf.Set("Dir::Etc::trustedparts","trusted.gpg.d");
-   Cnf.Set("Dir::Bin::methods","/usr/lib/apt/methods");
-   Cnf.Set("Dir::Media::MountPath","/media/apt");
+   Cnf.CndSet("Dir::Etc","etc/apt/");
+   Cnf.CndSet("Dir::Etc::sourcelist","sources.list");
+   Cnf.CndSet("Dir::Etc::sourceparts","sources.list.d");
+   Cnf.CndSet("Dir::Etc::vendorlist","vendors.list");
+   Cnf.CndSet("Dir::Etc::vendorparts","vendors.list.d");
+   Cnf.CndSet("Dir::Etc::main","apt.conf");
+   Cnf.CndSet("Dir::Etc::netrc", "auth.conf");
+   Cnf.CndSet("Dir::Etc::parts","apt.conf.d");
+   Cnf.CndSet("Dir::Etc::preferences","preferences");
+   Cnf.CndSet("Dir::Etc::preferencesparts","preferences.d");
+   Cnf.CndSet("Dir::Etc::trusted", "trusted.gpg");
+   Cnf.CndSet("Dir::Etc::trustedparts","trusted.gpg.d");
+   Cnf.CndSet("Dir::Bin::methods","/usr/lib/apt/methods");
+   Cnf.CndSet("Dir::Bin::solvers::","/usr/lib/apt/solvers");
+   Cnf.CndSet("Dir::Media::MountPath","/media/apt");
 
    // State   
-   Cnf.Set("Dir::Log","var/log/apt");
-   Cnf.Set("Dir::Log::Terminal","term.log");
-   Cnf.Set("Dir::Log::History","history.log");
+   Cnf.CndSet("Dir::Log","var/log/apt");
+   Cnf.CndSet("Dir::Log::Terminal","term.log");
+   Cnf.CndSet("Dir::Log::History","history.log");
 
    Cnf.Set("Dir::Ignore-Files-Silently::", "~$");
    Cnf.Set("Dir::Ignore-Files-Silently::", "\\.disabled$");
    Cnf.Set("Dir::Ignore-Files-Silently::", "\\.bak$");
    Cnf.Set("Dir::Ignore-Files-Silently::", "\\.dpkg-[a-z]+$");
+   Cnf.Set("Dir::Ignore-Files-Silently::", "\\.save$");
+   Cnf.Set("Dir::Ignore-Files-Silently::", "\\.orig$");
 
-   // Translation
-   Cnf.Set("APT::Acquire::Translation", "environment");
+   // Default cdrom mount point
+   Cnf.CndSet("Acquire::cdrom::mount", "/media/cdrom/");
 
    bool Res = true;
    
@@ -94,22 +102,22 @@ bool pkgInitConfig(Configuration &Cnf)
    const char *Cfg = getenv("APT_CONFIG");
    if (Cfg != 0)
    {
-      if (FileExists(Cfg) == true)
+      if (RealFileExists(Cfg) == true)
 	 Res &= ReadConfigFile(Cnf,Cfg);
       else
-	 _error->WarningE("FileExists",_("Unable to read %s"),Cfg);
+	 _error->WarningE("RealFileExists",_("Unable to read %s"),Cfg);
    }
 
    // Read the configuration parts dir
-   string Parts = Cnf.FindDir("Dir::Etc::parts");
+   std::string Parts = Cnf.FindDir("Dir::Etc::parts");
    if (DirectoryExists(Parts) == true)
       Res &= ReadConfigDir(Cnf,Parts);
    else
       _error->WarningE("DirectoryExists",_("Unable to read %s"),Parts.c_str());
 
    // Read the main config file
-   string FName = Cnf.FindFile("Dir::Etc::main");
-   if (FileExists(FName) == true)
+   std::string FName = Cnf.FindFile("Dir::Etc::main");
+   if (RealFileExists(FName) == true)
       Res &= ReadConfigFile(Cnf,FName);
 
    if (Res == false)
@@ -135,7 +143,7 @@ bool pkgInitConfig(Configuration &Cnf)
 bool pkgInitSystem(Configuration &Cnf,pkgSystem *&Sys)
 {
    Sys = 0;
-   string Label = Cnf.Find("Apt::System","");
+   std::string Label = Cnf.Find("Apt::System","");
    if (Label.empty() == false)
    {
       Sys = pkgSystem::GetSystem(Label.c_str());

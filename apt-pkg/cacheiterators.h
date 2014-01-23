@@ -32,6 +32,7 @@
 #include<iterator>
 
 #include<string.h>
+
 // abstract Iterator template						/*{{{*/
 /* This template provides the very basic iterator methods we
    need to have for doing some walk-over-the-cache magic */
@@ -96,7 +97,7 @@ class pkgCache::GrpIterator: public Iterator<Group, GrpIterator> {
 
 	protected:
 	inline Group* OwnerPointer() const {
-		return Owner->GrpP;
+		return (Owner != 0) ? Owner->GrpP : 0;
 	};
 
 	public:
@@ -111,7 +112,7 @@ class pkgCache::GrpIterator: public Iterator<Group, GrpIterator> {
 
 	inline const char *Name() const {return S->Name == 0?0:Owner->StrP + S->Name;};
 	inline PkgIterator PackageList() const;
-	PkgIterator FindPkg(string Arch = "any") const;
+	PkgIterator FindPkg(std::string Arch = "any") const;
 	/** \brief find the package with the "best" architecture
 
 	    The best architecture is either the "native" or the first
@@ -137,7 +138,7 @@ class pkgCache::PkgIterator: public Iterator<Package, PkgIterator> {
 
 	protected:
 	inline Package* OwnerPointer() const {
-		return Owner->PkgP;
+		return (Owner != 0) ? Owner->PkgP : 0;
 	};
 
 	public:
@@ -184,7 +185,7 @@ class pkgCache::PkgIterator: public Iterator<Package, PkgIterator> {
 class pkgCache::VerIterator : public Iterator<Version, VerIterator> {
 	protected:
 	inline Version* OwnerPointer() const {
-		return Owner->VerP;
+		return (Owner != 0) ? Owner->VerP : 0;
 	};
 
 	public:
@@ -206,13 +207,8 @@ class pkgCache::VerIterator : public Iterator<Version, VerIterator> {
 	inline const char *VerStr() const {return S->VerStr == 0?0:Owner->StrP + S->VerStr;};
 	inline const char *Section() const {return S->Section == 0?0:Owner->StrP + S->Section;};
 	inline const char *Arch() const {
-		if(S->MultiArch == pkgCache::Version::All)
+		if ((S->MultiArch & pkgCache::Version::All) == pkgCache::Version::All)
 			return "all";
-		return S->ParentPkg == 0?0:Owner->StrP + ParentPkg()->Arch;
-	};
-	inline const char *Arch(bool const pseudo) const {
-		if(pseudo == false)
-			return Arch();
 		return S->ParentPkg == 0?0:Owner->StrP + ParentPkg()->Arch;
 	};
 	inline PkgIterator ParentPkg() const {return PkgIterator(*Owner,Owner->PkgP + S->ParentPkg);};
@@ -224,10 +220,9 @@ class pkgCache::VerIterator : public Iterator<Version, VerIterator> {
 	inline VerFileIterator FileList() const;
 	bool Downloadable() const;
 	inline const char *PriorityType() const {return Owner->Priority(S->Priority);};
-	string RelStr() const;
+	std::string RelStr() const;
 
 	bool Automatic() const;
-	bool Pseudo() const;
 	VerFileIterator NewestFile() const;
 
 	inline VerIterator(pkgCache &Owner,Version *Trg = 0) : Iterator<Version, VerIterator>(Owner, Trg) {
@@ -241,7 +236,7 @@ class pkgCache::VerIterator : public Iterator<Version, VerIterator> {
 class pkgCache::DescIterator : public Iterator<Description, DescIterator> {
 	protected:
 	inline Description* OwnerPointer() const {
-		return Owner->DescP;
+		return (Owner != 0) ? Owner->DescP : 0;
 	};
 
 	public:
@@ -270,7 +265,7 @@ class pkgCache::DepIterator : public Iterator<Dependency, DepIterator> {
 
 	protected:
 	inline Dependency* OwnerPointer() const {
-		return Owner->DepP;
+		return (Owner != 0) ? Owner->DepP : 0;
 	};
 
 	public:
@@ -287,6 +282,10 @@ class pkgCache::DepIterator : public Iterator<Dependency, DepIterator> {
 	inline PkgIterator ParentPkg() const {return PkgIterator(*Owner,Owner->PkgP + Owner->VerP[S->ParentVer].ParentPkg);};
 	inline bool Reverse() const {return Type == DepRev;};
 	bool IsCritical() const;
+	bool IsNegative() const;
+	bool IsIgnorable(PrvIterator const &Prv) const;
+	bool IsIgnorable(PkgIterator const &Pkg) const;
+	bool IsMultiArchImplicit() const;
 	void GlobOr(DepIterator &Start,DepIterator &End);
 	Version **AllTargets() const;
 	bool SmartTargetPkg(PkgIterator &Result) const;
@@ -315,7 +314,7 @@ class pkgCache::PrvIterator : public Iterator<Provides, PrvIterator> {
 
 	protected:
 	inline Provides* OwnerPointer() const {
-		return Owner->ProvideP;
+		return (Owner != 0) ? Owner->ProvideP : 0;
 	};
 
 	public:
@@ -331,8 +330,9 @@ class pkgCache::PrvIterator : public Iterator<Provides, PrvIterator> {
 	inline VerIterator OwnerVer() const {return VerIterator(*Owner,Owner->VerP + S->Version);};
 	inline PkgIterator OwnerPkg() const {return PkgIterator(*Owner,Owner->PkgP + Owner->VerP[S->Version].ParentPkg);};
 
-	inline PrvIterator() : Iterator<Provides, PrvIterator>(), Type(PrvVer) {};
+	bool IsMultiArchImplicit() const;
 
+	inline PrvIterator() : Iterator<Provides, PrvIterator>(), Type(PrvVer) {};
 	inline PrvIterator(pkgCache &Owner, Provides *Trg, Version*) :
 		Iterator<Provides, PrvIterator>(Owner, Trg), Type(PrvVer) {
 		if (S == 0)
@@ -349,7 +349,7 @@ class pkgCache::PrvIterator : public Iterator<Provides, PrvIterator> {
 class pkgCache::PkgFileIterator : public Iterator<PackageFile, PkgFileIterator> {
 	protected:
 	inline PackageFile* OwnerPointer() const {
-		return Owner->PkgFileP;
+		return (Owner != 0) ? Owner->PkgFileP : 0;
 	};
 
 	public:
@@ -370,7 +370,7 @@ class pkgCache::PkgFileIterator : public Iterator<PackageFile, PkgFileIterator> 
 	inline const char *IndexType() const {return S->IndexType == 0?0:Owner->StrP + S->IndexType;};
 
 	bool IsOk();
-	string RelStr();
+	std::string RelStr();
 
 	// Constructors
 	inline PkgFileIterator() : Iterator<PackageFile, PkgFileIterator>() {};
@@ -382,7 +382,7 @@ class pkgCache::PkgFileIterator : public Iterator<PackageFile, PkgFileIterator> 
 class pkgCache::VerFileIterator : public pkgCache::Iterator<VerFile, VerFileIterator> {
 	protected:
 	inline VerFile* OwnerPointer() const {
-		return Owner->VerFileP;
+		return (Owner != 0) ? Owner->VerFileP : 0;
 	};
 
 	public:
@@ -401,7 +401,7 @@ class pkgCache::VerFileIterator : public pkgCache::Iterator<VerFile, VerFileIter
 class pkgCache::DescFileIterator : public Iterator<DescFile, DescFileIterator> {
 	protected:
 	inline DescFile* OwnerPointer() const {
-		return Owner->DescFileP;
+		return (Owner != 0) ? Owner->DescFileP : 0;
 	};
 
 	public:

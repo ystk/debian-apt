@@ -11,9 +11,13 @@
 
    ##################################################################### */
 									/*}}}*/
+#include <config.h>
 
 #include <apt-pkg/configuration.h>
+#include <apt-pkg/strutl.h>
+#include <apt-pkg/error.h>
 #include <apt-pkg/fileutl.h>
+
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +27,7 @@
 
 #include "netrc.h"
 
+using std::string;
 
 /* Get user and password from .netrc when given a machine name */
 
@@ -35,22 +40,19 @@ enum {
 };
 
 /* make sure we have room for at least this size: */
-#define LOGINSIZE 64
-#define PASSWORDSIZE 64
+#define LOGINSIZE 256
+#define PASSWORDSIZE 256
 #define NETRC DOT_CHAR "netrc"
 
 /* returns -1 on failure, 0 if the host is found, 1 is the host isn't found */
-int parsenetrc (char *host, char *login, char *password, char *netrcfile = NULL)
+static int parsenetrc_string (char *host, std::string &login, std::string &password, char *netrcfile = NULL)
 {
   FILE *file;
   int retcode = 1;
-  int specific_login = (login[0] != 0);
+  int specific_login = (login.empty() == false);
   char *home = NULL;
   bool netrc_alloc = false;
-  int state = NOTHING;
 
-  char state_login = 0;        /* Found a login keyword */
-  char state_password = 0;     /* Found a password keyword */
   int state_our_login = false;  /* With specific_login,
                                    found *our* login name */
 
@@ -67,8 +69,7 @@ int parsenetrc (char *host, char *login, char *password, char *netrcfile = NULL)
     if (!home)
       return -1;
 
-    asprintf (&netrcfile, "%s%s%s", home, DIR_CHAR, NETRC);
-    if(!netrcfile)
+    if (asprintf (&netrcfile, "%s%s%s", home, DIR_CHAR, NETRC) == -1 || netrcfile == NULL)
       return -1;
     else
       netrc_alloc = true;
@@ -79,12 +80,17 @@ int parsenetrc (char *host, char *login, char *password, char *netrcfile = NULL)
     char *tok;
     char *tok_buf;
     bool done = false;
-    char netrcbuffer[256];
+    char *netrcbuffer = NULL;
+    size_t netrcbuffer_size = 0;
 
-    while (!done && fgets(netrcbuffer, sizeof (netrcbuffer), file)) {
+    int state = NOTHING;
+    char state_login = 0;        /* Found a login keyword */
+    char state_password = 0;     /* Found a password keyword */
+
+    while (!done && getline(&netrcbuffer, &netrcbuffer_size, file) != -1) {
       tok = strtok_r (netrcbuffer, " \t\n", &tok_buf);
       while (!done && tok) {
-        if(login[0] && password[0]) {
+        if(login.empty() == false && password.empty() == false) {
           done = true;
           break;
         }
@@ -116,13 +122,13 @@ int parsenetrc (char *host, char *login, char *password, char *netrcfile = NULL)
           /* we are now parsing sub-keywords concerning "our" host */
           if (state_login) {
             if (specific_login)
-              state_our_login = !strcasecmp (login, tok);
+              state_our_login = !strcasecmp (login.c_str(), tok);
             else
-              strncpy (login, tok, LOGINSIZE - 1);
+              login = tok;
             state_login = 0;
           } else if (state_password) {
             if (state_our_login || !specific_login)
-              strncpy (password, tok, PASSWORDSIZE - 1);
+              password = tok;
             state_password = 0;
           } else if (!strcasecmp ("login", tok))
             state_login = 1;
@@ -138,8 +144,9 @@ int parsenetrc (char *host, char *login, char *password, char *netrcfile = NULL)
 
         tok = strtok_r (NULL, " \t\n", &tok_buf);
       } /* while(tok) */
-    } /* while fgets() */
+    } /* while getline() */
 
+    free(netrcbuffer);
     fclose(file);
   }
 
@@ -148,6 +155,18 @@ int parsenetrc (char *host, char *login, char *password, char *netrcfile = NULL)
 
   return retcode;
 }
+// for some unknown reason this method is exported so keep a compatible interface for now …
+int parsenetrc (char *host, char *login, char *password, char *netrcfile = NULL)
+{
+   std::string login_string, password_string;
+   int const ret = parsenetrc_string(host, login_string, password_string, netrcfile);
+   if (ret < 0)
+      return ret;
+   strncpy(login, login_string.c_str(), LOGINSIZE - 1);
+   strncpy(password, password_string.c_str(), PASSWORDSIZE - 1);
+   return ret;
+}
+
 
 void maybe_add_auth (URI &Uri, string NetRCFile)
 {
@@ -158,39 +177,42 @@ void maybe_add_auth (URI &Uri, string NetRCFile)
   {
     if (NetRCFile.empty () == false)
     {
-      char login[64] = "";
-      char password[64] = "";
-      char *netrcfile = strdupa (NetRCFile.c_str ());
+       std::string login, password;
+      char *netrcfile = strdup(NetRCFile.c_str());
 
       // first check for a generic host based netrc entry
-      char *host = strdupa (Uri.Host.c_str ());
-      if (host && parsenetrc (host, login, password, netrcfile) == 0)
+      char *host = strdup(Uri.Host.c_str());
+      if (host && parsenetrc_string(host, login, password, netrcfile) == 0)
       {
 	 if (_config->FindB("Debug::Acquire::netrc", false) == true)
 	    std::clog << "host: " << host 
 		      << " user: " << login
-		      << " pass-size: " << strlen(password)
+		      << " pass-size: " << password.size()
 		      << std::endl;
-        Uri.User = string (login);
-        Uri.Password = string (password);
+        Uri.User = login;
+        Uri.Password = password;
+	free(netrcfile);
+	free(host);
 	return;
       }
+      free(host);
 
       // if host did not work, try Host+Path next, this will trigger
       // a lookup uri.startswith(host) in the netrc file parser (because
       // of the "/"
-      char *hostpath = strdupa (string(Uri.Host+Uri.Path).c_str ());
-      if (hostpath && parsenetrc (hostpath, login, password, netrcfile) == 0)
+      char *hostpath = strdup(string(Uri.Host+Uri.Path).c_str());
+      if (hostpath && parsenetrc_string(hostpath, login, password, netrcfile) == 0)
       {
 	 if (_config->FindB("Debug::Acquire::netrc", false) == true)
 	    std::clog << "hostpath: " << hostpath
 		      << " user: " << login
-		      << " pass-size: " << strlen(password)
+		      << " pass-size: " << password.size()
 		      << std::endl;
-	 Uri.User = string (login);
-	 Uri.Password = string (password);
-	 return;
+	 Uri.User = login;
+	 Uri.Password = password;
       }
+      free(netrcfile);
+      free(hostpath);
     }
   }
 }

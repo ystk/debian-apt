@@ -9,6 +9,8 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/acquire-method.h>
@@ -22,6 +24,8 @@
 #include <errno.h>
 #include <apti18n.h>
 									/*}}}*/
+
+const char *Prog;
 
 class GzipMethod : public pkgAcqMethod
 {
@@ -39,18 +43,26 @@ class GzipMethod : public pkgAcqMethod
 bool GzipMethod::Fetch(FetchItem *Itm)
 {
    URI Get = Itm->Uri;
-   string Path = Get.Host + Get.Path; // To account for relative paths
+   std::string Path = Get.Host + Get.Path; // To account for relative paths
    
    FetchResult Res;
    Res.Filename = Itm->DestFile;
    URIStart(Res);
-   
-   // Open the source and destination files
-   FileFd From(Path,FileFd::ReadOnlyGzip);
 
-   // FIXME add an error message saying that empty files can't be valid archives
+   std::vector<APT::Configuration::Compressor> const compressors = APT::Configuration::getCompressors();
+   std::vector<APT::Configuration::Compressor>::const_iterator compressor = compressors.begin();
+   for (; compressor != compressors.end(); ++compressor)
+      if (compressor->Name == Prog)
+	 break;
+   if (compressor == compressors.end())
+      return _error->Error("Extraction of file %s requires unknown compressor %s", Path.c_str(), Prog);
+
+   // Open the source and destination files
+   FileFd From;
+   From.Open(Path, FileFd::ReadOnly, *compressor);
+
    if(From.FileSize() == 0)
-      return false;
+      return _error->Error(_("Empty files can't be valid archives"));
 
    FileFd To(Itm->DestFile,FileFd::WriteAtomic);   
    To.EraseOnFailure();
@@ -63,7 +75,7 @@ bool GzipMethod::Fetch(FetchItem *Itm)
    while (1) 
    {
       unsigned char Buffer[4*1024];
-      unsigned long Count;
+      unsigned long long Count = 0;
       
       if (!From.Read(Buffer,sizeof(Buffer),&Count))
       {
@@ -115,6 +127,9 @@ bool GzipMethod::Fetch(FetchItem *Itm)
 int main(int argc, char *argv[])
 {
    setlocale(LC_ALL, "");
+
+   Prog = strrchr(argv[0],'/');
+   ++Prog;
 
    GzipMethod Mth;
    return Mth.Run();

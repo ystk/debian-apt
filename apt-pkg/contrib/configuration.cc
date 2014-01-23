@@ -15,15 +15,18 @@
    ##################################################################### */
 									/*}}}*/
 // Include files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/configuration.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/fileutl.h>
-#include <apti18n.h>
 
 #include <vector>
 #include <fstream>
 #include <iostream>
+
+#include <apti18n.h>
 
 using namespace std;
 									/*}}}*/
@@ -168,42 +171,60 @@ string Configuration::Find(const char *Name,const char *Default) const
 string Configuration::FindFile(const char *Name,const char *Default) const
 {
    const Item *RootItem = Lookup("RootDir");
-   std::string rootDir =  (RootItem == 0) ? "" : RootItem->Value;
-   if(rootDir.size() > 0 && rootDir[rootDir.size() - 1] != '/')
-     rootDir.push_back('/');
+   std::string result =  (RootItem == 0) ? "" : RootItem->Value;
+   if(result.empty() == false && result[result.size() - 1] != '/')
+     result.push_back('/');
 
    const Item *Itm = Lookup(Name);
    if (Itm == 0 || Itm->Value.empty() == true)
    {
-      if (Default == 0)
-	 return rootDir;
-      else
-	 return rootDir + Default;
+      if (Default != 0)
+	 result.append(Default);
    }
-   
-   string val = Itm->Value;
-   while (Itm->Parent != 0 && Itm->Parent->Value.empty() == false)
-   {	 
-      // Absolute
-      if (val.length() >= 1 && val[0] == '/')
-         break;
+   else
+   {
+      string val = Itm->Value;
+      while (Itm->Parent != 0)
+      {
+	 if (Itm->Parent->Value.empty() == true)
+	 {
+	    Itm = Itm->Parent;
+	    continue;
+	 }
 
-      // ~/foo or ./foo 
-      if (val.length() >= 2 && (val[0] == '~' || val[0] == '.') && val[1] == '/')
-	 break;
-	 
-      // ../foo 
-      if (val.length() >= 3 && val[0] == '.' && val[1] == '.' && val[2] == '/')
-	 break;
-      
-      if (Itm->Parent->Value.end()[-1] != '/')
-	 val.insert(0, "/");
+	 // Absolute
+	 if (val.length() >= 1 && val[0] == '/')
+	 {
+	    if (val.compare(0, 9, "/dev/null") == 0)
+	       val.erase(9);
+	    break;
+	 }
 
-      val.insert(0, Itm->Parent->Value);
-      Itm = Itm->Parent;
+	 // ~/foo or ./foo
+	 if (val.length() >= 2 && (val[0] == '~' || val[0] == '.') && val[1] == '/')
+	    break;
+
+	 // ../foo
+	 if (val.length() >= 3 && val[0] == '.' && val[1] == '.' && val[2] == '/')
+	    break;
+
+	 if (Itm->Parent->Value.end()[-1] != '/')
+	    val.insert(0, "/");
+
+	 val.insert(0, Itm->Parent->Value);
+	 Itm = Itm->Parent;
+      }
+      result.append(val);
    }
 
-   return rootDir + val;
+   // do some normalisation by removing // and /./ from the path
+   size_t found = string::npos;
+   while ((found = result.find("/./")) != string::npos)
+      result.replace(found, 3, "/");
+   while ((found = result.find("//")) != string::npos)
+      result.replace(found, 2, "/");
+
+   return result;
 }
 									/*}}}*/
 // Configuration::FindDir - Find a directory name			/*{{{*/
@@ -213,7 +234,12 @@ string Configuration::FindDir(const char *Name,const char *Default) const
 {
    string Res = FindFile(Name,Default);
    if (Res.end()[-1] != '/')
+   {
+      size_t const found = Res.rfind("/dev/null");
+      if (found != string::npos && found == Res.size() - 9)
+	 return Res; // /dev/null returning
       return Res + '/';
+   }
    return Res;
 }
 									/*}}}*/
@@ -316,6 +342,19 @@ void Configuration::CndSet(const char *Name,const string &Value)
       return;
    if (Itm->Value.empty() == true)
       Itm->Value = Value;
+}
+									/*}}}*/
+// Configuration::Set - Set an integer value				/*{{{*/
+// ---------------------------------------------------------------------
+/* */
+void Configuration::CndSet(const char *Name,int const Value)
+{
+   Item *Itm = Lookup(Name,true);
+   if (Itm == 0 || Itm->Value.empty() == false)
+      return;
+   char S[300];
+   snprintf(S,sizeof(S),"%i",Value);
+   Itm->Value = S;
 }
 									/*}}}*/
 // Configuration::Set - Set a value					/*{{{*/
@@ -460,24 +499,80 @@ bool Configuration::ExistsAny(const char *Name) const
 /* Dump the entire configuration space */
 void Configuration::Dump(ostream& str)
 {
-   /* Write out all of the configuration directives by walking the 
+   Dump(str, NULL, "%f \"%v\";\n", true);
+}
+void Configuration::Dump(ostream& str, char const * const root,
+			 char const * const formatstr, bool const emptyValue)
+{
+   const Configuration::Item* Top = Tree(root);
+   if (Top == 0)
+      return;
+   const Configuration::Item* const Root = (root == NULL) ? NULL : Top;
+   std::vector<std::string> const format = VectorizeString(formatstr, '%');
+
+   /* Write out all of the configuration directives by walking the
       configuration tree */
-   const Configuration::Item *Top = Tree(0);
-   for (; Top != 0;)
-   {
-      str << Top->FullTag() << " \"" << Top->Value << "\";" << endl;
-      
+   do {
+      if (emptyValue == true || Top->Value.empty() == emptyValue)
+      {
+	 std::vector<std::string>::const_iterator f = format.begin();
+	 str << *f;
+	 for (++f; f != format.end(); ++f)
+	 {
+	    if (f->empty() == true)
+	    {
+	       ++f;
+	       str << '%' << *f;
+	       continue;
+	    }
+	    char const type = (*f)[0];
+	    if (type == 'f')
+	       str << Top->FullTag();
+	    else if (type == 't')
+	       str << Top->Tag;
+	    else if (type == 'v')
+	       str << Top->Value;
+	    else if (type == 'F')
+	       str << QuoteString(Top->FullTag(), "=\"\n");
+	    else if (type == 'T')
+	       str << QuoteString(Top->Tag, "=\"\n");
+	    else if (type == 'V')
+	       str << QuoteString(Top->Value, "=\"\n");
+	    else if (type == 'n')
+	       str << "\n";
+	    else if (type == 'N')
+	       str << "\t";
+	    else
+	       str << '%' << type;
+	    str << f->c_str() + 1;
+	 }
+      }
+
       if (Top->Child != 0)
       {
 	 Top = Top->Child;
 	 continue;
       }
-      
+
       while (Top != 0 && Top->Next == 0)
 	 Top = Top->Parent;
       if (Top != 0)
 	 Top = Top->Next;
-   }
+
+      if (Root != NULL)
+      {
+	 const Configuration::Item* I = Top;
+	 while(I != 0)
+	 {
+	    if (I == Root)
+	       break;
+	    else
+	       I = I->Parent;
+	 }
+	 if (I == 0)
+	    break;
+      }
+   } while (Top != 0);
 }
 									/*}}}*/
 
@@ -659,9 +754,9 @@ bool ReadConfigFile(Configuration &Conf,const string &FName,bool const &AsSectio
 	    // Put the last fragment into the buffer
 	    std::string::const_iterator NonWhitespaceStart = Start;
 	    std::string::const_iterator NonWhitespaceStop = I;
-	    for (; NonWhitespaceStart != I && isspace(*NonWhitespaceStart) != 0; NonWhitespaceStart++)
+	    for (; NonWhitespaceStart != I && isspace(*NonWhitespaceStart) != 0; ++NonWhitespaceStart)
 	      ;
-	    for (; NonWhitespaceStop != NonWhitespaceStart && isspace(NonWhitespaceStop[-1]) != 0; NonWhitespaceStop--)
+	    for (; NonWhitespaceStop != NonWhitespaceStart && isspace(NonWhitespaceStop[-1]) != 0; --NonWhitespaceStop)
 	      ;
 	    if (LineBuffer.empty() == false && NonWhitespaceStop - NonWhitespaceStart != 0)
 	       LineBuffer += ' ';
@@ -837,7 +932,7 @@ bool ReadConfigDir(Configuration &Conf,const string &Dir,
    vector<string> const List = GetListOfFilesInDir(Dir, "conf", true, true);
 
    // Read the files
-   for (vector<string>::const_iterator I = List.begin(); I != List.end(); I++)
+   for (vector<string>::const_iterator I = List.begin(); I != List.end(); ++I)
       if (ReadConfigFile(Conf,*I,AsSectional,Depth) == false)
 	 return false;
    return true;
@@ -857,10 +952,10 @@ Configuration::MatchAgainstConfig::MatchAgainstConfig(char const * Config)
       {
 	 regfree(p);
 	 delete p;
-	 clearPatterns();
-	 _error->Warning("Regex compilation error for '%s' in configuration option '%s'",
-				s->c_str(), Config);
-	 return;
+	 _error->Warning("Invalid regular expression '%s' in configuration "
+                         "option '%s' will be ignored.",
+                         s->c_str(), Config);
+	 continue;
       }
    }
    if (strings.size() == 0)
@@ -881,6 +976,7 @@ void Configuration::MatchAgainstConfig::clearPatterns()
       regfree(*p);
       delete *p;
    }
+   patterns.clear();
 }
 									/*}}}*/
 // MatchAgainstConfig::Match - returns true if a pattern matches	/*{{{*/

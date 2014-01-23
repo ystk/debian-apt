@@ -11,24 +11,27 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include<config.h>
+
 #include <apt-pkg/srcrecords.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/sourcelist.h>
 #include <apt-pkg/strutl.h>
-    
-#include <apti18n.h>    
+#include <apt-pkg/metaindex.h>
+
+#include <apti18n.h>
 									/*}}}*/
 
 // SrcRecords::pkgSrcRecords - Constructor				/*{{{*/
 // ---------------------------------------------------------------------
 /* Open all the source index files */
-pkgSrcRecords::pkgSrcRecords(pkgSourceList &List) : Files(0), Current(0)
+pkgSrcRecords::pkgSrcRecords(pkgSourceList &List) : d(NULL), Files(0), Current(0)
 {
-   for (pkgSourceList::const_iterator I = List.begin(); I != List.end(); I++)
+   for (pkgSourceList::const_iterator I = List.begin(); I != List.end(); ++I)
    {
-      vector<pkgIndexFile *> *Indexes = (*I)->GetIndexFiles();
-      for (vector<pkgIndexFile *>::const_iterator J = Indexes->begin();
-	   J != Indexes->end(); J++)
+      std::vector<pkgIndexFile *> *Indexes = (*I)->GetIndexFiles();
+      for (std::vector<pkgIndexFile *>::const_iterator J = Indexes->begin();
+	   J != Indexes->end(); ++J)
       {
          Parser* P = (*J)->CreateSrcParser();
 	 if (_error->PendingError() == true)
@@ -55,7 +58,7 @@ pkgSrcRecords::pkgSrcRecords(pkgSourceList &List) : Files(0), Current(0)
 pkgSrcRecords::~pkgSrcRecords()
 {
    // Blow away all the parser objects
-   for(vector<Parser*>::iterator I = Files.begin(); I != Files.end(); ++I)
+   for(std::vector<Parser*>::iterator I = Files.begin(); I != Files.end(); ++I)
       delete *I;
 }
 									/*}}}*/
@@ -65,8 +68,8 @@ pkgSrcRecords::~pkgSrcRecords()
 bool pkgSrcRecords::Restart()
 {
    Current = Files.begin();
-   for (vector<Parser*>::iterator I = Files.begin();
-        I != Files.end(); I++)
+   for (std::vector<Parser*>::iterator I = Files.begin();
+        I != Files.end(); ++I)
       (*I)->Restart();
    
    return true;
@@ -89,7 +92,7 @@ pkgSrcRecords::Parser *pkgSrcRecords::Find(const char *Package,bool const &SrcOn
       {
 	 if (_error->PendingError() == true)
 	    return 0;
-	 Current++;
+	 ++Current;
 	 if (Current == Files.end())
 	    return 0;
       }
@@ -107,7 +110,7 @@ pkgSrcRecords::Parser *pkgSrcRecords::Find(const char *Package,bool const &SrcOn
       
       // Check for a binary hit
       const char **I = (*Current)->Binaries();
-      for (; I != 0 && *I != 0; I++)
+      for (; I != 0 && *I != 0; ++I)
 	 if (strcmp(Package,*I) == 0)
 	    return *Current;
    }

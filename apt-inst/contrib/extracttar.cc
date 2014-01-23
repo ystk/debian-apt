@@ -16,8 +16,10 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
-#include <apt-pkg/extracttar.h>
+#include<config.h>
 
+#include <apt-pkg/dirstream.h>
+#include <apt-pkg/extracttar.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/configuration.h>
@@ -28,6 +30,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <iostream>
+
 #include <apti18n.h>
 									/*}}}*/
 
@@ -143,7 +146,7 @@ bool ExtractTar::StartGzip()
    }
 
    // Fix up our FDs
-   InFd.Fd(Pipes[0]);
+   InFd.OpenDescriptor(Pipes[0], FileFd::ReadOnly, FileFd::None, true);
    close(Pipes[1]);
    return true;
 }
@@ -195,10 +198,14 @@ bool ExtractTar::Go(pkgDirStream &Stream)
       // Decode all of the fields
       pkgDirStream::Item Itm;
       if (StrToNum(Tar->Mode,Itm.Mode,sizeof(Tar->Mode),8) == false ||
-	  StrToNum(Tar->UserID,Itm.UID,sizeof(Tar->UserID),8) == false ||
-	  StrToNum(Tar->GroupID,Itm.GID,sizeof(Tar->GroupID),8) == false ||
-	  StrToNum(Tar->Size,Itm.Size,sizeof(Tar->Size),8) == false ||
-	  StrToNum(Tar->MTime,Itm.MTime,sizeof(Tar->MTime),8) == false ||
+          (Base256ToNum(Tar->UserID,Itm.UID,8) == false &&
+	     StrToNum(Tar->UserID,Itm.UID,sizeof(Tar->UserID),8) == false) ||
+          (Base256ToNum(Tar->GroupID,Itm.GID,8) == false &&
+	     StrToNum(Tar->GroupID,Itm.GID,sizeof(Tar->GroupID),8) == false) ||
+          (Base256ToNum(Tar->Size,Itm.Size,12) == false &&
+	     StrToNum(Tar->Size,Itm.Size,sizeof(Tar->Size),8) == false) ||
+          (Base256ToNum(Tar->MTime,Itm.MTime,12) == false &&
+	     StrToNum(Tar->MTime,Itm.MTime,sizeof(Tar->MTime),8) == false) ||
 	  StrToNum(Tar->Major,Itm.Major,sizeof(Tar->Major),8) == false ||
 	  StrToNum(Tar->Minor,Itm.Minor,sizeof(Tar->Minor),8) == false)
 	 return _error->Error(_("Corrupted archive"));
@@ -332,7 +339,7 @@ bool ExtractTar::Go(pkgDirStream &Stream)
       }
       
       // And finish up
-      if (Itm.Size >= 0 && BadRecord == false)
+      if (BadRecord == false)
 	 if (Stream.FinishedFile(Itm,Fd) == false)
 	    return false;
       

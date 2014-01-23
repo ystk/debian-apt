@@ -1927,7 +1927,7 @@ msgstr ""
 #: apt-pkg/contrib/mmap.cc:234
 #, c-format
 msgid ""
-"Dynamic MMap ran out of room. Please increase the size of APT::Cache-Limit. "
+"Dynamic MMap ran out of room. Please increase the size of APT::Cache-Start. "
 "Current value: %lu. (man 5 apt.conf)"
 msgstr ""
 
@@ -2562,8 +2562,8 @@ msgstr ""
 #: apt-pkg/acquire-item.cc:1275
 #, c-format
 msgid ""
-"I wasn't able to locate file for the %s package. This might mean you need to "
-"manually fix this package."
+"I wasn't able to locate a file for the %s package. This might mean you need "
+"to manually fix this package."
 msgstr ""
 
 #: apt-pkg/acquire-item.cc:1316

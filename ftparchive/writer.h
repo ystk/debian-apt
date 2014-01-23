@@ -22,7 +22,6 @@
 #include <set>
 
 #include "cachedb.h"
-#include "multicompress.h"
 #include "override.h"
 #include "apt-ftparchive.h"
 
@@ -31,7 +30,7 @@ using std::cout;
 using std::endl;
 using std::vector;
 using std::map;
-    
+
 class FTWScanner
 {
    protected:
@@ -48,7 +47,7 @@ class FTWScanner
    static int ScannerFile(const char *File, bool const &ReadLink);
 
    bool Delink(string &FileName,const char *OriginalPath,
-	       unsigned long &Bytes,off_t const &FileSize);
+	       unsigned long long &Bytes,unsigned long long const &FileSize);
 
    inline void NewLine(unsigned const &Priority)
    {
@@ -60,6 +59,10 @@ class FTWScanner
    }
    
    public:
+   bool DoMD5;
+   bool DoSHA1;
+   bool DoSHA256;
+   bool DoSHA512;
 
    unsigned long DeLinkLimit;
    string InternalPrefix;
@@ -69,11 +72,15 @@ class FTWScanner
    bool LoadFileList(string const &BaseDir,string const &File);
    void ClearPatterns() { Patterns.clear(); };
    void AddPattern(string const &Pattern) { Patterns.push_back(Pattern); };
+   void AddPattern(char const *Pattern) { Patterns.push_back(Pattern); };
+   void AddPatterns(std::vector<std::string> const &patterns) { Patterns.insert(Patterns.end(), patterns.begin(), patterns.end()); };
    bool SetExts(string const &Vals);
       
    FTWScanner(string const &Arch = string());
    virtual ~FTWScanner() {};
 };
+
+class MultiCompress;
 
 class TranslationWriter
 {
@@ -101,9 +108,6 @@ class PackagesWriter : public FTWScanner
    public:
 
    // Some flags
-   bool DoMD5;
-   bool DoSHA1;
-   bool DoSHA256;
    bool DoAlwaysStat;
    bool NoOverride;
    bool DoContents;
@@ -156,7 +160,7 @@ class SourcesWriter : public FTWScanner
    Override BOver;
    Override SOver;
    char *Buffer;
-   unsigned long BufSize;
+   unsigned long long BufSize;
    
    public:
 
@@ -193,8 +197,9 @@ protected:
       string MD5;
       string SHA1;
       string SHA256;
+      string SHA512;
       // Limited by FileFd::Size()
-      unsigned long size;
+      unsigned long long size;
       ~CheckSum() {};
    };
    map<string,struct CheckSum> CheckSums;

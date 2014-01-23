@@ -25,8 +25,11 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/acquire-method.h>
+#include <apt-pkg/configuration.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/hashes.h>
 #include <apt-pkg/netrc.h>
@@ -39,10 +42,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <climits>
 #include <iostream>
 #include <map>
-#include <apti18n.h>
-
 
 // Internet stuff
 #include <netdb.h>
@@ -51,27 +53,29 @@
 #include "connect.h"
 #include "rfc2553emu.h"
 #include "http.h"
+
+#include <apti18n.h>
 									/*}}}*/
 using namespace std;
 
 string HttpMethod::FailFile;
 int HttpMethod::FailFd = -1;
 time_t HttpMethod::FailTime = 0;
-unsigned long PipelineDepth = 10;
+unsigned long PipelineDepth = 0;
 unsigned long TimeOut = 120;
 bool AllowRedirect = false;
 bool Debug = false;
 URI Proxy;
 
-unsigned long CircleBuf::BwReadLimit=0;
-unsigned long CircleBuf::BwTickReadData=0;
+unsigned long long CircleBuf::BwReadLimit=0;
+unsigned long long CircleBuf::BwTickReadData=0;
 struct timeval CircleBuf::BwReadTick={0,0};
 const unsigned int CircleBuf::BW_HZ=10;
  
 // CircleBuf::CircleBuf - Circular input buffer				/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-CircleBuf::CircleBuf(unsigned long Size) : Size(Size), Hash(0)
+CircleBuf::CircleBuf(unsigned long long Size) : Size(Size), Hash(0)
 {
    Buf = new unsigned char[Size];
    Reset();
@@ -87,7 +91,7 @@ void CircleBuf::Reset()
    InP = 0;
    OutP = 0;
    StrPos = 0;
-   MaxGet = (unsigned int)-1;
+   MaxGet = (unsigned long long)-1;
    OutQueue = string();
    if (Hash != 0)
    {
@@ -102,7 +106,7 @@ void CircleBuf::Reset()
    is non-blocking.. */
 bool CircleBuf::Read(int Fd)
 {
-   unsigned long BwReadMax;
+   unsigned long long BwReadMax;
 
    while (1)
    {
@@ -117,7 +121,7 @@ bool CircleBuf::Read(int Fd)
 	 struct timeval now;
 	 gettimeofday(&now,0);
 
-	 unsigned long d = (now.tv_sec-CircleBuf::BwReadTick.tv_sec)*1000000 +
+	 unsigned long long d = (now.tv_sec-CircleBuf::BwReadTick.tv_sec)*1000000 +
 	    now.tv_usec-CircleBuf::BwReadTick.tv_usec;
 	 if(d > 1000000/BW_HZ) {
 	    CircleBuf::BwReadTick = now;
@@ -131,7 +135,7 @@ bool CircleBuf::Read(int Fd)
       }
 
       // Write the buffer segment
-      int Res;
+      ssize_t Res;
       if(CircleBuf::BwReadLimit) {
 	 Res = read(Fd,Buf + (InP%Size), 
 		    BwReadMax > LeftRead() ? LeftRead() : BwReadMax);
@@ -180,7 +184,7 @@ void CircleBuf::FillOut()
 	 return;
       
       // Write the buffer segment
-      unsigned long Sz = LeftRead();
+      unsigned long long Sz = LeftRead();
       if (OutQueue.length() - StrPos < Sz)
 	 Sz = OutQueue.length() - StrPos;
       memcpy(Buf + (InP%Size),OutQueue.c_str() + StrPos,Sz);
@@ -214,7 +218,7 @@ bool CircleBuf::Write(int Fd)
 	 return true;
       
       // Write the buffer segment
-      int Res;
+      ssize_t Res;
       Res = write(Fd,Buf + (OutP%Size),LeftWrite());
 
       if (Res == 0)
@@ -240,7 +244,7 @@ bool CircleBuf::Write(int Fd)
 bool CircleBuf::WriteTillEl(string &Data,bool Single)
 {
    // We cheat and assume it is unneeded to have more than one buffer load
-   for (unsigned long I = OutP; I < InP; I++)
+   for (unsigned long long I = OutP; I < InP; I++)
    {      
       if (Buf[I%Size] != '\n')
 	 continue;
@@ -258,7 +262,7 @@ bool CircleBuf::WriteTillEl(string &Data,bool Single)
       Data = "";
       while (OutP < I)
       {
-	 unsigned long Sz = LeftWrite();
+	 unsigned long long Sz = LeftWrite();
 	 if (Sz == 0)
 	    return false;
 	 if (I - OutP < Sz)
@@ -286,6 +290,11 @@ void CircleBuf::Stats()
    clog << "Got " << InP << " in " << Diff << " at " << InP/Diff << endl;*/
 }
 									/*}}}*/
+CircleBuf::~CircleBuf()
+{
+   delete [] Buf;
+   delete Hash;
+}
 
 // ServerState::ServerState - Constructor				/*{{{*/
 // ---------------------------------------------------------------------
@@ -402,10 +411,10 @@ ServerState::RunHeadersResult ServerState::RunHeaders()
       if (Debug == true)
 	 clog << Data;
       
-      for (string::const_iterator I = Data.begin(); I < Data.end(); I++)
+      for (string::const_iterator I = Data.begin(); I < Data.end(); ++I)
       {
 	 string::const_iterator J = I;
-	 for (; J != Data.end() && *J != '\n' && *J != '\r';J++);
+	 for (; J != Data.end() && *J != '\n' && *J != '\r'; ++J);
 	 if (HeaderLine(string(I,J)) == false)
 	    return RUN_HEADERS_PARSE_ERROR;
 	 I = J;
@@ -453,7 +462,7 @@ bool ServerState::RunData()
 	    return false;
 	 	 
 	 // See if we are done
-	 unsigned long Len = strtol(Data.c_str(),0,16);
+	 unsigned long long Len = strtoull(Data.c_str(),0,16);
 	 if (Len == 0)
 	 {
 	    In.Limit(-1);
@@ -526,10 +535,6 @@ bool ServerState::HeaderLine(string Line)
    if (Line.empty() == true)
       return true;
 
-   // The http server might be trying to do something evil.
-   if (Line.length() >= MAXLEN)
-      return _error->Error(_("Got a single header line over %u chars"),MAXLEN);
-
    string::size_type Pos = Line.find(' ');
    if (Pos == string::npos || Pos+1 > Line.length())
    {
@@ -553,7 +558,7 @@ bool ServerState::HeaderLine(string Line)
       // Evil servers return no version
       if (Line[4] == '/')
       {
-	 int const elements = sscanf(Line.c_str(),"HTTP/%u.%u %u%[^\n]",&Major,&Minor,&Result,Code);
+	 int const elements = sscanf(Line.c_str(),"HTTP/%3u.%3u %3u%359[^\n]",&Major,&Minor,&Result,Code);
 	 if (elements == 3)
 	 {
 	    Code[0] = '\0';
@@ -567,7 +572,7 @@ bool ServerState::HeaderLine(string Line)
       {
 	 Major = 0;
 	 Minor = 9;
-	 if (sscanf(Line.c_str(),"HTTP %u%[^\n]",&Result,Code) != 2)
+	 if (sscanf(Line.c_str(),"HTTP %3u%359[^\n]",&Result,Code) != 2)
 	    return _error->Error(_("The HTTP server sent an invalid reply header"));
       }
 
@@ -577,7 +582,7 @@ bool ServerState::HeaderLine(string Line)
 	 Persistent = false;
       else
       {
-	 if (Major == 1 && Minor <= 0)
+	 if (Major == 1 && Minor == 0)
 	    Persistent = false;
 	 else
 	    Persistent = true;
@@ -595,9 +600,10 @@ bool ServerState::HeaderLine(string Line)
       // The length is already set from the Content-Range header
       if (StartPos != 0)
 	 return true;
-      
-      if (sscanf(Val.c_str(),"%lu",&Size) != 1)
-	 return _error->Error(_("The HTTP server sent an invalid Content-Length header"));
+
+      Size = strtoull(Val.c_str(), NULL, 10);
+      if (Size >= std::numeric_limits<unsigned long long>::max())
+	 return _error->Errno("HeaderLine", _("The HTTP server sent an invalid Content-Length header"));
       return true;
    }
 
@@ -611,9 +617,9 @@ bool ServerState::HeaderLine(string Line)
    {
       HaveContent = true;
       
-      if (sscanf(Val.c_str(),"bytes %lu-%*u/%lu",&StartPos,&Size) != 2)
+      if (sscanf(Val.c_str(),"bytes %llu-%*u/%llu",&StartPos,&Size) != 2)
 	 return _error->Error(_("The HTTP server sent an invalid Content-Range header"));
-      if ((unsigned)StartPos > Size)
+      if ((unsigned long long)StartPos > Size)
 	 return _error->Error(_("This HTTP server has broken range support"));
       return true;
    }
@@ -708,7 +714,19 @@ void HttpMethod::SendReq(FetchItem *Itm,CircleBuf &Out)
       }
    }
 
-   
+   // If we ask for uncompressed files servers might respond with content-
+   // negotation which lets us end up with compressed files we do not support,
+   // see 657029, 657560 and co, so if we have no extension on the request
+   // ask for text only. As a sidenote: If there is nothing to negotate servers
+   // seem to be nice and ignore it.
+   if (_config->FindB("Acquire::http::SendAccept", true) == true)
+   {
+      size_t const filepos = Itm->Uri.find_last_of('/');
+      string const file = Itm->Uri.substr(filepos + 1);
+      if (flExtension(file) == file)
+	 strcat(Buf,"Accept: text/*\r\n");
+   }
+
    string Req = Buf;
 
    // Check for a partial file
@@ -716,7 +734,7 @@ void HttpMethod::SendReq(FetchItem *Itm,CircleBuf &Out)
    if (stat(Itm->DestFile.c_str(),&SBuf) >= 0 && SBuf.st_size > 0)
    {
       // In this case we send an if-range query with a range header
-      sprintf(Buf,"Range: bytes=%li-\r\nIf-Range: %s\r\n",(long)SBuf.st_size - 1,
+      sprintf(Buf,"Range: bytes=%lli-\r\nIf-Range: %s\r\n",(long long)SBuf.st_size - 1,
 	      TimeRFC1123(SBuf.st_mtime).c_str());
       Req += Buf;
    }
@@ -740,7 +758,7 @@ void HttpMethod::SendReq(FetchItem *Itm,CircleBuf &Out)
           Base64Encode(Uri.User + ":" + Uri.Password) + "\r\n";
    }
    Req += "User-Agent: " + _config->Find("Acquire::http::User-Agent",
-		"Debian APT-HTTP/1.3 ("VERSION")") + "\r\n\r\n";
+		"Debian APT-HTTP/1.3 (" PACKAGE_VERSION ")") + "\r\n\r\n";
    
    if (Debug == true)
       cerr << Req << endl;
@@ -778,9 +796,10 @@ bool HttpMethod::Go(bool ToFile,ServerState *Srv)
    
    if (Srv->In.WriteSpace() == true && ToFile == true && FileFD != -1)
       FD_SET(FileFD,&wfds);
-   
+
    // Add stdin
-   FD_SET(STDIN_FILENO,&rfds);
+   if (_config->FindB("Acquire::http::DependOnSTDIN", true) == true)
+      FD_SET(STDIN_FILENO,&rfds);
 	  
    // Figure out the max fd
    int MaxFd = FileFD;
@@ -947,10 +966,29 @@ HttpMethod::DealWithHeaders(FetchResult &Res,ServerState *Srv)
            && Srv->Result != 304    // Not Modified
            && Srv->Result != 306))  // (Not part of HTTP/1.1, reserved)
    {
-      if (!Srv->Location.empty())
+      if (Srv->Location.empty() == true);
+      else if (Srv->Location[0] == '/' && Queue->Uri.empty() == false)
       {
-         NextURI = Srv->Location;
-         return TRY_AGAIN_OR_REDIRECT;
+	 URI Uri = Queue->Uri;
+	 if (Uri.Host.empty() == false)
+	 {
+	    if (Uri.Port != 0)
+	       strprintf(NextURI, "http://%s:%u", Uri.Host.c_str(), Uri.Port);
+	    else
+	       NextURI = "http://" + Uri.Host;
+	 }
+	 else
+	    NextURI.clear();
+	 NextURI.append(DeQuoteString(Srv->Location));
+	 return TRY_AGAIN_OR_REDIRECT;
+      }
+      else
+      {
+         NextURI = DeQuoteString(Srv->Location);
+         URI tmpURI = NextURI;
+         // Do not allow a redirection to switch protocol
+         if (tmpURI.Access == "http")
+            return TRY_AGAIN_OR_REDIRECT;
       }
       /* else pass through for error message */
    }
@@ -982,31 +1020,21 @@ HttpMethod::DealWithHeaders(FetchResult &Res,ServerState *Srv)
    FailFile.c_str();   // Make sure we dont do a malloc in the signal handler
    FailFd = File->Fd();
    FailTime = Srv->Date;
-      
-   // Set the expected size
-   if (Srv->StartPos >= 0)
-   {
-      Res.ResumePoint = Srv->StartPos;
-      if (ftruncate(File->Fd(),Srv->StartPos) < 0)
-	 _error->Errno("ftruncate", _("Failed to truncate file"));
-   }
-      
-   // Set the start point
-   lseek(File->Fd(),0,SEEK_END);
 
    delete Srv->In.Hash;
    Srv->In.Hash = new Hashes;
-   
-   // Fill the Hash if the file is non-empty (resume)
-   if (Srv->StartPos > 0)
+
+   // Set the expected size and read file for the hashes
+   if (Srv->StartPos >= 0)
    {
-      lseek(File->Fd(),0,SEEK_SET);
-      if (Srv->In.Hash->AddFD(File->Fd(),Srv->StartPos) == false)
+      Res.ResumePoint = Srv->StartPos;
+      File->Truncate(Srv->StartPos);
+
+      if (Srv->In.Hash->AddFD(*File,Srv->StartPos) == false)
       {
 	 _error->Errno("read",_("Problem hashing file"));
 	 return ERROR_NOT_FROM_SERVER;
       }
-      lseek(File->Fd(),0,SEEK_END);
    }
    
    SetNonBlock(File->Fd(),true);
@@ -1113,7 +1141,13 @@ int HttpMethod::Loop()
          do a WaitFd above.. Otherwise the FD is closed. */
       int Result = Run(true);
       if (Result != -1 && (Result != 0 || Queue == 0))
-	 return 100;
+      {
+	 if(FailReason.empty() == false ||
+	    _config->FindB("Acquire::http::DependOnSTDIN", true) == true)
+	    return 100;
+	 else
+	    return 0;
+      }
 
       if (Queue == 0)
 	 continue;
@@ -1296,13 +1330,13 @@ int HttpMethod::Loop()
                after the same URI is seen twice in a queue item. */
             StringVector &R = Redirected[Queue->DestFile];
             bool StopRedirects = false;
-            if (R.size() == 0)
+            if (R.empty() == true)
                R.push_back(Queue->Uri);
             else if (R[0] == "STOP" || R.size() > 10)
                StopRedirects = true;
             else
             {
-               for (StringVectorIterator I = R.begin(); I != R.end(); I++)
+               for (StringVectorIterator I = R.begin(); I != R.end(); ++I)
                   if (Queue->Uri == *I)
                   {
                      R[0] = "STOP";
@@ -1349,9 +1383,10 @@ bool HttpMethod::AutoDetectProxy()
    pid_t Process = ExecFork();
    if (Process == 0)
    {
+      close(Pipes[0]);
       dup2(Pipes[1],STDOUT_FILENO);
       SetCloseExec(STDOUT_FILENO,false);
-      
+
       const char *Args[2];
       Args[0] = AutoDetectProxyCmd.c_str();
       Args[1] = 0;
@@ -1361,10 +1396,18 @@ bool HttpMethod::AutoDetectProxy()
    }
    char buf[512];
    int InFd = Pipes[0];
-   if (read(InFd, buf, sizeof(buf)) < 0)
+   close(Pipes[1]);
+   int res = read(InFd, buf, sizeof(buf));
+   ExecWait(Process, "ProxyAutoDetect", true);
+
+   if (res < 0)
       return _error->Errno("read", "Failed to read");
-   ExecWait(Process, "ProxyAutoDetect");
-   
+   if (res == 0)
+      return _error->Warning("ProxyAutoDetect returned no data");
+
+   // add trailing \0
+   buf[res] = 0;
+
    if (Debug)
       clog << "auto detect command returned: '" << buf << "'" << endl;
 

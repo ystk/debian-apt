@@ -8,12 +8,15 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/acquire-method.h>
 #include <apt-pkg/cdrom.h>
 #include <apt-pkg/cdromutl.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/configuration.h>
 #include <apt-pkg/fileutl.h>
+#include <apt-pkg/strutl.h>
 #include <apt-pkg/hashes.h>
 
 #include <sys/stat.h>
@@ -54,7 +57,8 @@ class CDROMMethod : public pkgAcqMethod
 CDROMMethod::CDROMMethod() : pkgAcqMethod("1.0",SingleInstance | LocalOnly |
 					  SendConfig | NeedsCleanup |
 					  Removable), 
-                                          DatabaseLoaded(false), 
+                                          DatabaseLoaded(false),
+					  Debug(false),
                                           MountedByApt(false)
 {
    UdevCdroms.Dlopen();
@@ -220,7 +224,7 @@ bool CDROMMethod::Fetch(FetchItem *Itm)
    }
 
    bool AutoDetect = _config->FindB("Acquire::cdrom::AutoDetect", true);
-   CDROM = _config->FindDir("Acquire::cdrom::mount","/cdrom/");
+   CDROM = _config->FindDir("Acquire::cdrom::mount");
    if (Debug)
       clog << "Looking for CDROM at " << CDROM << endl;
 
@@ -264,7 +268,7 @@ bool CDROMMethod::Fetch(FetchItem *Itm)
 
    Hashes Hash;
    FileFd Fd(Res.Filename, FileFd::ReadOnly);
-   Hash.AddFD(Fd.Fd(), Fd.Size());
+   Hash.AddFD(Fd);
    Res.TakeHashes(Hash);
 
    URIDone(Res);

@@ -10,18 +10,23 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/deblistparser.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/configuration.h>
+#include <apt-pkg/cachefilter.h>
 #include <apt-pkg/aptconfiguration.h>
 #include <apt-pkg/strutl.h>
+#include <apt-pkg/fileutl.h>
 #include <apt-pkg/crc-16.h>
 #include <apt-pkg/md5.h>
 #include <apt-pkg/macros.h>
 
-#include <fnmatch.h>
 #include <ctype.h>
 									/*}}}*/
+
+using std::string;
 
 static debListParser::WordList PrioList[] = {{"important",pkgCache::State::Important},
                        {"required",pkgCache::State::Required},
@@ -67,23 +72,9 @@ string debListParser::Package() {
 									/*}}}*/
 // ListParser::Architecture - Return the package arch			/*{{{*/
 // ---------------------------------------------------------------------
-/* This will return the Architecture of the package this section describes
-   Note that architecture "all" packages will get the architecture of the
-   Packages file parsed here. */
+/* This will return the Architecture of the package this section describes */
 string debListParser::Architecture() {
-   string const Result = Section.FindS("Architecture");
-   if (Result.empty() == true || Result == "all")
-   {
-      if (Arch.empty() == true)
-	 /* FIXME: this is a problem for installed arch all
-	    packages as we don't know from which arch this
-	    package was installed - and therefore which
-	    dependency this package resolves. */
-	 return _config->Find("APT::Architecture");
-      else
-	 return Arch;
-   }
-   return Result;
+   return Section.FindS("Architecture");
 }
 									/*}}}*/
 // ListParser::ArchitectureAll						/*{{{*/
@@ -112,28 +103,34 @@ bool debListParser::NewVersion(pkgCache::VerIterator &Ver)
    Ver->Section = UniqFindTagWrite("Section");
 
    // Parse multi-arch
-   if (Section.FindS("Architecture") == "all")
-      /* Arch all packages can't have a Multi-Arch field,
-         but we need a special treatment for them nonetheless */
-      Ver->MultiArch = pkgCache::Version::All;
-   else
-   {
-      string const MultiArch = Section.FindS("Multi-Arch");
-      if (MultiArch.empty() == true)
-	 Ver->MultiArch = pkgCache::Version::None;
-      else if (MultiArch == "same")
-	 Ver->MultiArch = pkgCache::Version::Same;
-      else if (MultiArch == "foreign")
-	 Ver->MultiArch = pkgCache::Version::Foreign;
-      else if (MultiArch == "allowed")
-	 Ver->MultiArch = pkgCache::Version::Allowed;
-      else
+   string const MultiArch = Section.FindS("Multi-Arch");
+   if (MultiArch.empty() == true)
+      Ver->MultiArch = pkgCache::Version::None;
+   else if (MultiArch == "same") {
+      // Parse multi-arch
+      if (ArchitectureAll() == true)
       {
-	 _error->Warning("Unknown Multi-Arch type »%s« for package »%s«",
-			MultiArch.c_str(), Section.FindS("Package").c_str());
+	 /* Arch all packages can't be Multi-Arch: same */
+	 _error->Warning("Architecture: all package '%s' can't be Multi-Arch: same",
+			Section.FindS("Package").c_str());
 	 Ver->MultiArch = pkgCache::Version::None;
       }
+      else
+	 Ver->MultiArch = pkgCache::Version::Same;
    }
+   else if (MultiArch == "foreign")
+      Ver->MultiArch = pkgCache::Version::Foreign;
+   else if (MultiArch == "allowed")
+      Ver->MultiArch = pkgCache::Version::Allowed;
+   else
+   {
+      _error->Warning("Unknown Multi-Arch type '%s' for package '%s'",
+			MultiArch.c_str(), Section.FindS("Package").c_str());
+      Ver->MultiArch = pkgCache::Version::None;
+   }
+
+   if (ArchitectureAll() == true)
+      Ver->MultiArch |= pkgCache::Version::All;
 
    // Archive Size
    Ver->Size = Section.FindULL("Size");
@@ -148,24 +145,6 @@ bool debListParser::NewVersion(pkgCache::VerIterator &Ver)
    {      
       if (GrabWord(string(Start,Stop-Start),PrioList,Ver->Priority) == false)
 	 Ver->Priority = pkgCache::State::Extra;
-   }
-
-   if (Ver->MultiArch == pkgCache::Version::All)
-   {
-      /* We maintain a "pseudo" arch=all package for architecture all versions
-	 on which these versions can depend on. This pseudo package is many used
-	 for downloading/installing: The other pseudo-packages will degenerate
-	 to a NOP in the download/install step - this package will ensure that
-	 it is downloaded only one time and installed only one time -- even if
-	 the architecture bound versions coming in and out on regular basis. */
-      if (strcmp(Ver.Arch(true),"all") == 0)
-	 return true;
-      else if (MultiArchEnabled == true)
-      {
-	 // our pseudo packages have no size to not confuse the fetcher
-	 Ver->Size = 0;
-	 Ver->InstalledSize = 0;
-      }
    }
 
    if (ParseDepends(Ver,"Depends",pkgCache::Dep::Depends) == false)
@@ -219,9 +198,9 @@ string debListParser::DescriptionLanguage()
    if (Section.FindS("Description").empty() == false)
       return "";
 
-   std::vector<string> const lang = APT::Configuration::getLanguages();
+   std::vector<string> const lang = APT::Configuration::getLanguages(true);
    for (std::vector<string>::const_iterator l = lang.begin();
-	l != lang.end(); l++)
+	l != lang.end(); ++l)
       if (Section.FindS(string("Description-").append(*l).c_str()).empty() == false)
 	 return *l;
 
@@ -236,15 +215,22 @@ string debListParser::DescriptionLanguage()
  */
 MD5SumValue debListParser::Description_md5()
 {
-   string value = Section.FindS("Description-md5");
-
-   if (value.empty()) 
+   string const value = Section.FindS("Description-md5");
+   if (value.empty() == true)
    {
       MD5Summation md5;
       md5.Add((Description() + "\n").c_str());
       return md5.Result();
-   } else
-      return MD5SumValue(value);
+   }
+   else if (likely(value.size() == 32))
+   {
+      if (likely(value.find_first_not_of("0123456789abcdefABCDEF") == string::npos))
+	 return MD5SumValue(value);
+      _error->Error("Malformed Description-md5 line; includes invalid character '%s'", value.c_str());
+      return MD5SumValue();
+   }
+   _error->Error("Malformed Description-md5 line; doesn't have the required length (32 != %d) '%s'", (int)value.size(), value.c_str());
+   return MD5SumValue();
 }
                                                                         /*}}}*/
 // ListParser::UsePackage - Update a package structure			/*{{{*/
@@ -257,21 +243,26 @@ bool debListParser::UsePackage(pkgCache::PkgIterator &Pkg,
    if (Pkg->Section == 0)
       Pkg->Section = UniqFindTagWrite("Section");
 
-   // Packages which are not from the "native" arch doesn't get the essential flag
-   // in the default "native" mode - it is also possible to mark "all" or "none".
-   // The "installed" mode is handled by ParseStatus(), See #544481 and friends.
    string const static myArch = _config->Find("APT::Architecture");
-   string const static essential = _config->Find("pkgCacheGen::Essential", "native");
-   if ((essential == "native" && Pkg->Arch != 0 && myArch == Pkg.Arch()) ||
-       essential == "all")
+   // Possible values are: "all", "native", "installed" and "none"
+   // The "installed" mode is handled by ParseStatus(), See #544481 and friends.
+   string const static essential = _config->Find("pkgCacheGen::Essential", "all");
+   if (essential == "all" ||
+       (essential == "native" && Pkg->Arch != 0 && myArch == Pkg.Arch()))
       if (Section.FindFlag("Essential",Pkg->Flags,pkgCache::Flag::Essential) == false)
 	 return false;
    if (Section.FindFlag("Important",Pkg->Flags,pkgCache::Flag::Important) == false)
       return false;
 
    if (strcmp(Pkg.Name(),"apt") == 0)
-      Pkg->Flags |= pkgCache::Flag::Important;
-   
+   {
+      if ((essential == "native" && Pkg->Arch != 0 && myArch == Pkg.Arch()) ||
+	  essential == "all")
+	 Pkg->Flags |= pkgCache::Flag::Essential | pkgCache::Flag::Important;
+      else
+	 Pkg->Flags |= pkgCache::Flag::Important;
+   }
+
    if (ParseStatus(Pkg,Ver) == false)
       return false;
    return true;
@@ -302,18 +293,18 @@ unsigned short debListParser::VersionHash()
       /* Strip out any spaces from the text, this undoes dpkgs reformatting
          of certain fields. dpkg also has the rather interesting notion of
          reformatting depends operators < -> <= */
-      char *I = S;
+      char *J = S;
       for (; Start != End; Start++)
       {
 	 if (isspace(*Start) == 0)
-	    *I++ = tolower_ascii(*Start);
+	    *J++ = tolower_ascii(*Start);
 	 if (*Start == '<' && Start[1] != '<' && Start[1] != '=')
-	    *I++ = '=';
+	    *J++ = '=';
 	 if (*Start == '>' && Start[1] != '>' && Start[1] != '=')
-	    *I++ = '=';
+	    *J++ = '=';
       }
 
-      Result = AddCRC16(Result,S,I - S);
+      Result = AddCRC16(Result,S,J - S);
    }
    
    return Result;
@@ -473,22 +464,6 @@ const char *debListParser::ConvertRelation(const char *I,unsigned int &Op)
    }
    return I;
 }
-
-/*
- * CompleteArch:
- *
- * The complete architecture, consisting of <kernel>-<cpu>.
- */
-static string CompleteArch(std::string& arch) {
-    if (arch == "armel")              return "linux-arm";
-    if (arch == "armhf")              return "linux-arm";
-    if (arch == "lpia")               return "linux-i386";
-    if (arch == "powerpcspe")         return "linux-powerpc";
-    if (arch == "uclibc-linux-armel") return "linux-arm";
-    if (arch == "uclinux-armel")      return "uclinux-arm";
-
-    return (arch.find("-") != string::npos) ? arch : "linux-" + arch;
-}
 									/*}}}*/
 // ListParser::ParseDepends - Parse a dependency element		/*{{{*/
 // ---------------------------------------------------------------------
@@ -505,7 +480,7 @@ const char *debListParser::ParseDepends(const char *Start,const char *Stop,
    // Parse off the package name
    const char *I = Start;
    for (;I != Stop && isspace(*I) == 0 && *I != '(' && *I != ')' &&
-	*I != ',' && *I != '|'; I++);
+	*I != ',' && *I != '|' && *I != '[' && *I != ']'; I++);
    
    // Malformed, no '('
    if (I != Stop && *I == ')')
@@ -518,9 +493,13 @@ const char *debListParser::ParseDepends(const char *Start,const char *Stop,
    Package.assign(Start,I - Start);
 
    // We don't want to confuse library users which can't handle MultiArch
+   string const arch = _config->Find("APT::Architecture");
    if (StripMultiArch == true) {
       size_t const found = Package.rfind(':');
-      if (found != string::npos)
+      if (found != string::npos &&
+	  (strcmp(Package.c_str() + found, ":any") == 0 ||
+	   strcmp(Package.c_str() + found, ":native") == 0 ||
+	   strcmp(Package.c_str() + found + 1, arch.c_str()) == 0))
 	 Package = Package.substr(0,found);
    }
 
@@ -539,9 +518,9 @@ const char *debListParser::ParseDepends(const char *Start,const char *Stop,
       // Skip whitespace
       for (;I != Stop && isspace(*I) != 0; I++);
       Start = I;
-      for (;I != Stop && *I != ')'; I++);
-      if (I == Stop || Start == I)
-	 return 0;     
+      I = (const char*) memchr(I, ')', Stop - I);
+      if (I == NULL || Start == I)
+	 return 0;
       
       // Skip trailing whitespace
       const char *End = I;
@@ -561,59 +540,59 @@ const char *debListParser::ParseDepends(const char *Start,const char *Stop,
 
    if (ParseArchFlags == true)
    {
-      string arch = _config->Find("APT::Architecture");
-      string completeArch = CompleteArch(arch);
+      APT::CacheFilter::PackageArchitectureMatchesSpecification matchesArch(arch, false);
 
       // Parse an architecture
       if (I != Stop && *I == '[')
       {
+	 ++I;
 	 // malformed
-         I++;
-         if (I == Stop)
-	    return 0; 
-	 
-         const char *End = I;
-         bool Found = false;
-      	 bool NegArch = false;
-         while (I != Stop) 
+	 if (unlikely(I == Stop))
+	    return 0;
+
+	 const char *End = I;
+	 bool Found = false;
+	 bool NegArch = false;
+	 while (I != Stop)
 	 {
-            // look for whitespace or ending ']'
-	    while (End != Stop && !isspace(*End) && *End != ']') 
-	       End++;
-	 
-	    if (End == Stop) 
+	    // look for whitespace or ending ']'
+	    for (;End != Stop && !isspace(*End) && *End != ']'; ++End);
+
+	    if (unlikely(End == Stop))
 	       return 0;
 
 	    if (*I == '!')
-            {
+	    {
 	       NegArch = true;
-	       I++;
-            }
-
-	    if (stringcmp(arch,I,End) == 0) {
-	       Found = true;
-	    } else {
-	       std::string wildcard = SubstVar(string(I, End), "any", "*");
-	       if (fnmatch(wildcard.c_str(), completeArch.c_str(), 0) == 0)
-	          Found = true;
+	       ++I;
 	    }
-	    
+
+	    std::string arch(I, End);
+	    if (arch.empty() == false && matchesArch(arch.c_str()) == true)
+	    {
+	       Found = true;
+	       if (I[-1] != '!')
+		  NegArch = false;
+	       // we found a match, so fast-forward to the end of the wildcards
+	       for (; End != Stop && *End != ']'; ++End);
+	    }
+
 	    if (*End++ == ']') {
 	       I = End;
 	       break;
 	    }
-	    
+
 	    I = End;
 	    for (;I != Stop && isspace(*I) != 0; I++);
-         }
+	 }
 
-	 if (NegArch)
+	 if (NegArch == true)
 	    Found = !Found;
-	 
-         if (Found == false)
+
+	 if (Found == false)
 	    Package = ""; /* not for this arch */
       }
-      
+
       // Skip whitespace
       for (;I != Stop && isspace(*I) != 0; I++);
    }
@@ -643,18 +622,21 @@ bool debListParser::ParseDepends(pkgCache::VerIterator &Ver,
    if (Section.Find(Tag,Start,Stop) == false)
       return true;
 
-   string Package;
-   string const pkgArch = Ver.Arch(true);
-   string Version;
-   unsigned int Op;
+   string const pkgArch = Ver.Arch();
 
    while (1)
    {
-      Start = ParseDepends(Start,Stop,Package,Version,Op);
+      string Package;
+      string Version;
+      unsigned int Op;
+
+      Start = ParseDepends(Start,Stop,Package,Version,Op,false,!MultiArchEnabled);
       if (Start == 0)
 	 return _error->Error("Problem parsing dependency %s",Tag);
+      size_t const found = Package.rfind(':');
 
-      if (MultiArchEnabled == true &&
+      // If negative is unspecific it needs to apply on all architectures
+      if (MultiArchEnabled == true && found == string::npos &&
 	  (Type == pkgCache::Dep::Conflicts ||
 	   Type == pkgCache::Dep::DpkgBreaks ||
 	   Type == pkgCache::Dep::Replaces))
@@ -663,9 +645,33 @@ bool debListParser::ParseDepends(pkgCache::VerIterator &Ver,
 	      a != Architectures.end(); ++a)
 	    if (NewDepends(Ver,Package,*a,Version,Op,Type) == false)
 	       return false;
+	 if (NewDepends(Ver,Package,"none",Version,Op,Type) == false)
+	    return false;
       }
-      else if (NewDepends(Ver,Package,pkgArch,Version,Op,Type) == false)
-	 return false;
+      else if (MultiArchEnabled == true && found != string::npos &&
+	       strcmp(Package.c_str() + found, ":any") != 0)
+      {
+	 string Arch = Package.substr(found+1, string::npos);
+	 Package = Package.substr(0, found);
+	 // Such dependencies are not supposed to be accepted …
+	 // … but this is probably the best thing to do.
+	 if (Arch == "native")
+	    Arch = _config->Find("APT::Architecture");
+	 if (NewDepends(Ver,Package,Arch,Version,Op,Type) == false)
+	    return false;
+      }
+      else
+      {
+	 if (NewDepends(Ver,Package,pkgArch,Version,Op,Type) == false)
+	    return false;
+	 if ((Type == pkgCache::Dep::Conflicts ||
+	      Type == pkgCache::Dep::DpkgBreaks ||
+	      Type == pkgCache::Dep::Replaces) &&
+	     NewDepends(Ver, Package,
+			(pkgArch != "none") ? "none" : _config->Find("APT::Architecture"),
+			Version,Op,Type) == false)
+	    return false;
+      }
       if (Start == Stop)
 	 break;
    }
@@ -683,7 +689,7 @@ bool debListParser::ParseProvides(pkgCache::VerIterator &Ver)
    {
       string Package;
       string Version;
-      string const Arch = Ver.Arch(true);
+      string const Arch = Ver.Arch();
       unsigned int Op;
 
       while (1)
@@ -693,6 +699,9 @@ bool debListParser::ParseProvides(pkgCache::VerIterator &Ver)
 	    return _error->Error("Problem parsing Provides line");
 	 if (Op != pkgCache::Dep::NoOp) {
 	    _error->Warning("Ignoring Provides line with DepCompareOp for package %s", Package.c_str());
+	 } else if ((Ver->MultiArch & pkgCache::Version::Foreign) == pkgCache::Version::Foreign) {
+	    if (NewProvidesAllArch(Ver, Package, Version) == false)
+	       return false;
 	 } else {
 	    if (NewProvides(Ver, Package, Arch, Version) == false)
 	       return false;
@@ -703,27 +712,28 @@ bool debListParser::ParseProvides(pkgCache::VerIterator &Ver)
       }
    }
 
-   if (Ver->MultiArch == pkgCache::Version::Allowed)
-   {
-      string const Package = string(Ver.ParentPkg().Name()).append(":").append("any");
-      NewProvides(Ver, Package, "any", Ver.VerStr());
-   }
-
-   if (Ver->MultiArch != pkgCache::Version::Foreign)
-      return true;
-
    if (MultiArchEnabled == false)
       return true;
+   else if ((Ver->MultiArch & pkgCache::Version::Allowed) == pkgCache::Version::Allowed)
+   {
+      string const Package = string(Ver.ParentPkg().Name()).append(":").append("any");
+      return NewProvidesAllArch(Ver, Package, Ver.VerStr());
+   }
+   else if ((Ver->MultiArch & pkgCache::Version::Foreign) == pkgCache::Version::Foreign)
+      return NewProvidesAllArch(Ver, Ver.ParentPkg().Name(), Ver.VerStr());
 
-   string const Package = Ver.ParentPkg().Name();
-   string const Version = Ver.VerStr();
+   return true;
+}
+									/*}}}*/
+// ListParser::NewProvides - add provides for all architectures		/*{{{*/
+bool debListParser::NewProvidesAllArch(pkgCache::VerIterator &Ver, string const &Package,
+				string const &Version) {
    for (std::vector<string>::const_iterator a = Architectures.begin();
 	a != Architectures.end(); ++a)
    {
       if (NewProvides(Ver, Package, *a, Version) == false)
 	 return false;
    }
-
    return true;
 }
 									/*}}}*/
@@ -755,12 +765,14 @@ bool debListParser::Step()
          drop the whole section. A missing arch tag only happens (in theory)
          inside the Status file, so that is a positive return */
       string const Architecture = Section.FindS("Architecture");
-      if (Architecture.empty() == true)
-	 return true;
 
       if (Arch.empty() == true || Arch == "any" || MultiArchEnabled == false)
       {
 	 if (APT::Configuration::checkArchitecture(Architecture) == true)
+	    return true;
+	 /* parse version stanzas without an architecture only in the status file
+	    (and as misfortune bycatch flat-archives) */
+	 if ((Arch.empty() == true || Arch == "any") && Architecture.empty() == true)
 	    return true;
       }
       else
@@ -768,7 +780,7 @@ bool debListParser::Step()
 	 if (Architecture == Arch)
 	    return true;
 
-	 if (Architecture == "all")
+	 if (Architecture == "all" && Arch == _config->Find("APT::Architecture"))
 	    return true;
       }
 
@@ -783,45 +795,109 @@ bool debListParser::Step()
 bool debListParser::LoadReleaseInfo(pkgCache::PkgFileIterator &FileI,
 				    FileFd &File, string component)
 {
-   pkgTagFile Tags(&File, File.Size() + 256); // XXX
-   pkgTagSection Section;
-   if (Tags.Step(Section) == false)
-      return false;
-
-   // FIXME: Do we need it now for multi-arch?
-   // mvo: I don't think we need to fill that in (it's unused since apt-0.6)
-//    FileI->Architecture = WriteUniqString(Arch);
-   
    // apt-secure does no longer download individual (per-section) Release
    // file. to provide Component pinning we use the section name now
-   FileI->Component = WriteUniqString(component);
+   map_ptrloc const storage = WriteUniqString(component);
+   FileI->Component = storage;
 
-   const char *Start;
-   const char *Stop;
-   if (Section.Find("Suite",Start,Stop) == true)
-      FileI->Archive = WriteUniqString(Start,Stop - Start);
-   if (Section.Find("Component",Start,Stop) == true)
-      FileI->Component = WriteUniqString(Start,Stop - Start);
-   if (Section.Find("Version",Start,Stop) == true)
-      FileI->Version = WriteUniqString(Start,Stop - Start);
-   if (Section.Find("Origin",Start,Stop) == true)
-      FileI->Origin = WriteUniqString(Start,Stop - Start);
-   if (Section.Find("Codename",Start,Stop) == true)
-      FileI->Codename = WriteUniqString(Start,Stop - Start);
-   if (Section.Find("Label",Start,Stop) == true)
-      FileI->Label = WriteUniqString(Start,Stop - Start);
-   if (Section.Find("Architecture",Start,Stop) == true)
-      FileI->Architecture = WriteUniqString(Start,Stop - Start);
-   
-   if (Section.FindFlag("NotAutomatic",FileI->Flags,
-			pkgCache::Flag::NotAutomatic) == false)
-      _error->Warning("Bad NotAutomatic flag");
-   if (Section.FindFlag("ButAutomaticUpgrades",FileI->Flags,
-			pkgCache::Flag::ButAutomaticUpgrades) == false)
-      _error->Warning("Bad ButAutomaticUpgrades flag");
-   // overrule the NotAutomatic setting if needed as they are both present for compatibility
-   else if ((FileI->Flags & pkgCache::Flag::ButAutomaticUpgrades) == pkgCache::Flag::ButAutomaticUpgrades)
-      FileI->Flags &= ~pkgCache::Flag::NotAutomatic;
+   // FIXME: Code depends on the fact that Release files aren't compressed
+   FILE* release = fdopen(dup(File.Fd()), "r");
+   if (release == NULL)
+      return false;
+
+   char buffer[101];
+   bool gpgClose = false;
+   while (fgets(buffer, sizeof(buffer), release) != NULL)
+   {
+      size_t len = 0;
+
+      // Skip empty lines
+      for (; buffer[len] == '\r' && buffer[len] == '\n'; ++len)
+         /* nothing */
+         ;
+      if (buffer[len] == '\0')
+	 continue;
+
+      // only evalute the first GPG section
+      if (strncmp("-----", buffer, 5) == 0)
+      {
+	 if (gpgClose == true)
+	    break;
+	 gpgClose = true;
+	 continue;
+      }
+
+      // seperate the tag from the data
+      const char* dataStart = strchr(buffer + len, ':');
+      if (dataStart == NULL)
+	 continue;
+      len = dataStart - buffer;
+      for (++dataStart; *dataStart == ' '; ++dataStart)
+         /* nothing */
+         ;
+      const char* dataEnd = (const char*)rawmemchr(dataStart, '\0');
+      // The last char should be a newline, but we can never be sure: #633350
+      const char* lineEnd = dataEnd;
+      for (--lineEnd; *lineEnd == '\r' || *lineEnd == '\n'; --lineEnd)
+         /* nothing */
+         ;
+      ++lineEnd;
+
+      // which datastorage need to be updated
+      enum { Suite, Component, Version, Origin, Codename, Label, None } writeTo = None;
+      if (buffer[0] == ' ')
+	 ;
+      #define APT_PARSER_WRITETO(X) else if (strncmp(#X, buffer, len) == 0) writeTo = X;
+      APT_PARSER_WRITETO(Suite)
+      APT_PARSER_WRITETO(Component)
+      APT_PARSER_WRITETO(Version)
+      APT_PARSER_WRITETO(Origin)
+      APT_PARSER_WRITETO(Codename)
+      APT_PARSER_WRITETO(Label)
+      #undef APT_PARSER_WRITETO
+      #define APT_PARSER_FLAGIT(X) else if (strncmp(#X, buffer, len) == 0) \
+	 pkgTagSection::FindFlag(FileI->Flags, pkgCache::Flag:: X, dataStart, lineEnd);
+      APT_PARSER_FLAGIT(NotAutomatic)
+      APT_PARSER_FLAGIT(ButAutomaticUpgrades)
+      #undef APT_PARSER_FLAGIT
+
+      // load all data from the line and save it
+      string data;
+      if (writeTo != None)
+	 data.append(dataStart, dataEnd);
+      if (sizeof(buffer) - 1 == (dataEnd - buffer))
+      {
+	 while (fgets(buffer, sizeof(buffer), release) != NULL)
+	 {
+	    if (writeTo != None)
+	       data.append(buffer);
+	    if (strlen(buffer) != sizeof(buffer) - 1)
+	       break;
+	 }
+      }
+      if (writeTo != None)
+      {
+	 // remove spaces and stuff from the end of the data line
+	 for (std::string::reverse_iterator s = data.rbegin();
+	      s != data.rend(); ++s)
+	 {
+	    if (*s != '\r' && *s != '\n' && *s != ' ')
+	       break;
+	    *s = '\0';
+	 }
+	 map_ptrloc const storage = WriteUniqString(data);
+	 switch (writeTo) {
+	 case Suite: FileI->Archive = storage; break;
+	 case Component: FileI->Component = storage; break;
+	 case Version: FileI->Version = storage; break;
+	 case Origin: FileI->Origin = storage; break;
+	 case Codename: FileI->Codename = storage; break;
+	 case Label: FileI->Label = storage; break;
+	 case None: break;
+	 }
+      }
+   }
+   fclose(release);
 
    return !_error->PendingError();
 }

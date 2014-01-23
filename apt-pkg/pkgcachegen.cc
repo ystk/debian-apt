@@ -10,7 +10,7 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
-#define APT_COMPATIBILITY 986
+#include <config.h>
 
 #include <apt-pkg/pkgcachegen.h>
 #include <apt-pkg/error.h>
@@ -23,20 +23,25 @@
 #include <apt-pkg/sptr.h>
 #include <apt-pkg/pkgsystem.h>
 #include <apt-pkg/macros.h>
-
 #include <apt-pkg/tagfile.h>
-
-#include <apti18n.h>
+#include <apt-pkg/metaindex.h>
+#include <apt-pkg/fileutl.h>
 
 #include <vector>
-
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>
+
+#include <apti18n.h>
 									/*}}}*/
-typedef vector<pkgIndexFile *>::iterator FileIterator;
+typedef std::vector<pkgIndexFile *>::iterator FileIterator;
 template <typename Iter> std::vector<Iter*> pkgCacheGenerator::Dynamic<Iter>::toReMap;
+
+static bool IsDuplicateDescription(pkgCache::DescIterator Desc,
+			    MD5SumValue const &CurMd5, std::string const &CurLang);
+
+using std::string;
 
 // CacheGenerator::pkgCacheGenerator - Constructor			/*{{{*/
 // ---------------------------------------------------------------------
@@ -64,7 +69,9 @@ pkgCacheGenerator::pkgCacheGenerator(DynamicMMap *pMap,OpProgress *Prog) :
       *Cache.HeaderP = pkgCache::Header();
       map_ptrloc const idxVerSysName = WriteStringInMap(_system->VS->Label);
       Cache.HeaderP->VerSysName = idxVerSysName;
-      map_ptrloc const idxArchitecture = WriteStringInMap(_config->Find("APT::Architecture"));
+      // this pointer is set in ReMap, but we need it now for WriteUniqString
+      Cache.StringItemP = (pkgCache::StringItem *)Map.Data();
+      map_ptrloc const idxArchitecture = WriteUniqString(_config->Find("APT::Architecture"));
       Cache.HeaderP->Architecture = idxArchitecture;
       if (unlikely(idxVerSysName == 0 || idxArchitecture == 0))
 	 return;
@@ -98,12 +105,16 @@ pkgCacheGenerator::~pkgCacheGenerator()
       return;
    
    Cache.HeaderP->Dirty = false;
+   Cache.HeaderP->CacheFileSize = Map.Size();
    Map.Sync(0,sizeof(pkgCache::Header));
 }
 									/*}}}*/
 void pkgCacheGenerator::ReMap(void const * const oldMap, void const * const newMap) {/*{{{*/
    if (oldMap == newMap)
       return;
+
+   if (_config->FindB("Debug::pkgCacheGen", false))
+      std::clog << "Remaping from " << oldMap << " to " << newMap << std::endl;
 
    Cache.ReMap(false);
 
@@ -178,93 +189,172 @@ bool pkgCacheGenerator::MergeList(ListParser &List,
       if (PackageName.empty() == true)
 	 return false;
 
-      /* As we handle Arch all packages as architecture bounded
-         we add all information to every (simulated) arch package */
-      std::vector<string> genArch;
-      if (List.ArchitectureAll() == true) {
-	 genArch = APT::Configuration::getArchitectures();
-	 if (genArch.size() != 1)
-	    genArch.push_back("all");
-      } else
-	 genArch.push_back(List.Architecture());
-
-      for (std::vector<string>::const_iterator arch = genArch.begin();
-	   arch != genArch.end(); ++arch)
-      {
-      // Get a pointer to the package structure
-      pkgCache::PkgIterator Pkg;
-      Dynamic<pkgCache::PkgIterator> DynPkg(Pkg);
-      if (NewPackage(Pkg, PackageName, *arch) == false)
-	 return _error->Error(_("Error occurred while processing %s (NewPackage)"),PackageName.c_str());
       Counter++;
       if (Counter % 100 == 0 && Progress != 0)
 	 Progress->Progress(List.Offset());
 
-      /* Get a pointer to the version structure. We know the list is sorted
-         so we use that fact in the search. Insertion of new versions is
-	 done with correct sorting */
-      string Version = List.Version();
-      if (Version.empty() == true)
+      string Arch = List.Architecture();
+      string const Version = List.Version();
+      if (Version.empty() == true && Arch.empty() == true)
       {
-	 // we first process the package, then the descriptions
-	 // (this has the bonus that we get MMap error when we run out
-	 //  of MMap space)
-	 pkgCache::VerIterator Ver(Cache);
-	 Dynamic<pkgCache::VerIterator> DynVer(Ver);
-	 if (List.UsePackage(Pkg, Ver) == false)
-	    return _error->Error(_("Error occurred while processing %s (UsePackage1)"),
-				 PackageName.c_str());
-
- 	 // Find the right version to write the description
- 	 MD5SumValue CurMd5 = List.Description_md5();
- 	 Ver = Pkg.VersionList();
-
-	 for (; Ver.end() == false; ++Ver)
- 	 {
- 	    pkgCache::DescIterator Desc = Ver.DescriptionList();
-	    Dynamic<pkgCache::DescIterator> DynDesc(Desc);
- 	    map_ptrloc *LastDesc = &Ver->DescriptionList;
-	    bool duplicate=false;
-
-	    // don't add a new description if we have one for the given
-	    // md5 && language
-	    for ( ; Desc.end() == false; Desc++)
-	       if (MD5SumValue(Desc.md5()) == CurMd5 && 
-	           Desc.LanguageCode() == List.DescriptionLanguage())
-		  duplicate=true;
-	    if(duplicate)
-	       continue;
-	    
- 	    for (Desc = Ver.DescriptionList();
-		 Desc.end() == false;
-		 LastDesc = &Desc->NextDesc, Desc++)
-	    {
- 	       if (MD5SumValue(Desc.md5()) == CurMd5) 
-               {
- 		  // Add new description
-		  void const * const oldMap = Map.Data();
-		  map_ptrloc const descindex = NewDescription(Desc, List.DescriptionLanguage(), CurMd5, *LastDesc);
-		  if (oldMap != Map.Data())
-		     LastDesc += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
-		  *LastDesc = descindex;
- 		  Desc->ParentPkg = Pkg.Index();
-		  
-		  if ((*LastDesc == 0 && _error->PendingError()) || NewFileDesc(Desc,List) == false)
- 		     return _error->Error(_("Error occurred while processing %s (NewFileDesc1)"),PackageName.c_str());
- 		  break;
- 	       }
-	    }
- 	 }
-
+	 // package descriptions
+	 if (MergeListGroup(List, PackageName) == false)
+	    return false;
 	 continue;
       }
 
-      pkgCache::VerIterator Ver = Pkg.VersionList();
-      Dynamic<pkgCache::VerIterator> DynVer(Ver);
-      map_ptrloc *LastVer = &Pkg->VersionList;
-      void const * oldMap = Map.Data();
+      if (Arch.empty() == true)
+      {
+	 // use the pseudo arch 'none' for arch-less packages
+	 Arch = "none";
+	 /* We might built a SingleArchCache here, which we don't want to blow up
+	    just for these :none packages to a proper MultiArchCache, so just ensure
+	    that we have always a native package structure first for SingleArch */
+	 pkgCache::PkgIterator NP;
+	 Dynamic<pkgCache::PkgIterator> DynPkg(NP);
+	 if (NewPackage(NP, PackageName, _config->Find("APT::Architecture")) == false)
+	 // TRANSLATOR: The first placeholder is a package name,
+	 // the other two should be copied verbatim as they include debug info
+	 return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			      PackageName.c_str(), "NewPackage", 0);
+      }
+
+      // Get a pointer to the package structure
+      pkgCache::PkgIterator Pkg;
+      Dynamic<pkgCache::PkgIterator> DynPkg(Pkg);
+      if (NewPackage(Pkg, PackageName, Arch) == false)
+	 // TRANSLATOR: The first placeholder is a package name,
+	 // the other two should be copied verbatim as they include debug info
+	 return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			      PackageName.c_str(), "NewPackage", 1);
+
+
+      if (Version.empty() == true)
+      {
+	 if (MergeListPackage(List, Pkg) == false)
+	    return false;
+      }
+      else
+      {
+	 if (MergeListVersion(List, Pkg, Version, OutVer) == false)
+	    return false;
+      }
+
+      if (OutVer != 0)
+      {
+	 FoundFileDeps |= List.HasFileDeps();
+	 return true;
+      }
+   }
+
+   if (Cache.HeaderP->PackageCount >= (1ULL<<sizeof(Cache.PkgP->ID)*8)-1)
+      return _error->Error(_("Wow, you exceeded the number of package "
+			     "names this APT is capable of."));
+   if (Cache.HeaderP->VersionCount >= (1ULL<<(sizeof(Cache.VerP->ID)*8))-1)
+      return _error->Error(_("Wow, you exceeded the number of versions "
+			     "this APT is capable of."));
+   if (Cache.HeaderP->DescriptionCount >= (1ULL<<(sizeof(Cache.DescP->ID)*8))-1)
+      return _error->Error(_("Wow, you exceeded the number of descriptions "
+			     "this APT is capable of."));
+   if (Cache.HeaderP->DependsCount >= (1ULL<<(sizeof(Cache.DepP->ID)*8))-1ULL)
+      return _error->Error(_("Wow, you exceeded the number of dependencies "
+			     "this APT is capable of."));
+
+   FoundFileDeps |= List.HasFileDeps();
+   return true;
+}
+// CacheGenerator::MergeListGroup					/*{{{*/
+bool pkgCacheGenerator::MergeListGroup(ListParser &List, std::string const &GrpName)
+{
+   pkgCache::GrpIterator Grp = Cache.FindGrp(GrpName);
+   // a group has no data on it's own, only packages have it but these
+   // stanzas like this come from Translation- files to add descriptions,
+   // but without a version we don't need a description for it…
+   if (Grp.end() == true)
+      return true;
+   Dynamic<pkgCache::GrpIterator> DynGrp(Grp);
+
+   pkgCache::PkgIterator Pkg;
+   Dynamic<pkgCache::PkgIterator> DynPkg(Pkg);
+   for (Pkg = Grp.PackageList(); Pkg.end() == false; Pkg = Grp.NextPkg(Pkg))
+      if (MergeListPackage(List, Pkg) == false)
+	 return false;
+
+   return true;
+}
+									/*}}}*/
+// CacheGenerator::MergeListPackage					/*{{{*/
+bool pkgCacheGenerator::MergeListPackage(ListParser &List, pkgCache::PkgIterator &Pkg)
+{
+   // we first process the package, then the descriptions
+   // (for deb this package processing is in fact a no-op)
+   pkgCache::VerIterator Ver(Cache);
+   Dynamic<pkgCache::VerIterator> DynVer(Ver);
+   if (List.UsePackage(Pkg, Ver) == false)
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			   Pkg.Name(), "UsePackage", 1);
+
+   // Find the right version to write the description
+   MD5SumValue CurMd5 = List.Description_md5();
+   std::string CurLang = List.DescriptionLanguage();
+
+   for (Ver = Pkg.VersionList(); Ver.end() == false; ++Ver)
+   {
+      pkgCache::DescIterator Desc = Ver.DescriptionList();
+
+      // a version can only have one md5 describing it
+      if (Desc.end() == true || MD5SumValue(Desc.md5()) != CurMd5)
+	 continue;
+
+      // don't add a new description if we have one for the given
+      // md5 && language
+      if (IsDuplicateDescription(Desc, CurMd5, CurLang) == true)
+	 continue;
+
+      Dynamic<pkgCache::DescIterator> DynDesc(Desc);
+      // we add at the end, so that the start is constant as we need
+      // that to be able to efficiently share these lists
+      map_ptrloc *LastDesc = &Ver->DescriptionList;
+      for (;Desc.end() == false && Desc->NextDesc != 0; ++Desc);
+      if (Desc.end() == false)
+	 LastDesc = &Desc->NextDesc;
+
+      void const * const oldMap = Map.Data();
+      map_ptrloc const descindex = NewDescription(Desc, CurLang, CurMd5, *LastDesc);
+      if (unlikely(descindex == 0 && _error->PendingError()))
+	 return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			      Pkg.Name(), "NewDescription", 1);
+      if (oldMap != Map.Data())
+	 LastDesc += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
+      *LastDesc = descindex;
+      Desc->ParentPkg = Pkg.Index();
+
+      if ((*LastDesc == 0 && _error->PendingError()) || NewFileDesc(Desc,List) == false)
+	 return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			      Pkg.Name(), "NewFileDesc", 1);
+
+      // we can stop here as all "same" versions will share the description
+      break;
+   }
+
+   return true;
+}
+									/*}}}*/
+// CacheGenerator::MergeListVersion					/*{{{*/
+bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator &Pkg,
+					 std::string const &Version, pkgCache::VerIterator* &OutVer)
+{
+   pkgCache::VerIterator Ver = Pkg.VersionList();
+   Dynamic<pkgCache::VerIterator> DynVer(Ver);
+   map_ptrloc *LastVer = &Pkg->VersionList;
+   void const * oldMap = Map.Data();
+
+   unsigned long const Hash = List.VersionHash();
+   if (Ver.end() == false)
+   {
+      /* We know the list is sorted so we use that fact in the search.
+         Insertion of new versions is done with correct sorting */
       int Res = 1;
-      unsigned long const Hash = List.VersionHash();
       for (; Ver.end() == false; LastVer = &Ver->NextVer, Ver++)
       {
 	 Res = Cache.VS->CmpVersion(Version,Ver.VerStr());
@@ -282,94 +372,162 @@ bool pkgCacheGenerator::MergeList(ListParser &List,
       if (Res == 0 && Ver.end() == false && Ver->Hash == Hash)
       {
 	 if (List.UsePackage(Pkg,Ver) == false)
-	    return _error->Error(_("Error occurred while processing %s (UsePackage2)"),
-				 PackageName.c_str());
+	    return _error->Error(_("Error occurred while processing %s (%s%d)"),
+				 Pkg.Name(), "UsePackage", 2);
 
 	 if (NewFileVer(Ver,List) == false)
-	    return _error->Error(_("Error occurred while processing %s (NewFileVer1)"),
-				 PackageName.c_str());
-	 
+	    return _error->Error(_("Error occurred while processing %s (%s%d)"),
+				 Pkg.Name(), "NewFileVer", 1);
+
 	 // Read only a single record and return
 	 if (OutVer != 0)
 	 {
 	    *OutVer = Ver;
-	    FoundFileDeps |= List.HasFileDeps();
 	    return true;
 	 }
-	 
-	 continue;
-      }
 
-      // Add a new version
-      map_ptrloc const verindex = NewVersion(Ver,Version,*LastVer);
-      if (verindex == 0 && _error->PendingError())
-	 return _error->Error(_("Error occurred while processing %s (NewVersion%d)"),
-			      PackageName.c_str(), 1);
-
-      if (oldMap != Map.Data())
-	 LastVer += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
-      *LastVer = verindex;
-      Ver->ParentPkg = Pkg.Index();
-      Ver->Hash = Hash;
-
-      if (List.NewVersion(Ver) == false)
-	 return _error->Error(_("Error occurred while processing %s (NewVersion%d)"),
-			      PackageName.c_str(), 2);
-
-      if (List.UsePackage(Pkg,Ver) == false)
-	 return _error->Error(_("Error occurred while processing %s (UsePackage3)"),
-			      PackageName.c_str());
-      
-      if (NewFileVer(Ver,List) == false)
-	 return _error->Error(_("Error occurred while processing %s (NewVersion%d)"),
-			      PackageName.c_str(), 3);
-
-      // Read only a single record and return
-      if (OutVer != 0)
-      {
-	 *OutVer = Ver;
-	 FoundFileDeps |= List.HasFileDeps();
 	 return true;
-      }      
-
-      /* Record the Description data. Description data always exist in
-	 Packages and Translation-* files. */
-      pkgCache::DescIterator Desc = Ver.DescriptionList();
-      Dynamic<pkgCache::DescIterator> DynDesc(Desc);
-      map_ptrloc *LastDesc = &Ver->DescriptionList;
-
-      // Skip to the end of description set
-      for (; Desc.end() == false; LastDesc = &Desc->NextDesc, Desc++);
-
-      // Add new description
-      oldMap = Map.Data();
-      map_ptrloc const descindex = NewDescription(Desc, List.DescriptionLanguage(), List.Description_md5(), *LastDesc);
-      if (oldMap != Map.Data())
-	 LastDesc += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
-      *LastDesc = descindex;
-      Desc->ParentPkg = Pkg.Index();
-
-      if ((*LastDesc == 0 && _error->PendingError()) || NewFileDesc(Desc,List) == false)
-	 return _error->Error(_("Error occurred while processing %s (NewFileDesc2)"),PackageName.c_str());
       }
    }
 
-   FoundFileDeps |= List.HasFileDeps();
+   // Add a new version
+   map_ptrloc const verindex = NewVersion(Ver,Version,*LastVer);
+   if (verindex == 0 && _error->PendingError())
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			   Pkg.Name(), "NewVersion", 1);
 
-   if (Cache.HeaderP->PackageCount >= (1ULL<<sizeof(Cache.PkgP->ID)*8)-1)
-      return _error->Error(_("Wow, you exceeded the number of package "
-			     "names this APT is capable of."));
-   if (Cache.HeaderP->VersionCount >= (1ULL<<(sizeof(Cache.VerP->ID)*8))-1)
-      return _error->Error(_("Wow, you exceeded the number of versions "
-			     "this APT is capable of."));
-   if (Cache.HeaderP->DescriptionCount >= (1ULL<<(sizeof(Cache.DescP->ID)*8))-1)
-      return _error->Error(_("Wow, you exceeded the number of descriptions "
-			     "this APT is capable of."));
-   if (Cache.HeaderP->DependsCount >= (1ULL<<(sizeof(Cache.DepP->ID)*8))-1ULL)
-      return _error->Error(_("Wow, you exceeded the number of dependencies "
-			     "this APT is capable of."));
+   if (oldMap != Map.Data())
+	 LastVer += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
+   *LastVer = verindex;
+   Ver->ParentPkg = Pkg.Index();
+   Ver->Hash = Hash;
+
+   if (unlikely(List.NewVersion(Ver) == false))
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			   Pkg.Name(), "NewVersion", 2);
+
+   if (unlikely(List.UsePackage(Pkg,Ver) == false))
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			   Pkg.Name(), "UsePackage", 3);
+
+   if (unlikely(NewFileVer(Ver,List) == false))
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			   Pkg.Name(), "NewFileVer", 2);
+
+   pkgCache::GrpIterator Grp = Pkg.Group();
+   Dynamic<pkgCache::GrpIterator> DynGrp(Grp);
+
+   /* If it is the first version of this package we need to add implicit
+      Multi-Arch dependencies to all other package versions in the group now -
+      otherwise we just add them for this new version */
+   if (Pkg.VersionList()->NextVer == 0)
+   {
+      pkgCache::PkgIterator P = Grp.PackageList();
+      Dynamic<pkgCache::PkgIterator> DynP(P);
+      for (; P.end() != true; P = Grp.NextPkg(P))
+      {
+	 if (P->ID == Pkg->ID)
+	    continue;
+	 pkgCache::VerIterator V = P.VersionList();
+	 Dynamic<pkgCache::VerIterator> DynV(V);
+	 for (; V.end() != true; ++V)
+	    if (unlikely(AddImplicitDepends(V, Pkg) == false))
+	       return _error->Error(_("Error occurred while processing %s (%s%d)"),
+				    Pkg.Name(), "AddImplicitDepends", 1);
+      }
+      /* :none packages are packages without an architecture. They are forbidden by
+	 debian-policy, so usually they will only be in (old) dpkg status files -
+	 and dpkg will complain about them - and are pretty rare. We therefore do
+	 usually not create conflicts while the parent is created, but only if a :none
+	 package (= the target) appears. This creates incorrect dependencies on :none
+	 for architecture-specific dependencies on the package we copy from, but we
+	 will ignore this bug as architecture-specific dependencies are only allowed
+	 in jessie and until then the :none packages should be extinct (hopefully).
+	 In other words: This should work long enough to allow graceful removal of
+	 these packages, it is not supposed to allow users to keep using them … */
+      if (strcmp(Pkg.Arch(), "none") == 0)
+      {
+	 pkgCache::PkgIterator M = Grp.FindPreferredPkg();
+	 if (M.end() == false && Pkg != M)
+	 {
+	    pkgCache::DepIterator D = M.RevDependsList();
+	    Dynamic<pkgCache::DepIterator> DynD(D);
+	    for (; D.end() == false; ++D)
+	    {
+	       if ((D->Type != pkgCache::Dep::Conflicts &&
+		    D->Type != pkgCache::Dep::DpkgBreaks &&
+		    D->Type != pkgCache::Dep::Replaces) ||
+		   D.ParentPkg().Group() == Grp)
+		  continue;
+
+	       map_ptrloc *OldDepLast = NULL;
+	       pkgCache::VerIterator ConVersion = D.ParentVer();
+	       Dynamic<pkgCache::VerIterator> DynV(ConVersion);
+	       // duplicate the Conflicts/Breaks/Replaces for :none arch
+	       if (D->Version == 0)
+		  NewDepends(Pkg, ConVersion, "", 0, D->Type, OldDepLast);
+	       else
+		  NewDepends(Pkg, ConVersion, D.TargetVer(),
+			     D->CompareOp, D->Type, OldDepLast);
+	    }
+	 }
+      }
+   }
+   if (unlikely(AddImplicitDepends(Grp, Pkg, Ver) == false))
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			   Pkg.Name(), "AddImplicitDepends", 2);
+
+   // Read only a single record and return
+   if (OutVer != 0)
+   {
+      *OutVer = Ver;
+      return true;
+   }
+
+   /* Record the Description (it is not translated) */
+   MD5SumValue CurMd5 = List.Description_md5();
+   if (CurMd5.Value().empty() == true)
+      return true;
+   std::string CurLang = List.DescriptionLanguage();
+
+   /* Before we add a new description we first search in the group for
+      a version with a description of the same MD5 - if so we reuse this
+      description group instead of creating our own for this version */
+   for (pkgCache::PkgIterator P = Grp.PackageList();
+	P.end() == false; P = Grp.NextPkg(P))
+   {
+      for (pkgCache::VerIterator V = P.VersionList();
+	   V.end() == false; ++V)
+      {
+	 if (IsDuplicateDescription(V.DescriptionList(), CurMd5, "") == false)
+	    continue;
+	 Ver->DescriptionList = V->DescriptionList;
+	 return true;
+      }
+   }
+
+   // We haven't found reusable descriptions, so add the first description
+   pkgCache::DescIterator Desc = Ver.DescriptionList();
+   Dynamic<pkgCache::DescIterator> DynDesc(Desc);
+   map_ptrloc *LastDesc = &Ver->DescriptionList;
+
+   oldMap = Map.Data();
+   map_ptrloc const descindex = NewDescription(Desc, CurLang, CurMd5, *LastDesc);
+   if (unlikely(descindex == 0 && _error->PendingError()))
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			   Pkg.Name(), "NewDescription", 2);
+   if (oldMap != Map.Data())
+       LastDesc += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
+   *LastDesc = descindex;
+   Desc->ParentPkg = Pkg.Index();
+
+   if ((*LastDesc == 0 && _error->PendingError()) || NewFileDesc(Desc,List) == false)
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+			   Pkg.Name(), "NewFileDesc", 2);
+
    return true;
 }
+									/*}}}*/
 									/*}}}*/
 // CacheGenerator::MergeFileProvides - Merge file provides   		/*{{{*/
 // ---------------------------------------------------------------------
@@ -395,8 +553,8 @@ bool pkgCacheGenerator::MergeFileProvides(ListParser &List)
       pkgCache::PkgIterator Pkg = Cache.FindPkg(PackageName);
       Dynamic<pkgCache::PkgIterator> DynPkg(Pkg);
       if (Pkg.end() == true)
-	 return _error->Error(_("Error occurred while processing %s (FindPkg)"),
-				PackageName.c_str());
+	 return _error->Error(_("Error occurred while processing %s (%s%d)"),
+				PackageName.c_str(), "FindPkg", 1);
       Counter++;
       if (Counter % 100 == 0 && Progress != 0)
 	 Progress->Progress(List.Offset());
@@ -404,12 +562,13 @@ bool pkgCacheGenerator::MergeFileProvides(ListParser &List)
       unsigned long Hash = List.VersionHash();
       pkgCache::VerIterator Ver = Pkg.VersionList();
       Dynamic<pkgCache::VerIterator> DynVer(Ver);
-      for (; Ver.end() == false; Ver++)
+      for (; Ver.end() == false; ++Ver)
       {
 	 if (Ver->Hash == Hash && Version.c_str() == Ver.VerStr())
 	 {
 	    if (List.CollectFileProvides(Cache,Ver) == false)
-	       return _error->Error(_("Error occurred while processing %s (CollectFileProvides)"),PackageName.c_str());
+	       return _error->Error(_("Error occurred while processing %s (%s%d)"),
+				    PackageName.c_str(), "CollectFileProvides", 1);
 	    break;
 	 }
       }
@@ -491,7 +650,8 @@ bool pkgCacheGenerator::NewPackage(pkgCache::PkgIterator &Pkg,const string &Name
    // Set the name, arch and the ID
    Pkg->Name = Grp->Name;
    Pkg->Group = Grp.Index();
-   map_ptrloc const idxArch = WriteUniqString(Arch.c_str());
+   // all is mapped to the native architecture
+   map_ptrloc const idxArch = (Arch == "all") ? Cache.HeaderP->Architecture : WriteUniqString(Arch.c_str());
    if (unlikely(idxArch == 0))
       return false;
    Pkg->Arch = idxArch;
@@ -499,6 +659,75 @@ bool pkgCacheGenerator::NewPackage(pkgCache::PkgIterator &Pkg,const string &Name
 
    return true;
 }
+									/*}}}*/
+// CacheGenerator::AddImplicitDepends					/*{{{*/
+bool pkgCacheGenerator::AddImplicitDepends(pkgCache::GrpIterator &G,
+					   pkgCache::PkgIterator &P,
+					   pkgCache::VerIterator &V)
+{
+   // copy P.Arch() into a string here as a cache remap
+   // in NewDepends() later may alter the pointer location
+   string Arch = P.Arch() == NULL ? "" : P.Arch();
+   map_ptrloc *OldDepLast = NULL;
+   /* MultiArch handling introduces a lot of implicit Dependencies:
+      - MultiArch: same → Co-Installable if they have the same version
+      - All others conflict with all other group members */
+   bool const coInstall = ((V->MultiArch & pkgCache::Version::Same) == pkgCache::Version::Same);
+   pkgCache::PkgIterator D = G.PackageList();
+   Dynamic<pkgCache::PkgIterator> DynD(D);
+   for (; D.end() != true; D = G.NextPkg(D))
+   {
+      if (Arch == D.Arch() || D->VersionList == 0)
+	 continue;
+      /* We allow only one installed arch at the time
+	 per group, therefore each group member conflicts
+	 with all other group members */
+      if (coInstall == true)
+      {
+	 // Replaces: ${self}:other ( << ${binary:Version})
+	 NewDepends(D, V, V.VerStr(),
+		    pkgCache::Dep::Less, pkgCache::Dep::Replaces,
+		    OldDepLast);
+	 // Breaks: ${self}:other (!= ${binary:Version})
+	 NewDepends(D, V, V.VerStr(),
+		    pkgCache::Dep::NotEquals, pkgCache::Dep::DpkgBreaks,
+		    OldDepLast);
+      } else {
+	 // Conflicts: ${self}:other
+	 NewDepends(D, V, "",
+		    pkgCache::Dep::NoOp, pkgCache::Dep::Conflicts,
+		    OldDepLast);
+      }
+   }
+   return true;
+}
+bool pkgCacheGenerator::AddImplicitDepends(pkgCache::VerIterator &V,
+					   pkgCache::PkgIterator &D)
+{
+   /* MultiArch handling introduces a lot of implicit Dependencies:
+      - MultiArch: same → Co-Installable if they have the same version
+      - All others conflict with all other group members */
+   map_ptrloc *OldDepLast = NULL;
+   bool const coInstall = ((V->MultiArch & pkgCache::Version::Same) == pkgCache::Version::Same);
+   if (coInstall == true)
+   {
+      // Replaces: ${self}:other ( << ${binary:Version})
+      NewDepends(D, V, V.VerStr(),
+		 pkgCache::Dep::Less, pkgCache::Dep::Replaces,
+		 OldDepLast);
+      // Breaks: ${self}:other (!= ${binary:Version})
+      NewDepends(D, V, V.VerStr(),
+		 pkgCache::Dep::NotEquals, pkgCache::Dep::DpkgBreaks,
+		 OldDepLast);
+   } else {
+      // Conflicts: ${self}:other
+      NewDepends(D, V, "",
+		 pkgCache::Dep::NoOp, pkgCache::Dep::Conflicts,
+		 OldDepLast);
+   }
+   return true;
+}
+
 									/*}}}*/
 // CacheGenerator::NewFileVer - Create a new File<->Version association	/*{{{*/
 // ---------------------------------------------------------------------
@@ -519,7 +748,7 @@ bool pkgCacheGenerator::NewFileVer(pkgCache::VerIterator &Ver,
    
    // Link it to the end of the list
    map_ptrloc *Last = &Ver->FileList;
-   for (pkgCache::VerFileIterator V = Ver.FileList(); V.end() == false; V++)
+   for (pkgCache::VerFileIterator V = Ver.FileList(); V.end() == false; ++V)
       Last = &V->NextFile;
    VF->NextFile = *Last;
    *Last = VF.Index();
@@ -547,6 +776,7 @@ unsigned long pkgCacheGenerator::NewVersion(pkgCache::VerIterator &Ver,
    
    // Fill it in
    Ver = pkgCache::VerIterator(Cache,Cache.VerP + Version);
+   //Dynamic<pkgCache::VerIterator> DynV(Ver); // caller MergeListVersion already takes care of it
    Ver->NextVer = Next;
    Ver->ID = Cache.HeaderP->VersionCount++;
    map_ptrloc const idxVerStr = WriteStringInMap(VerStr);
@@ -576,7 +806,7 @@ bool pkgCacheGenerator::NewFileDesc(pkgCache::DescIterator &Desc,
 
    // Link it to the end of the list
    map_ptrloc *Last = &Desc->FileList;
-   for (pkgCache::DescFileIterator D = Desc.FileList(); D.end() == false; D++)
+   for (pkgCache::DescFileIterator D = Desc.FileList(); D.end() == false; ++D)
       Last = &D->NextFile;
 
    DF->NextFile = *Last;
@@ -618,86 +848,6 @@ map_ptrloc pkgCacheGenerator::NewDescription(pkgCache::DescIterator &Desc,
    return Description;
 }
 									/*}}}*/
-// CacheGenerator::FinishCache - do various finish operations		/*{{{*/
-// ---------------------------------------------------------------------
-/* This prepares the Cache for delivery */
-bool pkgCacheGenerator::FinishCache(OpProgress *Progress)
-{
-   // FIXME: add progress reporting for this operation
-   // Do we have different architectures in your groups ?
-   vector<string> archs = APT::Configuration::getArchitectures();
-   if (archs.size() > 1)
-   {
-      // Create Conflicts in between the group
-      pkgCache::GrpIterator G = GetCache().GrpBegin();
-      Dynamic<pkgCache::GrpIterator> DynG(G);
-      for (; G.end() != true; G++)
-      {
-	 string const PkgName = G.Name();
-	 pkgCache::PkgIterator P = G.PackageList();
-	 Dynamic<pkgCache::PkgIterator> DynP(P);
-	 for (; P.end() != true; P = G.NextPkg(P))
-	 {
-	    if (strcmp(P.Arch(),"all") == 0)
-	       continue;
-	    pkgCache::PkgIterator allPkg;
-	    Dynamic<pkgCache::PkgIterator> DynallPkg(allPkg);
-	    pkgCache::VerIterator V = P.VersionList();
-	    Dynamic<pkgCache::VerIterator> DynV(V);
-	    for (; V.end() != true; V++)
-	    {
-	       string const Arch = V.Arch(true);
-	       map_ptrloc *OldDepLast = NULL;
-	       /* MultiArch handling introduces a lot of implicit Dependencies:
-		- MultiArch: same → Co-Installable if they have the same version
-		- Architecture: all → Need to be Co-Installable for internal reasons
-		- All others conflict with all other group members */
-	       bool const coInstall = (V->MultiArch == pkgCache::Version::All ||
-					V->MultiArch == pkgCache::Version::Same);
-	       if (V->MultiArch == pkgCache::Version::All && allPkg.end() == true)
-		  allPkg = G.FindPkg("all");
-	       for (vector<string>::const_iterator A = archs.begin(); A != archs.end(); ++A)
-	       {
-		  if (*A == Arch)
-		     continue;
-		  /* We allow only one installed arch at the time
-		     per group, therefore each group member conflicts
-		     with all other group members */
-		  pkgCache::PkgIterator D = G.FindPkg(*A);
-		  Dynamic<pkgCache::PkgIterator> DynD(D);
-		  if (D.end() == true)
-		     continue;
-		  if (coInstall == true)
-		  {
-		     // Replaces: ${self}:other ( << ${binary:Version})
-		     NewDepends(D, V, V.VerStr(),
-				pkgCache::Dep::Less, pkgCache::Dep::Replaces,
-				OldDepLast);
-		     // Breaks: ${self}:other (!= ${binary:Version})
-		     NewDepends(D, V, V.VerStr(),
-				pkgCache::Dep::NotEquals, pkgCache::Dep::DpkgBreaks,
-				OldDepLast);
-		     if (V->MultiArch == pkgCache::Version::All)
-		     {
-			// Depend on ${self}:all which does depend on nothing
-			NewDepends(allPkg, V, V.VerStr(),
-				   pkgCache::Dep::Equals, pkgCache::Dep::Depends,
-				   OldDepLast);
-		     }
-		  } else {
-			// Conflicts: ${self}:other
-			NewDepends(D, V, "",
-				   pkgCache::Dep::NoOp, pkgCache::Dep::Conflicts,
-				   OldDepLast);
-		  }
-	       }
-	    }
-	 }
-      }
-   }
-   return true;
-}
-									/*}}}*/
 // CacheGenerator::NewDepends - Create a dependency element		/*{{{*/
 // ---------------------------------------------------------------------
 /* This creates a dependency element in the tree. It is linked to the
@@ -707,7 +857,7 @@ bool pkgCacheGenerator::NewDepends(pkgCache::PkgIterator &Pkg,
 				   string const &Version,
 				   unsigned int const &Op,
 				   unsigned int const &Type,
-				   map_ptrloc *OldDepLast)
+				   map_ptrloc* &OldDepLast)
 {
    void const * const oldMap = Map.Data();
    // Get a structure
@@ -746,7 +896,7 @@ bool pkgCacheGenerator::NewDepends(pkgCache::PkgIterator &Pkg,
    if (OldDepLast == NULL)
    {
       OldDepLast = &Ver->DependsList;
-      for (pkgCache::DepIterator D = Ver.DependsList(); D.end() == false; D++)
+      for (pkgCache::DepIterator D = Ver.DependsList(); D.end() == false; ++D)
 	 OldDepLast = &D->NextDepends;
    } else if (oldMap != Map.Data())
       OldDepLast += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
@@ -776,6 +926,9 @@ bool pkgCacheGenerator::ListParser::NewDepends(pkgCache::VerIterator &Ver,
 
    // Locate the target package
    pkgCache::PkgIterator Pkg = Grp.FindPkg(Arch);
+   // we don't create 'none' packages and their dependencies if we can avoid it …
+   if (Pkg.end() == true && Arch == "none" && strcmp(Ver.ParentPkg().Arch(), "none") != 0)
+      return true;
    Dynamic<pkgCache::PkgIterator> DynPkg(Pkg);
    if (Pkg.end() == true) {
       if (unlikely(Owner->NewPackage(Pkg, PackageName, Arch) == false))
@@ -806,7 +959,8 @@ bool pkgCacheGenerator::ListParser::NewProvides(pkgCache::VerIterator &Ver,
    pkgCache &Cache = Owner->Cache;
 
    // We do not add self referencing provides
-   if (Ver.ParentPkg().Name() == PkgName && PkgArch == Ver.Arch(true))
+   if (Ver.ParentPkg().Name() == PkgName && (PkgArch == Ver.ParentPkg().Arch() ||
+	(PkgArch == "all" && strcmp((Cache.StrP + Cache.HeaderP->Architecture), Ver.ParentPkg().Arch()) == 0)))
       return true;
    
    // Get a structure
@@ -821,8 +975,12 @@ bool pkgCacheGenerator::ListParser::NewProvides(pkgCache::VerIterator &Ver,
    Prv->Version = Ver.Index();
    Prv->NextPkgProv = Ver->ProvidesList;
    Ver->ProvidesList = Prv.Index();
-   if (Version.empty() == false && unlikely((Prv->ProvideVersion = WriteString(Version)) == 0))
-      return false;
+   if (Version.empty() == false) {
+      map_ptrloc const idxProvideVersion = WriteString(Version);
+      Prv->ProvideVersion = idxProvideVersion;
+      if (unlikely(idxProvideVersion == 0))
+	 return false;
+   }
    
    // Locate the target package
    pkgCache::PkgIterator Pkg;
@@ -937,8 +1095,11 @@ unsigned long pkgCacheGenerator::WriteUniqString(const char *S,
 /* This just verifies that each file in the list of index files exists,
    has matching attributes with the cache and the cache does not have
    any extra files. */
-static bool CheckValidity(const string &CacheFile, FileIterator Start, 
-                          FileIterator End,MMap **OutMap = 0)
+static bool CheckValidity(const string &CacheFile, 
+                          pkgSourceList &List,
+                          FileIterator Start, 
+                          FileIterator End,
+                          MMap **OutMap = 0)
 {
    bool const Debug = _config->FindB("Debug::pkgCacheGen", false);
    // No file, certainly invalid
@@ -946,6 +1107,13 @@ static bool CheckValidity(const string &CacheFile, FileIterator Start,
    {
       if (Debug == true)
 	 std::clog << "CacheFile doesn't exist" << std::endl;
+      return false;
+   }
+
+   if (List.GetLastModifiedTime() > GetModificationTime(CacheFile))
+   {
+      if (Debug == true)
+	 std::clog << "sources.list is newer than the cache" << std::endl;
       return false;
    }
 
@@ -965,7 +1133,7 @@ static bool CheckValidity(const string &CacheFile, FileIterator Start,
       verify the IMS data and check that it is on the disk too.. */
    SPtrArray<bool> Visited = new bool[Cache.HeaderP->PackageFileCount];
    memset(Visited,0,sizeof(*Visited)*Cache.HeaderP->PackageFileCount);
-   for (; Start != End; Start++)
+   for (; Start != End; ++Start)
    {
       if (Debug == true)
 	 std::clog << "Checking PkgFile " << (*Start)->Describe() << ": ";
@@ -1032,7 +1200,7 @@ static bool CheckValidity(const string &CacheFile, FileIterator Start,
 static unsigned long ComputeSize(FileIterator Start,FileIterator End)
 {
    unsigned long TotalSize = 0;
-   for (; Start != End; Start++)
+   for (; Start != End; ++Start)
    {
       if ((*Start)->HasPackages() == false)
 	 continue;      
@@ -1050,7 +1218,7 @@ static bool BuildCache(pkgCacheGenerator &Gen,
 		       FileIterator Start, FileIterator End)
 {
    FileIterator I;
-   for (I = Start; I != End; I++)
+   for (I = Start; I != End; ++I)
    {
       if ((*I)->HasPackages() == false)
 	 continue;
@@ -1080,7 +1248,7 @@ static bool BuildCache(pkgCacheGenerator &Gen,
 	 Progress->Done();
       TotalSize = ComputeSize(Start, End);
       CurrentSize = 0;
-      for (I = Start; I != End; I++)
+      for (I = Start; I != End; ++I)
       {
 	 unsigned long Size = (*I)->Size();
 	 if (Progress != NULL)
@@ -1123,16 +1291,16 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
 			MMap **OutMap,bool AllowMem)
 {
    bool const Debug = _config->FindB("Debug::pkgCacheGen", false);
-   
-   vector<pkgIndexFile *> Files;
-   for (vector<metaIndex *>::const_iterator i = List.begin();
+
+   std::vector<pkgIndexFile *> Files;
+   for (std::vector<metaIndex *>::const_iterator i = List.begin();
         i != List.end();
-        i++)
+        ++i)
    {
-      vector <pkgIndexFile *> *Indexes = (*i)->GetIndexFiles();
-      for (vector<pkgIndexFile *>::const_iterator j = Indexes->begin();
+      std::vector <pkgIndexFile *> *Indexes = (*i)->GetIndexFiles();
+      for (std::vector<pkgIndexFile *>::const_iterator j = Indexes->begin();
 	   j != Indexes->end();
-	   j++)
+	   ++j)
          Files.push_back (*j);
    }
    
@@ -1174,7 +1342,7 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
       Progress->OverallProgress(0,1,1,_("Reading package lists"));
 
    // Cache is OK, Fin.
-   if (CheckValidity(CacheFile,Files.begin(),Files.end(),OutMap) == true)
+   if (CheckValidity(CacheFile, List, Files.begin(),Files.end(),OutMap) == true)
    {
       if (Progress != NULL)
 	 Progress->OverallProgress(1,1,1,_("Reading package lists"));
@@ -1191,16 +1359,33 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
    SPtr<DynamicMMap> Map;
    if (Writeable == true && CacheFile.empty() == false)
    {
+      _error->PushToStack();
       unlink(CacheFile.c_str());
       CacheF = new FileFd(CacheFile,FileFd::WriteAtomic);
       fchmod(CacheF->Fd(),0644);
       Map = CreateDynamicMMap(CacheF, MMap::Public);
       if (_error->PendingError() == true)
-	 return false;
-      if (Debug == true)
-	 std::clog << "Open filebased MMap" << std::endl;
+      {
+	 delete CacheF.UnGuard();
+	 delete Map.UnGuard();
+	 if (Debug == true)
+	    std::clog << "Open filebased MMap FAILED" << std::endl;
+	 Writeable = false;
+	 if (AllowMem == false)
+	 {
+	    _error->MergeWithStack();
+	    return false;
+	 }
+	 _error->RevertToStack();
+      }
+      else
+      {
+	 _error->MergeWithStack();
+	 if (Debug == true)
+	    std::clog << "Open filebased MMap" << std::endl;
+      }
    }
-   else
+   if (Writeable == false || CacheFile.empty() == true)
    {
       // Just build it in memory..
       Map = CreateDynamicMMap(NULL);
@@ -1211,7 +1396,7 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
    // Lets try the source cache.
    unsigned long CurrentSize = 0;
    unsigned long TotalSize = 0;
-   if (CheckValidity(SrcCacheFile,Files.begin(),
+   if (CheckValidity(SrcCacheFile, List, Files.begin(),
 		     Files.begin()+EndOfSource) == true)
    {
       if (Debug == true)
@@ -1233,9 +1418,6 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
       if (BuildCache(Gen,Progress,CurrentSize,TotalSize,
 		     Files.begin()+EndOfSource,Files.end()) == false)
 	 return false;
-
-      // FIXME: move me to a better place
-      Gen.FinishCache(Progress);
    }
    else
    {
@@ -1278,9 +1460,6 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
       if (BuildCache(Gen,Progress,CurrentSize,TotalSize,
 		     Files.begin()+EndOfSource,Files.end()) == false)
 	 return false;
-
-      // FIXME: move me to a better place
-      Gen.FinishCache(Progress);
    }
    if (Debug == true)
       std::clog << "Caches are ready for shipping" << std::endl;
@@ -1310,7 +1489,7 @@ __deprecated bool pkgMakeOnlyStatusCache(OpProgress &Progress,DynamicMMap **OutM
    { return pkgCacheGenerator::MakeOnlyStatusCache(&Progress, OutMap); }
 bool pkgCacheGenerator::MakeOnlyStatusCache(OpProgress *Progress,DynamicMMap **OutMap)
 {
-   vector<pkgIndexFile *> Files;
+   std::vector<pkgIndexFile *> Files;
    unsigned long EndOfSource = Files.size();
    if (_system->AddStatusFiles(Files) == false)
       return false;
@@ -1331,13 +1510,29 @@ bool pkgCacheGenerator::MakeOnlyStatusCache(OpProgress *Progress,DynamicMMap **O
 		  Files.begin()+EndOfSource,Files.end()) == false)
       return false;
 
-   // FIXME: move me to a better place
-   Gen.FinishCache(Progress);
-
    if (_error->PendingError() == true)
       return false;
    *OutMap = Map.UnGuard();
    
+   return true;
+}
+									/*}}}*/
+// IsDuplicateDescription						/*{{{*/
+static bool IsDuplicateDescription(pkgCache::DescIterator Desc,
+			    MD5SumValue const &CurMd5, std::string const &CurLang)
+{
+   // Descriptions in the same link-list have all the same md5
+   if (Desc.end() == true || MD5SumValue(Desc.md5()) != CurMd5)
+      return false;
+   for (; Desc.end() == false; ++Desc)
+      if (Desc.LanguageCode() == CurLang)
+	 return true;
+   return false;
+}
+									/*}}}*/
+// CacheGenerator::FinishCache						/*{{{*/
+bool pkgCacheGenerator::FinishCache(OpProgress *Progress)
+{
    return true;
 }
 									/*}}}*/

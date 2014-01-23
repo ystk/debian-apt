@@ -11,6 +11,8 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include<config.h>
+
 #include <apt-pkg/dirstream.h>
 #include <apt-pkg/error.h>
 
@@ -43,11 +45,15 @@ bool pkgDirStream::DoItem(Item &Itm,int &Fd)
 	 
 	 // fchmod deals with umask and fchown sets the ownership
 	 if (fchmod(iFd,Itm.Mode) != 0)
-	    return _error->Errno("fchmod",_("Failed to write file %s"),
-				 Itm.Name);
+	 {
+	    close(iFd);
+	    return _error->Errno("fchmod",_("Failed to write file %s"), Itm.Name);
+	 }
 	 if (fchown(iFd,Itm.UID,Itm.GID) != 0 && errno != EPERM)
-	    return _error->Errno("fchown",_("Failed to write file %s"),
-				 Itm.Name);
+	 {
+	    close(iFd);
+	    return _error->Errno("fchown",_("Failed to write file %s"), Itm.Name);
+	 }
 	 Fd = iFd;
 	 return true;
       }

@@ -10,23 +10,27 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
-#include "cachedb.h"
+#include <config.h>
 
-#include <apti18n.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/md5.h>
 #include <apt-pkg/sha1.h>
-#include <apt-pkg/sha256.h>
+#include <apt-pkg/sha2.h>
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/configuration.h>
-    
+#include <apt-pkg/fileutl.h>
+
 #include <netinet/in.h>       // htonl, etc
+
+#include "cachedb.h"
+
+#include <apti18n.h>
 									/*}}}*/
 
 // CacheDB::ReadyDB - Ready the DB2					/*{{{*/
 // ---------------------------------------------------------------------
 /* This opens the DB2 file for caching package information */
-bool CacheDB::ReadyDB(string const &DB)
+bool CacheDB::ReadyDB(std::string const &DB)
 {
    int err;
 
@@ -46,7 +50,7 @@ bool CacheDB::ReadyDB(string const &DB)
    
    DBLoaded = false;
    Dbp = 0;
-   DBFile = string();
+   DBFile = std::string();
    
    if (DB.empty())
       return true;
@@ -160,9 +164,10 @@ bool CacheDB::GetCurStat()
 									/*}}}*/
 // CacheDB::GetFileInfo - Get all the info about the file		/*{{{*/
 // ---------------------------------------------------------------------
-bool CacheDB::GetFileInfo(string const &FileName, bool const &DoControl, bool const &DoContents,
+bool CacheDB::GetFileInfo(std::string const &FileName, bool const &DoControl, bool const &DoContents,
 				bool const &GenContentsOnly, bool const &DoMD5, bool const &DoSHA1,
-				bool const &DoSHA256, bool const &checkMtime)
+				bool const &DoSHA256, 	bool const &DoSHA512, 
+                          bool const &checkMtime)
 {
 	this->FileName = FileName;
 
@@ -190,7 +195,9 @@ bool CacheDB::GetFileInfo(string const &FileName, bool const &DoControl, bool co
 		|| (DoContents && LoadContents(GenContentsOnly) == false)
 		|| (DoMD5 && GetMD5(false) == false)
 		|| (DoSHA1 && GetSHA1(false) == false)
-		|| (DoSHA256 && GetSHA256(false) == false))
+		|| (DoSHA256 && GetSHA256(false) == false)
+		|| (DoSHA512 && GetSHA512(false) == false)
+           )
 	{
 		delete Fd;
 		Fd = NULL;
@@ -293,12 +300,16 @@ bool CacheDB::LoadContents(bool const &GenOnly)
 }
 									/*}}}*/
 
-static string bytes2hex(uint8_t *bytes, size_t length) {
-   char space[65];
-   if (length * 2 > sizeof(space) - 1) length = (sizeof(space) - 1) / 2;
-   for (size_t i = 0; i < length; i++)
-      snprintf(&space[i*2], 3, "%02x", bytes[i]);
-   return string(space);
+static std::string bytes2hex(uint8_t *bytes, size_t length) {
+   char buf[3];
+   std::string space;
+
+   space.reserve(length*2 + 1);
+   for (size_t i = 0; i < length; i++) {
+      snprintf(buf, sizeof(buf), "%02x", bytes[i]);
+      space.append(buf);
+   }
+   return space;
 }
 
 static inline unsigned char xdig2num(char const &dig) {
@@ -341,7 +352,7 @@ bool CacheDB::GetMD5(bool const &GenOnly)
       return false;
    }
    MD5Summation MD5;
-   if (Fd->Seek(0) == false || MD5.AddFD(Fd->Fd(),CurStat.FileSize) == false)
+   if (Fd->Seek(0) == false || MD5.AddFD(*Fd, CurStat.FileSize) == false)
       return false;
    
    MD5Res = MD5.Result();
@@ -372,7 +383,7 @@ bool CacheDB::GetSHA1(bool const &GenOnly)
       return false;
    }
    SHA1Summation SHA1;
-   if (Fd->Seek(0) == false || SHA1.AddFD(Fd->Fd(),CurStat.FileSize) == false)
+   if (Fd->Seek(0) == false || SHA1.AddFD(*Fd, CurStat.FileSize) == false)
       return false;
    
    SHA1Res = SHA1.Result();
@@ -403,12 +414,43 @@ bool CacheDB::GetSHA256(bool const &GenOnly)
       return false;
    }
    SHA256Summation SHA256;
-   if (Fd->Seek(0) == false || SHA256.AddFD(Fd->Fd(),CurStat.FileSize) == false)
+   if (Fd->Seek(0) == false || SHA256.AddFD(*Fd, CurStat.FileSize) == false)
       return false;
    
    SHA256Res = SHA256.Result();
    hex2bytes(CurStat.SHA256, SHA256Res.data(), sizeof(CurStat.SHA256));
    CurStat.Flags |= FlSHA256;
+   return true;
+}
+									/*}}}*/
+// CacheDB::GetSHA256 - Get the SHA256 hash				/*{{{*/
+// ---------------------------------------------------------------------
+/* */
+bool CacheDB::GetSHA512(bool const &GenOnly)
+{
+   // Try to read the control information out of the DB.
+   if ((CurStat.Flags & FlSHA512) == FlSHA512)
+   {
+      if (GenOnly == true)
+	 return true;
+
+      SHA512Res = bytes2hex(CurStat.SHA512, sizeof(CurStat.SHA512));
+      return true;
+   }
+   
+   Stats.SHA512Bytes += CurStat.FileSize;
+	 
+   if (Fd == NULL && OpenFile() == false)
+   {
+      return false;
+   }
+   SHA512Summation SHA512;
+   if (Fd->Seek(0) == false || SHA512.AddFD(*Fd, CurStat.FileSize) == false)
+      return false;
+   
+   SHA512Res = SHA512.Result();
+   hex2bytes(CurStat.SHA512, SHA512Res.data(), sizeof(CurStat.SHA512));
+   CurStat.Flags |= FlSHA512;
    return true;
 }
 									/*}}}*/
@@ -460,7 +502,7 @@ bool CacheDB::Clean()
              stringcmp(Colon + 1, (char *)Key.data+Key.size,"cl") == 0 ||
              stringcmp(Colon + 1, (char *)Key.data+Key.size,"cn") == 0)
 	 {
-            if (FileExists(string((const char *)Key.data,Colon)) == true)
+            if (FileExists(std::string((const char *)Key.data,Colon)) == true)
 		continue;	     
 	 }
       }

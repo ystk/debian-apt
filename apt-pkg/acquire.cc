@@ -13,6 +13,8 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/acquire.h>
 #include <apt-pkg/acquire-item.h>
 #include <apt-pkg/acquire-worker.h>
@@ -21,8 +23,6 @@
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/fileutl.h>
 
-#include <apti18n.h>
-
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
@@ -30,6 +30,8 @@
 #include <dirent.h>
 #include <sys/time.h>
 #include <errno.h>
+
+#include <apti18n.h>
 									/*}}}*/
 
 using namespace std;
@@ -37,9 +39,9 @@ using namespace std;
 // Acquire::pkgAcquire - Constructor					/*{{{*/
 // ---------------------------------------------------------------------
 /* We grab some runtime state from the configuration space */
-pkgAcquire::pkgAcquire() : Queues(0), Workers(0), Configs(0), Log(NULL), ToFetch(0),
+pkgAcquire::pkgAcquire() : LockFD(-1), Queues(0), Workers(0), Configs(0), Log(NULL), ToFetch(0),
 			   Debug(_config->FindB("Debug::pkgAcquire",false)),
-			   Running(false), LockFD(-1)
+			   Running(false)
 {
    string const Mode = _config->Find("Acquire::Queue-Mode","host");
    if (strcasecmp(Mode.c_str(),"host") == 0)
@@ -47,10 +49,10 @@ pkgAcquire::pkgAcquire() : Queues(0), Workers(0), Configs(0), Log(NULL), ToFetch
    if (strcasecmp(Mode.c_str(),"access") == 0)
       QueueMode = QueueAccess;
 }
-pkgAcquire::pkgAcquire(pkgAcquireStatus *Progress) : Queues(0), Workers(0),
+pkgAcquire::pkgAcquire(pkgAcquireStatus *Progress) :  LockFD(-1), Queues(0), Workers(0),
 			   Configs(0), Log(Progress), ToFetch(0),
 			   Debug(_config->FindB("Debug::pkgAcquire",false)),
-			   Running(false), LockFD(-1)
+			   Running(false)
 {
    string const Mode = _config->Find("Acquire::Queue-Mode","host");
    if (strcasecmp(Mode.c_str(),"host") == 0)
@@ -116,7 +118,7 @@ pkgAcquire::~pkgAcquire()
 /* */
 void pkgAcquire::Shutdown()
 {
-   while (Items.size() != 0)
+   while (Items.empty() == false)
    {
       if (Items[0]->Status == Item::StatFetching)
          Items[0]->Status = Item::StatError;
@@ -155,7 +157,7 @@ void pkgAcquire::Remove(Item *Itm)
 	 I = Items.begin();
       }      
       else 
-	 I++;
+	 ++I;
    }
 }
 									/*}}}*/
@@ -242,11 +244,19 @@ void pkgAcquire::Dequeue(Item *Itm)
 {
    Queue *I = Queues;
    bool Res = false;
-   for (; I != 0; I = I->Next)
-      Res |= I->Dequeue(Itm);
-   
    if (Debug == true)
       clog << "Dequeuing " << Itm->DestFile << endl;
+
+   for (; I != 0; I = I->Next)
+   {
+      if (I->Dequeue(Itm))
+      {
+         Res = true;
+	 if (Debug == true)
+	    clog << "Dequeued from " << I->Name << endl;
+      }
+   }
+
    if (Res == true)
       ToFetch--;
 }
@@ -267,9 +277,30 @@ string pkgAcquire::QueueName(string Uri,MethodConfig const *&Config)
    /* Single-Instance methods get exactly one queue per URI. This is
       also used for the Access queue method  */
    if (Config->SingleInstance == true || QueueMode == QueueAccess)
-       return U.Access;
+      return U.Access;
 
-   return U.Access + ':' + U.Host;
+   string AccessSchema = U.Access + ':',
+	FullQueueName = AccessSchema + U.Host;
+   unsigned int Instances = 0, SchemaLength = AccessSchema.length();
+
+   Queue *I = Queues;
+   for (; I != 0; I = I->Next) {
+      // if the queue already exists, re-use it
+      if (I->Name == FullQueueName)
+	 return FullQueueName;
+
+      if (I->Name.compare(0, SchemaLength, AccessSchema) == 0)
+	 Instances++;
+   }
+
+   if (Debug) {
+      clog << "Found " << Instances << " instances of " << U.Access << endl;
+   }
+
+   if (Instances >= (unsigned int)_config->FindI("Acquire::QueueHost::Limit",10))
+      return U.Access;
+
+   return FullQueueName;
 }
 									/*}}}*/
 // Acquire::GetConfig - Fetch the configuration information		/*{{{*/
@@ -411,7 +442,7 @@ pkgAcquire::RunResult pkgAcquire::Run(int PulseIntervall)
       I->Shutdown(false);
 
    // Shut down the items
-   for (ItemIterator I = Items.begin(); I != Items.end(); I++)
+   for (ItemIterator I = Items.begin(); I != Items.end(); ++I)
       (*I)->Finished(); 
    
    if (_error->PendingError())
@@ -445,6 +476,10 @@ pkgAcquire::Worker *pkgAcquire::WorkerStep(Worker *I)
    if it is part of the download set. */
 bool pkgAcquire::Clean(string Dir)
 {
+   // non-existing directories are by definition clean…
+   if (DirectoryExists(Dir) == false)
+      return true;
+
    DIR *D = opendir(Dir.c_str());   
    if (D == 0)
       return _error->Errno("opendir",_("Unable to read %s"),Dir.c_str());
@@ -467,7 +502,7 @@ bool pkgAcquire::Clean(string Dir)
       
       // Look in the get list
       ItemCIterator I = Items.begin();
-      for (; I != Items.end(); I++)
+      for (; I != Items.end(); ++I)
 	 if (flNotDir((*I)->DestFile) == Dir->d_name)
 	    break;
       
@@ -488,7 +523,7 @@ bool pkgAcquire::Clean(string Dir)
 unsigned long long pkgAcquire::TotalNeeded()
 {
    unsigned long long Total = 0;
-   for (ItemCIterator I = ItemsBegin(); I != ItemsEnd(); I++)
+   for (ItemCIterator I = ItemsBegin(); I != ItemsEnd(); ++I)
       Total += (*I)->FileSize;
    return Total;
 }
@@ -499,7 +534,7 @@ unsigned long long pkgAcquire::TotalNeeded()
 unsigned long long pkgAcquire::FetchNeeded()
 {
    unsigned long long Total = 0;
-   for (ItemCIterator I = ItemsBegin(); I != ItemsEnd(); I++)
+   for (ItemCIterator I = ItemsBegin(); I != ItemsEnd(); ++I)
       if ((*I)->Local == false)
 	 Total += (*I)->FileSize;
    return Total;
@@ -511,7 +546,7 @@ unsigned long long pkgAcquire::FetchNeeded()
 unsigned long long pkgAcquire::PartialPresent()
 {
   unsigned long long Total = 0;
-   for (ItemCIterator I = ItemsBegin(); I != ItemsEnd(); I++)
+   for (ItemCIterator I = ItemsBegin(); I != ItemsEnd(); ++I)
       if ((*I)->Local == false)
 	 Total += (*I)->PartialSize;
    return Total;
@@ -760,7 +795,7 @@ void pkgAcquire::Queue::Bump()
 // AcquireStatus::pkgAcquireStatus - Constructor			/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-pkgAcquireStatus::pkgAcquireStatus() : Update(true), MorePulses(false)
+pkgAcquireStatus::pkgAcquireStatus() : d(NULL), Update(true), MorePulses(false)
 {
    Start();
 }
@@ -781,11 +816,11 @@ bool pkgAcquireStatus::Pulse(pkgAcquire *Owner)
    unsigned int Unknown = 0;
    unsigned int Count = 0;
    for (pkgAcquire::ItemCIterator I = Owner->ItemsBegin(); I != Owner->ItemsEnd();
-	I++, Count++)
+	++I, ++Count)
    {
       TotalItems++;
       if ((*I)->Status == pkgAcquire::Item::StatDone)
-	 CurrentItems++;
+	 ++CurrentItems;
       
       // Totally ignore local items
       if ((*I)->Local == true)
@@ -795,11 +830,11 @@ bool pkgAcquireStatus::Pulse(pkgAcquire *Owner)
       if ((*I)->Complete == true)
 	 CurrentBytes += (*I)->FileSize;
       if ((*I)->FileSize == 0 && (*I)->Complete == false)
-	 Unknown++;
+	 ++Unknown;
    }
    
    // Compute the current completion
-   unsigned long ResumeSize = 0;
+   unsigned long long ResumeSize = 0;
    for (pkgAcquire::Worker *I = Owner->WorkersBegin(); I != 0;
 	I = Owner->WorkerStep(I))
       if (I->CurrentItem != 0 && I->CurrentItem->Owner->Complete == false)
@@ -838,7 +873,7 @@ bool pkgAcquireStatus::Pulse(pkgAcquire *Owner)
       else
 	 CurrentCPS = ((CurrentBytes - ResumeSize) - LastBytes)/Delta;
       LastBytes = CurrentBytes - ResumeSize;
-      ElapsedTime = (unsigned long)Delta;
+      ElapsedTime = (unsigned long long)Delta;
       Time = NewTime;
    }
 
@@ -849,8 +884,9 @@ bool pkgAcquireStatus::Pulse(pkgAcquire *Owner)
 
       char msg[200];
       long i = CurrentItems < TotalItems ? CurrentItems + 1 : CurrentItems;
-      unsigned long ETA =
-	 (unsigned long)((TotalBytes - CurrentBytes) / CurrentCPS);
+      unsigned long long ETA = 0;
+      if(CurrentCPS > 0)
+         ETA = (TotalBytes - CurrentBytes) / CurrentCPS;
 
       // only show the ETA if it makes sense
       if (ETA > 0 && ETA < 172800 /* two days */ )
@@ -865,7 +901,9 @@ bool pkgAcquireStatus::Pulse(pkgAcquire *Owner)
 	     << ":"  << (CurrentBytes/float(TotalBytes)*100.0) 
 	     << ":" << msg 
 	     << endl;
-      write(fd, status.str().c_str(), status.str().size());
+
+      std::string const dlstatus = status.str();
+      FileFd::Write(fd, dlstatus.c_str(), dlstatus.size());
    }
 
    return true;
@@ -906,13 +944,13 @@ void pkgAcquireStatus::Stop()
    else
       CurrentCPS = FetchedBytes/Delta;
    LastBytes = CurrentBytes;
-   ElapsedTime = (unsigned int)Delta;
+   ElapsedTime = (unsigned long long)Delta;
 }
 									/*}}}*/
 // AcquireStatus::Fetched - Called when a byte set has been fetched	/*{{{*/
 // ---------------------------------------------------------------------
 /* This is used to get accurate final transfer rate reporting. */
-void pkgAcquireStatus::Fetched(unsigned long Size,unsigned long Resume)
+void pkgAcquireStatus::Fetched(unsigned long long Size,unsigned long long Resume)
 {   
    FetchedBytes += Size - Resume;
 }

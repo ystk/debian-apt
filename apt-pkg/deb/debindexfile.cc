@@ -9,6 +9,8 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/debindexfile.h>
 #include <apt-pkg/debsrcrecords.h>
 #include <apt-pkg/deblistparser.h>
@@ -23,6 +25,8 @@
 
 #include <sys/stat.h>
 									/*}}}*/
+
+using std::string;
 
 // SourcesIndex::debSourcesIndex - Constructor				/*{{{*/
 // ---------------------------------------------------------------------
@@ -66,7 +70,10 @@ pkgSrcRecords::Parser *debSourcesIndex::CreateSrcParser() const
    string SourcesURI = _config->FindDir("Dir::State::lists") + 
       URItoFileName(IndexURI("Sources"));
    string SourcesURIgzip = SourcesURI + ".gz";
-   if (!FileExists(SourcesURI) && FileExists(SourcesURIgzip))
+
+   if (!FileExists(SourcesURI) && !FileExists(SourcesURIgzip))
+      return NULL;
+   else if (!FileExists(SourcesURI) && FileExists(SourcesURIgzip))
       SourcesURI = SourcesURIgzip;
 
    return new debSrcRecordParser(SourcesURI,this);
@@ -154,7 +161,7 @@ unsigned long debSourcesIndex::Size() const
    /* we need to ignore errors here; if the lists are absent, just return 0 */
    _error->PushToStack();
 
-   FileFd f = FileFd (IndexFile("Sources"), FileFd::ReadOnlyGzip);
+   FileFd f(IndexFile("Sources"), FileFd::ReadOnly, FileFd::Extension);
    if (!f.Failed())
       size = f.Size();
 
@@ -283,7 +290,7 @@ unsigned long debPackagesIndex::Size() const
    /* we need to ignore errors here; if the lists are absent, just return 0 */
    _error->PushToStack();
 
-   FileFd f = FileFd (IndexFile("Packages"), FileFd::ReadOnlyGzip);
+   FileFd f(IndexFile("Packages"), FileFd::ReadOnly, FileFd::Extension);
    if (!f.Failed())
       size = f.Size();
 
@@ -300,7 +307,7 @@ unsigned long debPackagesIndex::Size() const
 bool debPackagesIndex::Merge(pkgCacheGenerator &Gen,OpProgress *Prog) const
 {
    string PackageFile = IndexFile("Packages");
-   FileFd Pkg(PackageFile,FileFd::ReadOnlyGzip);
+   FileFd Pkg(PackageFile,FileFd::ReadOnly, FileFd::Extension);
    debListParser Parser(&Pkg, Architecture);
 
    if (_error->PendingError() == true)
@@ -314,18 +321,21 @@ bool debPackagesIndex::Merge(pkgCacheGenerator &Gen,OpProgress *Prog) const
    // Store the IMS information
    pkgCache::PkgFileIterator File = Gen.GetCurFile();
    pkgCacheGenerator::Dynamic<pkgCache::PkgFileIterator> DynFile(File);
-   struct stat St;
-   if (fstat(Pkg.Fd(),&St) != 0)
-      return _error->Errno("fstat","Failed to stat");
-   File->Size = St.st_size;
-   File->mtime = St.st_mtime;
+   File->Size = Pkg.FileSize();
+   File->mtime = Pkg.ModificationTime();
    
    if (Gen.MergeList(Parser) == false)
       return _error->Error("Problem with MergeList %s",PackageFile.c_str());
 
    // Check the release file
-   string ReleaseFile = debReleaseIndex(URI,Dist).MetaIndexFile("Release");
+   string ReleaseFile = debReleaseIndex(URI,Dist).MetaIndexFile("InRelease");
+   bool releaseExists = false;
    if (FileExists(ReleaseFile) == true)
+      releaseExists = true;
+   else
+      ReleaseFile = debReleaseIndex(URI,Dist).MetaIndexFile("Release");
+
+   if (releaseExists == true || FileExists(ReleaseFile) == true)
    {
       FileFd Rel(ReleaseFile,FileFd::ReadOnly);
       if (_error->PendingError() == true)
@@ -343,7 +353,7 @@ pkgCache::PkgFileIterator debPackagesIndex::FindInCache(pkgCache &Cache) const
 {
    string FileName = IndexFile("Packages");
    pkgCache::PkgFileIterator File = Cache.FileBegin();
-   for (; File.end() == false; File++)
+   for (; File.end() == false; ++File)
    {
        if (File.FileName() == NULL || FileName != File.FileName())
 	 continue;
@@ -414,12 +424,10 @@ string debTranslationsIndex::IndexURI(const char *Type) const
 /* */
 bool debTranslationsIndex::GetIndexes(pkgAcquire *Owner) const
 {
-   if (TranslationsAvailable()) {
-     string const TranslationFile = string("Translation-").append(Language);
-     new pkgAcqIndexTrans(Owner, IndexURI(Language),
-			  Info(TranslationFile.c_str()),
-			  TranslationFile);
-   }
+   string const TranslationFile = string("Translation-").append(Language);
+   new pkgAcqIndexTrans(Owner, IndexURI(Language),
+                        Info(TranslationFile.c_str()),
+                        TranslationFile);
 
    return true;
 }
@@ -459,9 +467,6 @@ string debTranslationsIndex::Info(const char *Type) const
 									/*}}}*/
 bool debTranslationsIndex::HasPackages() const				/*{{{*/
 {
-   if(!TranslationsAvailable())
-      return false;
-   
    return FileExists(IndexFile(Language));
 }
 									/*}}}*/
@@ -483,7 +488,7 @@ unsigned long debTranslationsIndex::Size() const
    /* we need to ignore errors here; if the lists are absent, just return 0 */
    _error->PushToStack();
 
-   FileFd f = FileFd (IndexFile(Language), FileFd::ReadOnlyGzip);
+   FileFd f(IndexFile(Language), FileFd::ReadOnly, FileFd::Extension);
    if (!f.Failed())
       size = f.Size();
 
@@ -501,9 +506,9 @@ bool debTranslationsIndex::Merge(pkgCacheGenerator &Gen,OpProgress *Prog) const
 {
    // Check the translation file, if in use
    string TranslationFile = IndexFile(Language);
-   if (TranslationsAvailable() && FileExists(TranslationFile))
+   if (FileExists(TranslationFile))
    {
-     FileFd Trans(TranslationFile,FileFd::ReadOnlyGzip);
+     FileFd Trans(TranslationFile,FileFd::ReadOnly, FileFd::Extension);
      debListParser TransParser(&Trans);
      if (_error->PendingError() == true)
        return false;
@@ -515,11 +520,8 @@ bool debTranslationsIndex::Merge(pkgCacheGenerator &Gen,OpProgress *Prog) const
 
      // Store the IMS information
      pkgCache::PkgFileIterator TransFile = Gen.GetCurFile();
-     struct stat TransSt;
-     if (fstat(Trans.Fd(),&TransSt) != 0)
-       return _error->Errno("fstat","Failed to stat");
-     TransFile->Size = TransSt.st_size;
-     TransFile->mtime = TransSt.st_mtime;
+     TransFile->Size = Trans.FileSize();
+     TransFile->mtime = Trans.ModificationTime();
    
      if (Gen.MergeList(TransParser) == false)
        return _error->Error("Problem with MergeList %s",TranslationFile.c_str());
@@ -536,7 +538,7 @@ pkgCache::PkgFileIterator debTranslationsIndex::FindInCache(pkgCache &Cache) con
    string FileName = IndexFile(Language);
    
    pkgCache::PkgFileIterator File = Cache.FileBegin();
-   for (; File.end() == false; File++)
+   for (; File.end() == false; ++File)
    {
       if (FileName != File.FileName())
 	 continue;
@@ -584,7 +586,7 @@ unsigned long debStatusIndex::Size() const
 /* */
 bool debStatusIndex::Merge(pkgCacheGenerator &Gen,OpProgress *Prog) const
 {
-   FileFd Pkg(File,FileFd::ReadOnlyGzip);
+   FileFd Pkg(File,FileFd::ReadOnly, FileFd::Extension);
    if (_error->PendingError() == true)
       return false;
    debListParser Parser(&Pkg);
@@ -598,12 +600,10 @@ bool debStatusIndex::Merge(pkgCacheGenerator &Gen,OpProgress *Prog) const
 
    // Store the IMS information
    pkgCache::PkgFileIterator CFile = Gen.GetCurFile();
-   struct stat St;
-   if (fstat(Pkg.Fd(),&St) != 0)
-      return _error->Errno("fstat","Failed to stat");
-   CFile->Size = St.st_size;
-   CFile->mtime = St.st_mtime;
-   CFile->Archive = Gen.WriteUniqString("now");
+   CFile->Size = Pkg.FileSize();
+   CFile->mtime = Pkg.ModificationTime();
+   map_ptrloc const storage = Gen.WriteUniqString("now");
+   CFile->Archive = storage;
    
    if (Gen.MergeList(Parser) == false)
       return _error->Error("Problem with MergeList %s",File.c_str());   
@@ -616,7 +616,7 @@ bool debStatusIndex::Merge(pkgCacheGenerator &Gen,OpProgress *Prog) const
 pkgCache::PkgFileIterator debStatusIndex::FindInCache(pkgCache &Cache) const
 {
    pkgCache::PkgFileIterator File = Cache.FileBegin();
-   for (; File.end() == false; File++)
+   for (; File.end() == false; ++File)
    {
       if (this->File != File.FileName())
 	 continue;

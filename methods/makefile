@@ -7,7 +7,7 @@ include ../buildlib/defaults.mak
 BIN := $(BIN)/methods
 
 include ../buildlib/libversion.mak
-APT_DOMAIN := libapt-pkg$(LIBAPTPKG_MAJOR)
+APT_DOMAIN := apt
 
 # The file method
 PROGRAM=file
@@ -86,16 +86,9 @@ LIB_MAKES = apt-pkg/makefile
 SOURCE = mirror.cc http.cc rfc2553emu.cc connect.cc
 include $(PROGRAM_H)
 
-# The gzip method
-PROGRAM=bzip2
-SLIBS = -lapt-pkg $(INTLLIBS)
-LIB_MAKES = apt-pkg/makefile
-SOURCE = bzip2.cc
-include $(PROGRAM_H)
-
-# SSH and lzma method symlink
-binary: $(BIN)/ssh $(BIN)/lzma
-veryclean: clean-$(BIN)/ssh clean-$(BIN)/lzma
+# SSH method symlink
+binary: $(BIN)/ssh
+veryclean: clean-$(BIN)/ssh
 
 $(BIN)/ssh:
 	echo "Installing ssh method link"
@@ -103,8 +96,15 @@ $(BIN)/ssh:
 clean-$(BIN)/ssh:
 	-rm $(BIN)/ssh
 
-$(BIN)/lzma:
-	echo "Installing lzma method link"
-	ln -fs bzip2 $(BIN)/lzma
-clean-$(BIN)/lzma:
-	-rm $(BIN)/lzma
+# create links for all other compressors
+COMPRESSORS=bzip2 lzma xz
+
+binary: $(addprefix $(BIN)/,$(COMPRESSORS))
+veryclean: $(addprefix clean-$(BIN)/,$(COMPRESSORS))
+
+$(addprefix $(BIN)/,$(COMPRESSORS)): $(BIN)/gzip
+	echo "Installing $(notdir $@) method link"
+	ln -fs gzip $@
+
+$(addprefix clean-$(BIN)/,$(COMPRESSORS)):
+	-rm $(BIN)/$(notdir $@)

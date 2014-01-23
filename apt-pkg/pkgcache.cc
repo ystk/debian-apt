@@ -20,6 +20,8 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include<config.h>
+
 #include <apt-pkg/pkgcache.h>
 #include <apt-pkg/policy.h>
 #include <apt-pkg/version.h>
@@ -29,13 +31,12 @@
 #include <apt-pkg/aptconfiguration.h>
 #include <apt-pkg/macros.h>
 
-#include <apti18n.h>
-    
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
-
 #include <ctype.h>
+
+#include <apti18n.h>
 									/*}}}*/
 
 using std::string;
@@ -84,6 +85,8 @@ pkgCache::Header::Header()
    memset(PkgHashTable,0,sizeof(PkgHashTable));
    memset(GrpHashTable,0,sizeof(GrpHashTable));
    memset(Pools,0,sizeof(Pools));
+
+   CacheFileSize = 0;
 }
 									/*}}}*/
 // Cache::Header::CheckSizes - Check if the two headers have same *sz	/*{{{*/
@@ -155,6 +158,9 @@ bool pkgCache::ReMap(bool const &Errorchecks)
        HeaderP->CheckSizes(DefHeader) == false)
       return _error->Error(_("The package cache file is an incompatible version"));
 
+   if (Map.Size() < HeaderP->CacheFileSize)
+      return _error->Error(_("The package cache file is corrupted, it is too small"));
+
    // Locate our VS..
    if (HeaderP->VerSysName == 0 ||
        (VS = pkgVersioningSystem::GetVS(StrP + HeaderP->VerSysName)) == 0)
@@ -175,7 +181,7 @@ bool pkgCache::ReMap(bool const &Errorchecks)
 unsigned long pkgCache::sHash(const string &Str) const
 {
    unsigned long Hash = 0;
-   for (string::const_iterator I = Str.begin(); I != Str.end(); I++)
+   for (string::const_iterator I = Str.begin(); I != Str.end(); ++I)
       Hash = 5*Hash + tolower_ascii(*I);
    return Hash % _count(HeaderP->PkgHashTable);
 }
@@ -183,7 +189,7 @@ unsigned long pkgCache::sHash(const string &Str) const
 unsigned long pkgCache::sHash(const char *Str) const
 {
    unsigned long Hash = 0;
-   for (const char *I = Str; *I != 0; I++)
+   for (const char *I = Str; *I != 0; ++I)
       Hash = 5*Hash + tolower_ascii(*I);
    return Hash % _count(HeaderP->PkgHashTable);
 }
@@ -211,12 +217,18 @@ pkgCache::PkgIterator pkgCache::SingleArchFindPkg(const string &Name)
 // ---------------------------------------------------------------------
 /* Returns 0 on error, pointer to the package otherwise */
 pkgCache::PkgIterator pkgCache::FindPkg(const string &Name) {
-	if (MultiArchCache() == false)
-		return SingleArchFindPkg(Name);
 	size_t const found = Name.find(':');
 	if (found == string::npos)
-		return FindPkg(Name, "native");
+	{
+		if (MultiArchCache() == false)
+			return SingleArchFindPkg(Name);
+		else
+			return FindPkg(Name, "native");
+	}
 	string const Arch = Name.substr(found+1);
+	/* Beware: This is specialcased to handle pkg:any in dependencies as
+	   these are linked to virtual pkg:any named packages with all archs.
+	   If you want any arch from a given pkg, use FindPkg(pkg,arch) */
 	if (Arch == "any")
 		return FindPkg(Name, "any");
 	return FindPkg(Name.substr(0, found), Arch);
@@ -226,9 +238,9 @@ pkgCache::PkgIterator pkgCache::FindPkg(const string &Name) {
 // ---------------------------------------------------------------------
 /* Returns 0 on error, pointer to the package otherwise */
 pkgCache::PkgIterator pkgCache::FindPkg(const string &Name, string const &Arch) {
-	if (MultiArchCache() == false) {
+	if (MultiArchCache() == false && Arch != "none") {
 		if (Arch == "native" || Arch == "all" || Arch == "any" ||
-		    Arch == _config->Find("APT::Architecture"))
+		    Arch == NativeArch())
 			return SingleArchFindPkg(Name);
 		else
 			return PkgIterator(*this,0);
@@ -317,21 +329,21 @@ pkgCache::PkgIterator pkgCache::GrpIterator::FindPkg(string Arch) const {
 	if (unlikely(IsGood() == false || S->FirstPackage == 0))
 		return PkgIterator(*Owner, 0);
 
-	static string const myArch = _config->Find("APT::Architecture");
-	/* Most of the time the package for our native architecture is
-	   the one we add at first to the cache, but this would be the
-	   last one we check, so we do it now. */
-	if (Arch == "native" || Arch == myArch) {
-		Arch = myArch;
-		pkgCache::Package *Pkg = Owner->PkgP + S->LastPackage;
-		if (stringcasecmp(Arch, Owner->StrP + Pkg->Arch) == 0)
-			return PkgIterator(*Owner, Pkg);
-	}
-
 	/* If we accept any package we simply return the "first"
 	   package in this group (the last one added). */
 	if (Arch == "any")
 		return PkgIterator(*Owner, Owner->PkgP + S->FirstPackage);
+
+	char const* const myArch = Owner->NativeArch();
+	/* Most of the time the package for our native architecture is
+	   the one we add at first to the cache, but this would be the
+	   last one we check, so we do it now. */
+	if (Arch == "native" || Arch == myArch || Arch == "all") {
+		pkgCache::Package *Pkg = Owner->PkgP + S->LastPackage;
+		if (strcasecmp(myArch, Owner->StrP + Pkg->Arch) == 0)
+			return PkgIterator(*Owner, Pkg);
+		Arch = myArch;
+	}
 
 	/* Iterate over the list to find the matching arch
 	   unfortunately this list includes "package noise"
@@ -364,6 +376,10 @@ pkgCache::PkgIterator pkgCache::GrpIterator::FindPreferredPkg(bool const &Prefer
 		if (Pkg.end() == false && (PreferNonVirtual == false || Pkg->VersionList != 0))
 			return Pkg;
 	}
+	// packages without an architecture
+	Pkg = FindPkg("none");
+	if (Pkg.end() == false && (PreferNonVirtual == false || Pkg->VersionList != 0))
+		return Pkg;
 
 	if (PreferNonVirtual == true)
 		return FindPreferredPkg(false);
@@ -478,7 +494,7 @@ pkgCache::PkgIterator::CurVersion() const
    if they provide no new information (e.g. there is no newer version than candidate)
    If no version and/or section can be found "none" is used. */
 std::ostream& 
-operator<<(ostream& out, pkgCache::PkgIterator Pkg) 
+operator<<(std::ostream& out, pkgCache::PkgIterator Pkg) 
 {
    if (Pkg.end() == true)
       return out << "invalid package";
@@ -503,7 +519,8 @@ std::string pkgCache::PkgIterator::FullName(bool const &Pretty) const
 {
    string fullname = Name();
    if (Pretty == false ||
-       (strcmp(Arch(), "all") != 0 && _config->Find("APT::Architecture") != Arch()))
+       (strcmp(Arch(), "all") != 0 &&
+	strcmp(Owner->NativeArch(), Arch()) != 0))
       return fullname.append(":").append(Arch());
    return fullname;
 }
@@ -514,13 +531,22 @@ std::string pkgCache::PkgIterator::FullName(bool const &Pretty) const
    conflicts (including dpkg's Breaks fields). */
 bool pkgCache::DepIterator::IsCritical() const
 {
-   if (S->Type == pkgCache::Dep::Conflicts ||
-       S->Type == pkgCache::Dep::DpkgBreaks ||
-       S->Type == pkgCache::Dep::Obsoletes ||
+   if (IsNegative() == true ||
        S->Type == pkgCache::Dep::Depends ||
        S->Type == pkgCache::Dep::PreDepends)
       return true;
    return false;
+}
+									/*}}}*/
+// DepIterator::IsNegative - Returns true if the dep is a negative one	/*{{{*/
+// ---------------------------------------------------------------------
+/* Some dependencies are positive like Depends and Recommends, others
+   are negative like Conflicts which can and should be handled differently */
+bool pkgCache::DepIterator::IsNegative() const
+{
+   return S->Type == Dep::DpkgBreaks ||
+	  S->Type == Dep::Conflicts ||
+	  S->Type == Dep::Obsoletes;
 }
 									/*}}}*/
 // DepIterator::SmartTargetPkg - Resolve dep target pointers w/provides	/*{{{*/
@@ -553,7 +579,7 @@ bool pkgCache::DepIterator::SmartTargetPkg(PkgIterator &Result) const
       virtual package libc-dev which is provided by libc5-dev and libc6-dev
       we must ignore libc5-dev when considering the provides list. */ 
    PrvIterator PStart = Result.ProvidesList();
-   for (; PStart.end() != true && PStart.OwnerPkg() == ParentPkg(); PStart++);
+   for (; PStart.end() != true && PStart.OwnerPkg() == ParentPkg(); ++PStart);
 
    // Nothing but indirect self provides
    if (PStart.end() == true)
@@ -561,7 +587,7 @@ bool pkgCache::DepIterator::SmartTargetPkg(PkgIterator &Result) const
    
    // Check for single packages in the provides list
    PrvIterator P = PStart;
-   for (; P.end() != true; P++)
+   for (; P.end() != true; ++P)
    {
       // Skip over self provides
       if (P.OwnerPkg() == ParentPkg())
@@ -595,34 +621,28 @@ pkgCache::Version **pkgCache::DepIterator::AllTargets() const
       PkgIterator DPkg = TargetPkg();
 
       // Walk along the actual package providing versions
-      for (VerIterator I = DPkg.VersionList(); I.end() == false; I++)
+      for (VerIterator I = DPkg.VersionList(); I.end() == false; ++I)
       {
+	 if (IsIgnorable(I.ParentPkg()) == true)
+	    continue;
+
 	 if (Owner->VS->CheckDep(I.VerStr(),S->CompareOp,TargetVer()) == false)
 	    continue;
 
-	 if ((S->Type == pkgCache::Dep::Conflicts ||
-	      S->Type == pkgCache::Dep::DpkgBreaks ||
-	      S->Type == pkgCache::Dep::Obsoletes) &&
-	     ParentPkg() == I.ParentPkg())
-	    continue;
-	 
 	 Size++;
 	 if (Res != 0)
 	    *End++ = I;
       }
       
       // Follow all provides
-      for (PrvIterator I = DPkg.ProvidesList(); I.end() == false; I++)
+      for (PrvIterator I = DPkg.ProvidesList(); I.end() == false; ++I)
       {
+	 if (IsIgnorable(I) == true)
+	    continue;
+
 	 if (Owner->VS->CheckDep(I.ProvideVersion(),S->CompareOp,TargetVer()) == false)
 	    continue;
-	 
-	 if ((S->Type == pkgCache::Dep::Conflicts ||
-	      S->Type == pkgCache::Dep::DpkgBreaks ||
-	      S->Type == pkgCache::Dep::Obsoletes) &&
-	     ParentPkg() == I.OwnerPkg())
-	    continue;
-	 
+
 	 Size++;
 	 if (Res != 0)
 	    *End++ = I.OwnerVer();
@@ -664,10 +684,74 @@ void pkgCache::DepIterator::GlobOr(DepIterator &Start,DepIterator &End)
    }
 }
 									/*}}}*/
+// DepIterator::IsIgnorable - should this packag/providr be ignored?	/*{{{*/
+// ---------------------------------------------------------------------
+/* Deps like self-conflicts should be ignored as well as implicit conflicts
+   on virtual packages. */
+bool pkgCache::DepIterator::IsIgnorable(PkgIterator const &Pkg) const
+{
+   if (IsNegative() == false)
+      return false;
+
+   pkgCache::PkgIterator PP = ParentPkg();
+   pkgCache::PkgIterator PT = TargetPkg();
+   if (PP->Group != PT->Group)
+      return false;
+   // self-conflict
+   if (PP == PT)
+      return true;
+   pkgCache::VerIterator PV = ParentVer();
+   // ignore group-conflict on a M-A:same package - but not our implicit dependencies
+   // so that we can have M-A:same packages conflicting with their own real name
+   if ((PV->MultiArch & pkgCache::Version::Same) == pkgCache::Version::Same)
+   {
+      // Replaces: ${self}:other ( << ${binary:Version})
+      if (S->Type == pkgCache::Dep::Replaces && S->CompareOp == pkgCache::Dep::Less && strcmp(PV.VerStr(), TargetVer()) == 0)
+	 return false;
+      // Breaks: ${self}:other (!= ${binary:Version})
+      if (S->Type == pkgCache::Dep::DpkgBreaks && S->CompareOp == pkgCache::Dep::NotEquals && strcmp(PV.VerStr(), TargetVer()) == 0)
+	 return false;
+      return true;
+   }
+
+   return false;
+}
+bool pkgCache::DepIterator::IsIgnorable(PrvIterator const &Prv) const
+{
+   if (IsNegative() == false)
+      return false;
+
+   PkgIterator const Pkg = ParentPkg();
+   /* Provides may never be applied against the same package (or group)
+      if it is a conflicts. See the comment above. */
+   if (Prv.OwnerPkg()->Group == Pkg->Group)
+      return true;
+   // Implicit group-conflicts should not be applied on providers of other groups
+   if (Pkg->Group == TargetPkg()->Group && Prv.OwnerPkg()->Group != Pkg->Group)
+      return true;
+
+   return false;
+}
+									/*}}}*/
+// DepIterator::IsMultiArchImplicit - added by the cache generation	/*{{{*/
+// ---------------------------------------------------------------------
+/* MultiArch can be translated to SingleArch for an resolver and we did so,
+   by adding dependencies to help the resolver understand the problem, but
+   sometimes it is needed to identify these to ignore them… */
+bool pkgCache::DepIterator::IsMultiArchImplicit() const
+{
+   if (ParentPkg()->Arch != TargetPkg()->Arch &&
+       (S->Type == pkgCache::Dep::Replaces ||
+	S->Type == pkgCache::Dep::DpkgBreaks ||
+	S->Type == pkgCache::Dep::Conflicts))
+      return true;
+   return false;
+}
+									/*}}}*/
 // ostream operator to handle string representation of a dependecy	/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-std::ostream& operator<<(ostream& out, pkgCache::DepIterator D)
+std::ostream& operator<<(std::ostream& out, pkgCache::DepIterator D)
 {
    if (D.end() == true)
       return out << "invalid dependency";
@@ -705,7 +789,7 @@ int pkgCache::VerIterator::CompareVer(const VerIterator &B) const
    /* Start at A and look for B. If B is found then A > B otherwise
       B was before A so A < B */
    VerIterator I = *this;
-   for (;I.end() == false; I++)
+   for (;I.end() == false; ++I)
       if (I == B)
 	 return 1;
    return -1;
@@ -717,7 +801,7 @@ int pkgCache::VerIterator::CompareVer(const VerIterator &B) const
 bool pkgCache::VerIterator::Downloadable() const
 {
    VerFileIterator Files = FileList();
-   for (; Files.end() == false; Files++)
+   for (; Files.end() == false; ++Files)
       if ((Files.File()->Flags & pkgCache::Flag::NotSource) != pkgCache::Flag::NotSource)
 	 return true;
    return false;
@@ -730,27 +814,10 @@ bool pkgCache::VerIterator::Downloadable() const
 bool pkgCache::VerIterator::Automatic() const
 {
    VerFileIterator Files = FileList();
-   for (; Files.end() == false; Files++)
+   for (; Files.end() == false; ++Files)
       // Do not check ButAutomaticUpgrades here as it is kind of automatic…
       if ((Files.File()->Flags & pkgCache::Flag::NotAutomatic) != pkgCache::Flag::NotAutomatic)
 	 return true;
-   return false;
-}
-									/*}}}*/
-// VerIterator::Pseudo - Check if this version is a pseudo one		/*{{{*/
-// ---------------------------------------------------------------------
-/* Sometimes you have the need to express dependencies with versions
-   which doesn't really exist or exist multiply times for "different"
-   packages. We need these versions for dependency resolution but they
-   are a problem everytime we need to download/install something. */
-bool pkgCache::VerIterator::Pseudo() const
-{
-   if (S->MultiArch == pkgCache::Version::All &&
-	   strcmp(Arch(true),"all") != 0)
-   {
-	   GrpIterator const Grp = ParentPkg().Group();
-	   return (Grp->LastPackage != Grp->FirstPackage);
-   }
    return false;
 }
 									/*}}}*/
@@ -762,7 +829,7 @@ pkgCache::VerFileIterator pkgCache::VerIterator::NewestFile() const
 {
    VerFileIterator Files = FileList();
    VerFileIterator Highest = Files;
-   for (; Files.end() == false; Files++)
+   for (; Files.end() == false; ++Files)
    {
       if (Owner->VS->CmpReleaseVer(Files.File().Version(),Highest.File().Version()) > 0)
 	 Highest = Files;
@@ -779,7 +846,7 @@ string pkgCache::VerIterator::RelStr() const
 {
    bool First = true;
    string Res;
-   for (pkgCache::VerFileIterator I = this->FileList(); I.end() == false; I++)
+   for (pkgCache::VerFileIterator I = this->FileList(); I.end() == false; ++I)
    {
       // Do not print 'not source' entries'
       pkgCache::PkgFileIterator File = I.File();
@@ -788,7 +855,7 @@ string pkgCache::VerIterator::RelStr() const
 
       // See if we have already printed this out..
       bool Seen = false;
-      for (pkgCache::VerFileIterator J = this->FileList(); I != J; J++)
+      for (pkgCache::VerFileIterator J = this->FileList(); I != J; ++J)
       {
 	 pkgCache::PkgFileIterator File2 = J.File();
 	 if (File2->Label == 0 || File->Label == 0)
@@ -889,15 +956,26 @@ pkgCache::DescIterator pkgCache::VerIterator::TranslatedDescription() const
 {
    std::vector<string> const lang = APT::Configuration::getLanguages();
    for (std::vector<string>::const_iterator l = lang.begin();
-	l != lang.end(); l++)
+	l != lang.end(); ++l)
    {
       pkgCache::DescIterator Desc = DescriptionList();
       for (; Desc.end() == false; ++Desc)
-	 if (*l == Desc.LanguageCode() ||
-	     (*l == "en" && strcmp(Desc.LanguageCode(),"") == 0))
+	 if (*l == Desc.LanguageCode())
 	    break;
       if (Desc.end() == true)
-	 continue;
+      {
+	 if (*l == "en")
+	 {
+	    Desc = DescriptionList();
+	    for (; Desc.end() == false; ++Desc)
+	       if (strcmp(Desc.LanguageCode(), "") == 0)
+		  break;
+	    if (Desc.end() == true)
+	       continue;
+	 }
+	 else
+	    continue;
+      }
       return Desc;
    }
    for (pkgCache::DescIterator Desc = DescriptionList();
@@ -907,4 +985,18 @@ pkgCache::DescIterator pkgCache::VerIterator::TranslatedDescription() const
    return DescriptionList();
 };
 
+									/*}}}*/
+// PrvIterator::IsMultiArchImplicit - added by the cache generation	/*{{{*/
+// ---------------------------------------------------------------------
+/* MultiArch can be translated to SingleArch for an resolver and we did so,
+   by adding provides to help the resolver understand the problem, but
+   sometimes it is needed to identify these to ignore them… */
+bool pkgCache::PrvIterator::IsMultiArchImplicit() const
+{
+   pkgCache::PkgIterator const Owner = OwnerPkg();
+   pkgCache::PkgIterator const Parent = ParentPkg();
+   if (strcmp(Owner.Arch(), Parent.Arch()) != 0 || Owner->Name == Parent->Name)
+      return true;
+   return false;
+}
 									/*}}}*/

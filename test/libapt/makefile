@@ -6,6 +6,10 @@ BASENAME=_libapt_test
 # Bring in the default rules
 include ../../buildlib/defaults.mak
 
+.PHONY: test
+test:
+	./run-tests
+
 # Program for testing getLanguageCode
 PROGRAM = getLanguages${BASENAME}
 SLIBS = -lapt-pkg
@@ -30,6 +34,12 @@ SOURCE = getlistoffilesindir_test.cc
 include $(PROGRAM_H)
 
 # Program for testing CommandLine reconstruction
+PROGRAM = Commandline${BASENAME}
+SLIBS = -lapt-pkg
+SOURCE = commandline_test.cc
+include $(PROGRAM_H)
+
+# Program for testing CommandLine reconstruction
 PROGRAM = CommandlineAsString${BASENAME}
 SLIBS = -lapt-pkg
 SOURCE = commandlineasstring_test.cc
@@ -45,4 +55,46 @@ include $(PROGRAM_H)
 PROGRAM = GlobalError${BASENAME}
 SLIBS = -lapt-pkg
 SOURCE = globalerror_test.cc
+include $(PROGRAM_H)
+
+# test the different Hashsum classes
+PROGRAM = HashSums${BASENAME}
+SLIBS = -lapt-pkg
+SOURCE = hashsums_test.cc
+include $(PROGRAM_H)
+
+# test the strutils stuff
+PROGRAM = StrUtil${BASENAME}
+SLIBS = -lapt-pkg
+SOURCE = strutil_test.cc
+include $(PROGRAM_H)
+
+# test the URI parsing stuff
+PROGRAM = URI${BASENAME}
+SLIBS = -lapt-pkg
+SOURCE = uri_test.cc
+include $(PROGRAM_H)
+
+# test the Configuration class
+PROGRAM = Configuration${BASENAME}
+SLIBS = -lapt-pkg
+SOURCE = configuration_test.cc
+include $(PROGRAM_H)
+
+# test cdroms core FindPackages
+PROGRAM = CdromFindPackages${BASENAME}
+SLIBS = -lapt-pkg
+SOURCE = cdromfindpackages_test.cc
+include $(PROGRAM_H)
+
+# test cdroms index reduction for source.list
+PROGRAM = CdromReduceSourceList${BASENAME}
+SLIBS = -lapt-pkg
+SOURCE = cdromreducesourcelist_test.cc
+include $(PROGRAM_H)
+
+# text IndexCopy::ConvertToSourceList
+PROGRAM = IndexCopyToSourceList${BASENAME}
+SLIBS = -lapt-pkg
+SOURCE = indexcopytosourcelist_test.cc
 include $(PROGRAM_H)

@@ -10,23 +10,27 @@
    ##################################################################### */
 									/*}}}*/
 // Include Files							/*{{{*/
+#include<config.h>
+
 #include <apt-pkg/cdromutl.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/md5.h>
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/configuration.h>
+#include <apt-pkg/strutl.h>
 
-#include <apti18n.h>
-    
 #include <sys/wait.h>
-#include <sys/errno.h>
 #include <sys/statvfs.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
+
+#include <apti18n.h>
 									/*}}}*/
+
+using std::string;
 
 // IsMounted - Returns true if the mount point is mounted		/*{{{*/
 // ---------------------------------------------------------------------
@@ -205,8 +209,11 @@ bool IdentCdrom(string CD,string &Res,unsigned int Version)
       Hash.Add(Dir->d_name);
    };
    
-   if (chdir(StartDir.c_str()) != 0)
-      return _error->Errno("chdir",_("Unable to change to %s"),StartDir.c_str());
+   if (chdir(StartDir.c_str()) != 0) {
+      _error->Errno("chdir",_("Unable to change to %s"),StartDir.c_str());
+      closedir(D);
+      return false;
+   }
    closedir(D);
    
    // Some stats from the fsys
@@ -232,5 +239,39 @@ bool IdentCdrom(string CD,string &Res,unsigned int Version)
    
    Res = Hash.Result().Value() + S;
    return true;   
+}
+									/*}}}*/
+
+// FindMountPointForDevice - Find mountpoint for the given device	/*{{{*/
+string FindMountPointForDevice(const char *devnode)
+{
+   char buf[255];
+   char *out[10];
+   int i=0;
+
+   // this is the order that mount uses as well
+   const char *mount[] = { "/etc/mtab", 
+                           "/proc/mount", 
+                           NULL };
+
+   for (i=0; mount[i] != NULL; i++) {
+      if (FileExists(mount[i])) {
+         FILE *f=fopen(mount[i], "r");
+         while ( fgets(buf, sizeof(buf), f) != NULL) {
+            if (strncmp(buf, devnode, strlen(devnode)) == 0) {
+               if(TokSplitString(' ', buf, out, 10))
+               {
+                  fclose(f);
+                  // unescape the \0XXX chars in the path
+                  string mount_point = out[1];
+                  return DeEscapeString(mount_point);
+               }
+            }
+         }
+         fclose(f);
+      }
+   }
+   
+   return string();
 }
 									/*}}}*/

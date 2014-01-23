@@ -1,9 +1,11 @@
+#include <config.h>
+
 #include <apt-pkg/error.h>
 #include <apt-pkg/acquire-method.h>
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/indexcopy.h>
-#include <apti18n.h>
+#include <apt-pkg/configuration.h>
 
 #include <utime.h>
 #include <stdio.h>
@@ -12,8 +14,12 @@
 #include <sys/wait.h>
 #include <iostream>
 #include <sstream>
-
 #include <vector>
+
+#include <apti18n.h>
+
+using std::string;
+using std::vector;
 
 #define GNUPGPREFIX "[GNUPG:]"
 #define GNUPGBADSIG "[GNUPG:] BADSIG"
@@ -65,13 +71,16 @@ string GPGVMethod::VerifyGetSigners(const char *file, const char *outfile,
       return string("Couldn't spawn new process") + strerror(errno);
    else if (pid == 0)
    {
-      if (SigVerify::RunGPGV(outfile, file, 3, fd) == false)
+      _error->PushToStack();
+      bool const success = SigVerify::RunGPGV(outfile, file, 3, fd);
+      if (success == false)
       {
-	 // TRANSLATOR: %s is the trusted keyring parts directory
-	 ioprintf(ret, _("No keyring installed in %s."),
-		  _config->FindDir("Dir::Etc::TrustedParts").c_str());
-	 return ret.str();
+	 string errmsg;
+	 _error->PopMessage(errmsg);
+	 _error->RevertToStack();
+	 return errmsg;
       }
+      _error->RevertToStack();
       exit(111);
    }
    close(fd[1]);
@@ -89,8 +98,16 @@ string GPGVMethod::VerifyGetSigners(const char *file, const char *outfile,
       // Read a line.  Sigh.
       while ((c = getc(pipein)) != EOF && c != '\n')
       {
-         if (bufferoff == buffersize)
-            buffer = (char *) realloc(buffer, buffersize *= 2);
+	 if (bufferoff == buffersize)
+	 {
+	    char* newBuffer = (char *) realloc(buffer, buffersize *= 2);
+	    if (newBuffer == NULL)
+	    {
+	       free(buffer);
+	       return "Couldn't allocate a buffer big enough for reading";
+	    }
+	    buffer = newBuffer;
+	 }
          *(buffer+bufferoff) = c;
          bufferoff++;
       }
@@ -210,21 +227,21 @@ bool GPGVMethod::Fetch(FetchItem *Itm)
          {
             errmsg += _("The following signatures were invalid:\n");
             for (vector<string>::iterator I = BadSigners.begin();
-		 I != BadSigners.end(); I++)
+		 I != BadSigners.end(); ++I)
                errmsg += (*I + "\n");
          }
          if (!WorthlessSigners.empty())
          {
             errmsg += _("The following signatures were invalid:\n");
             for (vector<string>::iterator I = WorthlessSigners.begin();
-		 I != WorthlessSigners.end(); I++)
+		 I != WorthlessSigners.end(); ++I)
                errmsg += (*I + "\n");
          }
          if (!NoPubKeySigners.empty())
          {
              errmsg += _("The following signatures couldn't be verified because the public key is not available:\n");
             for (vector<string>::iterator I = NoPubKeySigners.begin();
-		 I != NoPubKeySigners.end(); I++)
+		 I != NoPubKeySigners.end(); ++I)
                errmsg += (*I + "\n");
          }
       }

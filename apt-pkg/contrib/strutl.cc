@@ -15,14 +15,15 @@
    ##################################################################### */
 									/*}}}*/
 // Includes								/*{{{*/
+#include <config.h>
+
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/error.h>
 
-#include <apti18n.h>
-    
 #include <ctype.h>
 #include <string.h>
+#include <sstream>
 #include <stdio.h>
 #include <algorithm>
 #include <unistd.h>
@@ -31,7 +32,7 @@
 #include <stdarg.h>
 #include <iconv.h>
 
-#include "config.h"
+#include <apti18n.h>
 
 using namespace std;
 									/*}}}*/
@@ -179,14 +180,14 @@ bool ParseQuoteWord(const char *&String,string &Res)
    {
       if (*C == '"')
       {
-	 for (C++; *C != 0 && *C != '"'; C++);
-	 if (*C == 0)
+	 C = strchr(C + 1, '"');
+	 if (C == NULL)
 	    return false;
       }
       if (*C == '[')
       {
-	 for (C++; *C != 0 && *C != ']'; C++);
-	 if (*C == 0)
+	 C = strchr(C + 1, ']');
+	 if (C == NULL)
 	    return false;
       }
    }
@@ -271,7 +272,7 @@ bool ParseCWord(const char *&String,string &Res)
 string QuoteString(const string &Str, const char *Bad)
 {
    string Res;
-   for (string::const_iterator I = Str.begin(); I != Str.end(); I++)
+   for (string::const_iterator I = Str.begin(); I != Str.end(); ++I)
    {
       if (strchr(Bad,*I) != 0 || isprint(*I) == 0 || 
 	  *I == 0x25 || // percent '%' char
@@ -298,7 +299,7 @@ string DeQuoteString(string::const_iterator const &begin,
 			string::const_iterator const &end)
 {
    string Res;
-   for (string::const_iterator I = begin; I != end; I++)
+   for (string::const_iterator I = begin; I != end; ++I)
    {
       if (*I == '%' && I + 2 < end &&
 	  isxdigit(I[1]) && isxdigit(I[2]))
@@ -632,7 +633,7 @@ string LookupTag(const string &Message,const char *Tag,const char *Default)
 {
    // Look for a matching tag.
    int Length = strlen(Tag);
-   for (string::const_iterator I = Message.begin(); I + Length < Message.end(); I++)
+   for (string::const_iterator I = Message.begin(); I + Length < Message.end(); ++I)
    {
       // Found the tag
       if (I[Length] == ':' && stringcasecmp(I,I+Length,Tag) == 0)
@@ -640,14 +641,14 @@ string LookupTag(const string &Message,const char *Tag,const char *Default)
 	 // Find the end of line and strip the leading/trailing spaces
 	 string::const_iterator J;
 	 I += Length + 1;
-	 for (; isspace(*I) != 0 && I < Message.end(); I++);
-	 for (J = I; *J != '\n' && J < Message.end(); J++);
-	 for (; J > I && isspace(J[-1]) != 0; J--);
+	 for (; isspace(*I) != 0 && I < Message.end(); ++I);
+	 for (J = I; *J != '\n' && J < Message.end(); ++J);
+	 for (; J > I && isspace(J[-1]) != 0; --J);
 	 
 	 return string(I,J);
       }
       
-      for (; *I != '\n' && I < Message.end(); I++);
+      for (; *I != '\n' && I < Message.end(); ++I);
    }   
    
    // Failed to find a match
@@ -692,14 +693,16 @@ int StringToBool(const string &Text,int Default)
    year 2000 complient and timezone neutral */
 string TimeRFC1123(time_t Date)
 {
-   struct tm Conv = *gmtime(&Date);
-   char Buf[300];
+   struct tm Conv;
+   if (gmtime_r(&Date, &Conv) == NULL)
+      return "";
 
+   char Buf[300];
    const char *Day[] = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
    const char *Month[] = {"Jan","Feb","Mar","Apr","May","Jun","Jul",
                           "Aug","Sep","Oct","Nov","Dec"};
 
-   sprintf(Buf,"%s, %02i %s %i %02i:%02i:%02i GMT",Day[Conv.tm_wday],
+   snprintf(Buf, sizeof(Buf), "%s, %02i %s %i %02i:%02i:%02i GMT",Day[Conv.tm_wday],
 	   Conv.tm_mday,Month[Conv.tm_mon],Conv.tm_year+1900,Conv.tm_hour,
 	   Conv.tm_min,Conv.tm_sec);
    return Buf;
@@ -902,24 +905,23 @@ bool StrToTime(const string &Val,time_t &Result)
 {
    struct tm Tm;
    char Month[10];
-   const char *I = Val.c_str();
-   
+
    // Skip the day of the week
-   for (;*I != 0  && *I != ' '; I++);
-   
+   const char *I = strchr(Val.c_str(), ' ');
+
    // Handle RFC 1123 time
    Month[0] = 0;
-   if (sscanf(I," %d %3s %d %d:%d:%d GMT",&Tm.tm_mday,Month,&Tm.tm_year,
+   if (sscanf(I," %2d %3s %4d %2d:%2d:%2d GMT",&Tm.tm_mday,Month,&Tm.tm_year,
 	      &Tm.tm_hour,&Tm.tm_min,&Tm.tm_sec) != 6)
    {
       // Handle RFC 1036 time
-      if (sscanf(I," %d-%3s-%d %d:%d:%d GMT",&Tm.tm_mday,Month,
+      if (sscanf(I," %2d-%3s-%3d %2d:%2d:%2d GMT",&Tm.tm_mday,Month,
 		 &Tm.tm_year,&Tm.tm_hour,&Tm.tm_min,&Tm.tm_sec) == 6)
 	 Tm.tm_year += 1900;
       else
       {
 	 // asctime format
-	 if (sscanf(I," %3s %d %d:%d:%d %d",Month,&Tm.tm_mday,
+	 if (sscanf(I," %3s %2d %2d:%2d:%2d %4d",Month,&Tm.tm_mday,
 		    &Tm.tm_hour,&Tm.tm_min,&Tm.tm_sec,&Tm.tm_year) != 6)
 	 {
 	    // 'ftp' time
@@ -966,6 +968,51 @@ bool StrToNum(const char *Str,unsigned long &Res,unsigned Len,unsigned Base)
       return false;
    
    return true;
+}
+									/*}}}*/
+// StrToNum - Convert a fixed length string to a number			/*{{{*/
+// ---------------------------------------------------------------------
+/* This is used in decoding the crazy fixed length string headers in 
+   tar and ar files. */
+bool StrToNum(const char *Str,unsigned long long &Res,unsigned Len,unsigned Base)
+{
+   char S[30];
+   if (Len >= sizeof(S))
+      return false;
+   memcpy(S,Str,Len);
+   S[Len] = 0;
+   
+   // All spaces is a zero
+   Res = 0;
+   unsigned I;
+   for (I = 0; S[I] == ' '; I++);
+   if (S[I] == 0)
+      return true;
+   
+   char *End;
+   Res = strtoull(S,&End,Base);
+   if (End == S)
+      return false;
+   
+   return true;
+}
+									/*}}}*/
+
+// Base256ToNum - Convert a fixed length binary to a number             /*{{{*/
+// ---------------------------------------------------------------------
+/* This is used in decoding the 256bit encoded fixed length fields in
+   tar files */
+bool Base256ToNum(const char *Str,unsigned long &Res,unsigned int Len)
+{
+   if ((Str[0] & 0x80) == 0)
+      return false;
+   else
+   {
+      Res = Str[0] & 0x7F;
+      for(unsigned int i = 1; i < Len; ++i)
+         Res = (Res<<8) + Str[i];
+      return true;
+   }
 }
 									/*}}}*/
 // HexDigit - Convert a hex character into an integer			/*{{{*/
@@ -1122,34 +1169,50 @@ unsigned long RegexChoice(RxChoiceList *Rxs,const char **ListBegin,
    return Hits;
 }
 									/*}}}*/
-// ioprintf - C format string outputter to C++ iostreams		/*{{{*/
+// {str,io}printf - C format string outputter to C++ strings/iostreams	/*{{{*/
 // ---------------------------------------------------------------------
 /* This is used to make the internationalization strings easier to translate
    and to allow reordering of parameters */
-void ioprintf(ostream &out,const char *format,...) 
-{
-   va_list args;
-   va_start(args,format);
-   
-   // sprintf the description
-   char S[4096];
-   vsnprintf(S,sizeof(S),format,args);
-   out << S;
+static bool iovprintf(ostream &out, const char *format,
+		      va_list &args, ssize_t &size) {
+   char *S = (char*)malloc(size);
+   ssize_t const n = vsnprintf(S, size, format, args);
+   if (n > -1 && n < size) {
+      out << S;
+      free(S);
+      return true;
+   } else {
+      if (n > -1)
+	 size = n + 1;
+      else
+	 size *= 2;
+   }
+   free(S);
+   return false;
 }
-									/*}}}*/
-// strprintf - C format string outputter to C++ strings 		/*{{{*/
-// ---------------------------------------------------------------------
-/* This is used to make the internationalization strings easier to translate
-   and to allow reordering of parameters */
-void strprintf(string &out,const char *format,...) 
+void ioprintf(ostream &out,const char *format,...)
 {
    va_list args;
-   va_start(args,format);
-   
-   // sprintf the description
-   char S[4096];
-   vsnprintf(S,sizeof(S),format,args);
-   out = string(S);
+   ssize_t size = 400;
+   while (true) {
+      va_start(args,format);
+      if (iovprintf(out, format, args, size) == true)
+	 return;
+      va_end(args);
+   }
+}
+void strprintf(string &out,const char *format,...)
+{
+   va_list args;
+   ssize_t size = 400;
+   std::ostringstream outstr;
+   while (true) {
+      va_start(args,format);
+      if (iovprintf(outstr, format, args, size) == true)
+	 break;
+      va_end(args);
+   }
+   out = outstr.str();
 }
 									/*}}}*/
 // safe_snprintf - Safer snprintf					/*{{{*/
@@ -1174,6 +1237,15 @@ char *safe_snprintf(char *Buffer,char *End,const char *Format,...)
    return Buffer + Did;
 }
 									/*}}}*/
+// StripEpoch - Remove the version "epoch" from a version string	/*{{{*/
+// ---------------------------------------------------------------------
+string StripEpoch(const string &VerStr)
+{
+   size_t i = VerStr.find(":");
+   if (i == string::npos)
+      return VerStr;
+   return VerStr.substr(i+1);
+}
 
 // tolower_ascii - tolower() function that ignores the locale		/*{{{*/
 // ---------------------------------------------------------------------
@@ -1196,7 +1268,7 @@ int tolower_ascii(int const c)
 bool CheckDomainList(const string &Host,const string &List)
 {
    string::const_iterator Start = List.begin();
-   for (string::const_iterator Cur = List.begin(); Cur <= List.end(); Cur++)
+   for (string::const_iterator Cur = List.begin(); Cur <= List.end(); ++Cur)
    {
       if (Cur < List.end() && *Cur != ',')
 	 continue;
@@ -1212,7 +1284,68 @@ bool CheckDomainList(const string &Host,const string &List)
    return false;
 }
 									/*}}}*/
+// DeEscapeString - unescape (\0XX and \xXX) from a string      	/*{{{*/
+// ---------------------------------------------------------------------
+/* */
+string DeEscapeString(const string &input)
+{
+   char tmp[3];
+   string::const_iterator it, escape_start;
+   string output, octal, hex;
+   for (it = input.begin(); it != input.end(); ++it)
+   {
+      // just copy non-escape chars
+      if (*it != '\\')
+      {
+         output += *it;
+         continue;
+      }
 
+      // deal with double escape
+      if (*it == '\\' && 
+          (it + 1 < input.end()) &&  it[1] == '\\')
+      {
+         // copy
+         output += *it;
+         // advance iterator one step further
+         ++it;
+         continue;
+      }
+        
+      // ensure we have a char to read
+      if (it + 1 == input.end())
+         continue;
+
+      // read it
+      ++it;
+      switch (*it)
+      {
+         case '0':
+            if (it + 2 <= input.end()) {
+               tmp[0] = it[1];
+               tmp[1] = it[2];
+               tmp[2] = 0;
+               output += (char)strtol(tmp, 0, 8);
+               it += 2;
+            }
+            break;
+         case 'x':
+            if (it + 2 <= input.end()) {
+               tmp[0] = it[1];
+               tmp[1] = it[2];
+               tmp[2] = 0;
+               output += (char)strtol(tmp, 0, 16);
+               it += 2;
+            }
+            break;
+         default:
+            // FIXME: raise exception here?
+            break;
+      }
+   }
+   return output;
+}
+									/*}}}*/
 // URI::CopyFrom - Copy from an object					/*{{{*/
 // ---------------------------------------------------------------------
 /* This parses the URI into all of its components */
@@ -1221,7 +1354,7 @@ void URI::CopyFrom(const string &U)
    string::const_iterator I = U.begin();
 
    // Locate the first colon, this separates the scheme
-   for (; I < U.end() && *I != ':' ; I++);
+   for (; I < U.end() && *I != ':' ; ++I);
    string::const_iterator FirstColon = I;
 
    /* Determine if this is a host type URI with a leading double //
@@ -1233,7 +1366,7 @@ void URI::CopyFrom(const string &U)
    /* Find the / indicating the end of the hostname, ignoring /'s in the
       square brackets */
    bool InBracket = false;
-   for (; SingleSlash < U.end() && (*SingleSlash != '/' || InBracket == true); SingleSlash++)
+   for (; SingleSlash < U.end() && (*SingleSlash != '/' || InBracket == true); ++SingleSlash)
    {
       if (*SingleSlash == '[')
 	 InBracket = true;
@@ -1266,11 +1399,11 @@ void URI::CopyFrom(const string &U)
    I = FirstColon + 1;
    if (I > SingleSlash)
       I = SingleSlash;
-   for (; I < SingleSlash && *I != ':'; I++);
+   for (; I < SingleSlash && *I != ':'; ++I);
    string::const_iterator SecondColon = I;
    
    // Search for the @ after the colon
-   for (; I < SingleSlash && *I != '@'; I++);
+   for (; I < SingleSlash && *I != '@'; ++I);
    string::const_iterator At = I;
    
    // Now write the host and user/pass

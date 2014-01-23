@@ -1,5 +1,6 @@
 usr/bin
 usr/lib/apt/methods
+usr/lib/apt/solvers
 usr/lib/dpkg/methods/apt
 etc/apt
 etc/apt/apt.conf.d
@@ -13,4 +14,3 @@ var/lib/apt/mirrors/partial
 var/lib/apt/periodic
 var/log/apt
 usr/share/bug/apt
-usr/share/lintian/overrides
