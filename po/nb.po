@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-25 11:54+0100\n"
+"POT-Creation-Date: 2014-06-12 15:48+0200\n"
 "PO-Revision-Date: 2010-09-01 21:10+0200\n"
 "Last-Translator: Hans Fredrik Nordhaug <hans@nordhaug.priv.no>\n"
 "Language-Team: Norwegian Bokmål <i18n-nb@lister.ping.uio.no>\n"
@@ -155,7 +155,7 @@ msgstr "  Versjonstabell:"
 
 #: cmdline/apt-cache.cc:1738 cmdline/apt-cdrom.cc:197 cmdline/apt-config.cc:70
 #: cmdline/apt-extracttemplates.cc:225 ftparchive/apt-ftparchive.cc:589
-#: cmdline/apt-get.cc:2758 cmdline/apt-sortpkgs.cc:144
+#: cmdline/apt-get.cc:2774 cmdline/apt-sortpkgs.cc:144
 #, c-format
 msgid "%s %s for %s compiled on %s %s\n"
 msgstr "%s %s for %s kompilert på %s %s\n"
@@ -562,12 +562,12 @@ msgstr "  %s har ingen kildeoverstyringsoppføring\n"
 msgid "  %s has no binary override entry either\n"
 msgstr "  %s har ingen binæroverstyringsoppføring heller\n"
 
-#: ftparchive/contents.cc:321
+#: ftparchive/contents.cc:325
 #, c-format
 msgid "Internal error, could not locate member %s"
 msgstr "Intern feil, fant ikke medlemmet %s"
 
-#: ftparchive/contents.cc:358 ftparchive/contents.cc:389
+#: ftparchive/contents.cc:362 ftparchive/contents.cc:393
 msgid "realloc - Failed to allocate memory"
 msgstr "realloc - Klarte ikke å tildele minne"
 
@@ -596,63 +596,63 @@ msgstr "Ugyldig overstyring %s linje %lu #3"
 msgid "Failed to read the override file %s"
 msgstr "Klarte ikke å lese overstyringsfila %s"
 
-#: ftparchive/multicompress.cc:72
+#: ftparchive/multicompress.cc:73
 #, c-format
 msgid "Unknown compression algorithm '%s'"
 msgstr "Ukjent komprimeringsalgoritme «%s»"
 
-#: ftparchive/multicompress.cc:102
+#: ftparchive/multicompress.cc:103
 #, c-format
 msgid "Compressed output %s needs a compression set"
 msgstr "Komprimert utdata %s trenger et komprimeringssett"
 
-#: ftparchive/multicompress.cc:169 methods/rsh.cc:91
+#: ftparchive/multicompress.cc:170 methods/rsh.cc:91
 msgid "Failed to create IPC pipe to subprocess"
 msgstr "Klarte ikke å opprette IPC-rør til underprosessen"
 
-#: ftparchive/multicompress.cc:195
+#: ftparchive/multicompress.cc:196
 msgid "Failed to create FILE*"
 msgstr "Klarte ikke å opprette FILE*"
 
-#: ftparchive/multicompress.cc:198
+#: ftparchive/multicompress.cc:199
 msgid "Failed to fork"
 msgstr "Klarte ikke å forgreine prosess"
 
-#: ftparchive/multicompress.cc:212
+#: ftparchive/multicompress.cc:213
 msgid "Compress child"
 msgstr "Komprimer barneprosess"
 
-#: ftparchive/multicompress.cc:235
+#: ftparchive/multicompress.cc:236
 #, c-format
 msgid "Internal error, failed to create %s"
 msgstr "Intern feil, klarte ikke å opprette %s"
 
-#: ftparchive/multicompress.cc:286
+#: ftparchive/multicompress.cc:287
 msgid "Failed to create subprocess IPC"
 msgstr "Klarte ikke å opprette underprosessen IPC"
 
-#: ftparchive/multicompress.cc:321
+#: ftparchive/multicompress.cc:322
 msgid "Failed to exec compressor "
 msgstr "Klarte ikke å kjøre komprimeringen"
 
-#: ftparchive/multicompress.cc:360
+#: ftparchive/multicompress.cc:361
 msgid "decompressor"
 msgstr "dekomprimering"
 
-#: ftparchive/multicompress.cc:403
+#: ftparchive/multicompress.cc:404
 msgid "IO to subprocess/file failed"
 msgstr "Klarte ikke å kommunisere med underprosess/fil"
 
-#: ftparchive/multicompress.cc:455
+#: ftparchive/multicompress.cc:456
 msgid "Failed to read while computing MD5"
 msgstr "Klarte ikke å lese under utregning av MD5"
 
-#: ftparchive/multicompress.cc:472
+#: ftparchive/multicompress.cc:473
 #, c-format
 msgid "Problem unlinking %s"
 msgstr "Problem ved oppheving av lenken til %s"
 
-#: ftparchive/multicompress.cc:487 apt-inst/extract.cc:185
+#: ftparchive/multicompress.cc:488 apt-inst/extract.cc:185
 #, c-format
 msgid "Failed to rename %s to %s"
 msgstr "Klarte ikke å endre navnet på %s til %s"
@@ -847,7 +847,7 @@ msgstr "Det er ikke mulig å installere %s på nytt - den kan ikke nedlastes.\n"
 msgid "%s is already the newest version.\n"
 msgstr "%s er allerede nyeste versjon.\n"
 
-#: cmdline/apt-get.cc:823 cmdline/apt-get.cc:1992
+#: cmdline/apt-get.cc:823 cmdline/apt-get.cc:1999
 #, c-format
 msgid "%s set to manually installed.\n"
 msgstr "%s satt til manuell installasjon.\n"
@@ -885,39 +885,39 @@ msgstr "Du vil kanskje kjøre «apt-get -f install» for å rette på dette."
 msgid "Unmet dependencies. Try using -f."
 msgstr "Uinnfridde avhengighetsforhold - Prøv «-f»."
 
-#: cmdline/apt-get.cc:981
+#: cmdline/apt-get.cc:964
 msgid "WARNING: The following packages cannot be authenticated!"
 msgstr "ADVARSEL: Følgende pakker ble ikke autentisert!"
 
-#: cmdline/apt-get.cc:985
+#: cmdline/apt-get.cc:968
 msgid "Authentication warning overridden.\n"
 msgstr "Autentiseringsadvarsel overstyrt.\n"
 
-#: cmdline/apt-get.cc:992
-msgid "Install these packages without verification [y/N]? "
-msgstr "Installer disse pakkene uten verifikasjon [j/N]? "
-
-#: cmdline/apt-get.cc:994
+#: cmdline/apt-get.cc:973 cmdline/apt-get.cc:980
 msgid "Some packages could not be authenticated"
 msgstr "Noen pakker ble ikke autentisert"
 
-#: cmdline/apt-get.cc:1003 cmdline/apt-get.cc:1166
+#: cmdline/apt-get.cc:978
+msgid "Install these packages without verification [y/N]? "
+msgstr "Installer disse pakkene uten verifikasjon [j/N]? "
+
+#: cmdline/apt-get.cc:989 cmdline/apt-get.cc:1173
 msgid "There are problems and -y was used without --force-yes"
 msgstr "Det oppsto problemer og «-y» ble brukt uten «--force-yes»"
 
-#: cmdline/apt-get.cc:1044
+#: cmdline/apt-get.cc:1051
 msgid "Internal error, InstallPackages was called with broken packages!"
 msgstr "Intern feil, InstallPackages ble kalt med ødelagte pakker!"
 
-#: cmdline/apt-get.cc:1053
+#: cmdline/apt-get.cc:1060
 msgid "Packages need to be removed but remove is disabled."
 msgstr "Pakker trenges å fjernes, men funksjonen er slått av."
 
-#: cmdline/apt-get.cc:1064
+#: cmdline/apt-get.cc:1071
 msgid "Internal error, Ordering didn't finish"
 msgstr "Intern feil, sortering fullførte ikke"
 
-#: cmdline/apt-get.cc:1104
+#: cmdline/apt-get.cc:1111
 msgid "How odd.. The sizes didn't match, email apt@packages.debian.org"
 msgstr ""
 "Så rart ... Størrelsene stemmer ikke overens, send en e-post til "
@@ -925,53 +925,53 @@ msgstr ""
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement strings, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:1111
+#: cmdline/apt-get.cc:1118
 #, c-format
 msgid "Need to get %sB/%sB of archives.\n"
 msgstr "Må hente %sB/%sB med arkiver.\n"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement string, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:1116
+#: cmdline/apt-get.cc:1123
 #, c-format
 msgid "Need to get %sB of archives.\n"
 msgstr "Må hente %sB med arkiver.\n"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement string, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:1123
+#: cmdline/apt-get.cc:1130
 #, c-format
 msgid "After this operation, %sB of additional disk space will be used.\n"
 msgstr "Etter denne operasjonen vil %sB ekstra diskplass bli brukt.\n"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement string, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:1128
+#: cmdline/apt-get.cc:1135
 #, c-format
 msgid "After this operation, %sB disk space will be freed.\n"
 msgstr "Etter denne operasjonen vil %sB diskplass bli ledig.\n"
 
-#: cmdline/apt-get.cc:1143 cmdline/apt-get.cc:1146 cmdline/apt-get.cc:2332
-#: cmdline/apt-get.cc:2335
+#: cmdline/apt-get.cc:1150 cmdline/apt-get.cc:1153 cmdline/apt-get.cc:2348
+#: cmdline/apt-get.cc:2351
 #, c-format
 msgid "Couldn't determine free space in %s"
 msgstr "Klarte ikke bestemme ledig plass i %s"
 
-#: cmdline/apt-get.cc:1156
+#: cmdline/apt-get.cc:1163
 #, c-format
 msgid "You don't have enough free space in %s."
 msgstr "Dessverre, ikke nok ledig plass i %s"
 
-#: cmdline/apt-get.cc:1172 cmdline/apt-get.cc:1192
+#: cmdline/apt-get.cc:1179 cmdline/apt-get.cc:1199
 msgid "Trivial Only specified but this is not a trivial operation."
 msgstr ""
 "«Bare trivielle endringer» ble angitt, men dette er ikke en triviell endring."
 
-#: cmdline/apt-get.cc:1174
+#: cmdline/apt-get.cc:1181
 msgid "Yes, do as I say!"
 msgstr "Ja, gjør som jeg sier!"
 
-#: cmdline/apt-get.cc:1176
+#: cmdline/apt-get.cc:1183
 #, c-format
 msgid ""
 "You are about to do something potentially harmful.\n"
@@ -982,28 +982,28 @@ msgstr ""
 "For å fortsette skriv inn teksten «%s»\n"
 " ?] "
 
-#: cmdline/apt-get.cc:1182 cmdline/apt-get.cc:1201
+#: cmdline/apt-get.cc:1189 cmdline/apt-get.cc:1208
 msgid "Abort."
 msgstr "Avbryter."
 
-#: cmdline/apt-get.cc:1197
+#: cmdline/apt-get.cc:1204
 msgid "Do you want to continue [Y/n]? "
 msgstr "Vil du fortsette [Y/n]? "
 
-#: cmdline/apt-get.cc:1269 cmdline/apt-get.cc:2392 apt-pkg/algorithms.cc:1470
+#: cmdline/apt-get.cc:1276 cmdline/apt-get.cc:2408 apt-pkg/algorithms.cc:1470
 #, c-format
 msgid "Failed to fetch %s  %s\n"
 msgstr "Klarte ikke å skaffe %s  %s\n"
 
-#: cmdline/apt-get.cc:1287
+#: cmdline/apt-get.cc:1294
 msgid "Some files failed to download"
 msgstr "Klarte ikke laste ned alle filene"
 
-#: cmdline/apt-get.cc:1288 cmdline/apt-get.cc:2401
+#: cmdline/apt-get.cc:1295 cmdline/apt-get.cc:2417
 msgid "Download complete and in download only mode"
 msgstr "Nedlasting fullført med innstillinga «bare nedlasting»"
 
-#: cmdline/apt-get.cc:1294
+#: cmdline/apt-get.cc:1301
 msgid ""
 "Unable to fetch some archives, maybe run apt-get update or try with --fix-"
 "missing?"
@@ -1011,19 +1011,19 @@ msgstr ""
 "Klarte ikke å hente alle arkivene. Du kan prøve med «apt-get update» eller "
 "«--fix-missing»."
 
-#: cmdline/apt-get.cc:1298
+#: cmdline/apt-get.cc:1305
 msgid "--fix-missing and media swapping is not currently supported"
 msgstr "«--fix-missing» og bytte av media støttes nå ikke"
 
-#: cmdline/apt-get.cc:1303
+#: cmdline/apt-get.cc:1310
 msgid "Unable to correct missing packages."
 msgstr "Klarer ikke å rette på manglende pakker."
 
-#: cmdline/apt-get.cc:1304
+#: cmdline/apt-get.cc:1311
 msgid "Aborting install."
 msgstr "Avbryter installasjonen."
 
-#: cmdline/apt-get.cc:1332
+#: cmdline/apt-get.cc:1339
 msgid ""
 "The following package disappeared from your system as\n"
 "all files have been overwritten by other packages:"
@@ -1037,35 +1037,35 @@ msgstr[1] ""
 "De følgende pakkene forsvant fra systemet ditt siden\n"
 "alle filene er overskrevet av andre pakker:"
 
-#: cmdline/apt-get.cc:1336
+#: cmdline/apt-get.cc:1343
 msgid "Note: This is done automatic and on purpose by dpkg."
 msgstr "Merk: Dette er gjort automatisk og med hensikt av dpkg."
 
-#: cmdline/apt-get.cc:1466
+#: cmdline/apt-get.cc:1473
 #, c-format
 msgid "Ignore unavailable target release '%s' of package '%s'"
 msgstr "Ignorer utilgjengelig målutgave «%s» av pakke «%s»"
 
-#: cmdline/apt-get.cc:1498
+#: cmdline/apt-get.cc:1505
 #, c-format
 msgid "Picking '%s' as source package instead of '%s'\n"
 msgstr "Velger «%s» som kildepakke istedenfor «%s»\n"
 
 #. if (VerTag.empty() == false && Last == 0)
-#: cmdline/apt-get.cc:1536
+#: cmdline/apt-get.cc:1543
 #, c-format
 msgid "Ignore unavailable version '%s' of package '%s'"
 msgstr "Ignorer utilgjengelig versjon «%s» av pakke «%s»"
 
-#: cmdline/apt-get.cc:1552
+#: cmdline/apt-get.cc:1559
 msgid "The update command takes no arguments"
 msgstr "Oppdaterings-kommandoen tar ingen argumenter"
 
-#: cmdline/apt-get.cc:1618
+#: cmdline/apt-get.cc:1625
 msgid "We are not supposed to delete stuff, can't start AutoRemover"
 msgstr "Vi skal ikke slette ting, kan ikke starte auto-fjerner (AutoRemover)"
 
-#: cmdline/apt-get.cc:1666
+#: cmdline/apt-get.cc:1673
 msgid ""
 "The following package was automatically installed and is no longer required:"
 msgid_plural ""
@@ -1076,7 +1076,7 @@ msgstr[0] ""
 msgstr[1] ""
 "Følgende pakker ble automatisk installert og er ikke lenger påkrevet:"
 
-#: cmdline/apt-get.cc:1670
+#: cmdline/apt-get.cc:1677
 #, c-format
 msgid "%lu package was automatically installed and is no longer required.\n"
 msgid_plural ""
@@ -1084,11 +1084,11 @@ msgid_plural ""
 msgstr[0] "%lu pakke ble automatisk installert og er ikke lenger påkrevet.\n"
 msgstr[1] "%lu pakker ble automatisk installert og er ikke lenger påkrevet.\n"
 
-#: cmdline/apt-get.cc:1672
+#: cmdline/apt-get.cc:1679
 msgid "Use 'apt-get autoremove' to remove them."
 msgstr "Bruk «apt-get autoremove» for å fjerne dem."
 
-#: cmdline/apt-get.cc:1677
+#: cmdline/apt-get.cc:1684
 msgid ""
 "Hmm, seems like the AutoRemover destroyed something which really\n"
 "shouldn't happen. Please file a bug report against apt."
@@ -1106,23 +1106,23 @@ msgstr ""
 #. "that package should be filed.") << endl;
 #. }
 #.
-#: cmdline/apt-get.cc:1680 cmdline/apt-get.cc:1822
+#: cmdline/apt-get.cc:1687 cmdline/apt-get.cc:1829
 msgid "The following information may help to resolve the situation:"
 msgstr "Følgende informasjon kan være til hjelp med å løse problemet:"
 
-#: cmdline/apt-get.cc:1684
+#: cmdline/apt-get.cc:1691
 msgid "Internal Error, AutoRemover broke stuff"
 msgstr "Intern feil, autofjerneren (AutoRemover) ødela noe"
 
-#: cmdline/apt-get.cc:1703
+#: cmdline/apt-get.cc:1710
 msgid "Internal error, AllUpgrade broke stuff"
 msgstr "Intern feil - «AllUpgrade» ødela noe"
 
-#: cmdline/apt-get.cc:1792
+#: cmdline/apt-get.cc:1799
 msgid "You might want to run 'apt-get -f install' to correct these:"
 msgstr "Du vil kanskje utføre «apt-get -f install» for å rette på disse:"
 
-#: cmdline/apt-get.cc:1795
+#: cmdline/apt-get.cc:1802
 msgid ""
 "Unmet dependencies. Try 'apt-get -f install' with no packages (or specify a "
 "solution)."
@@ -1130,7 +1130,7 @@ msgstr ""
 "Uinnfridde avhengighetsforhold. Prøv «apt-get -f install» uten pakker (eller "
 "angi en løsning)."
 
-#: cmdline/apt-get.cc:1807
+#: cmdline/apt-get.cc:1814
 msgid ""
 "Some packages could not be installed. This may mean that you have\n"
 "requested an impossible situation or if you are using the unstable\n"
@@ -1142,62 +1142,62 @@ msgstr ""
 "at visse kjernepakker ennå ikke er laget eller flyttet ut av «Incoming» for\n"
 "distribusjonen."
 
-#: cmdline/apt-get.cc:1825
+#: cmdline/apt-get.cc:1832
 msgid "Broken packages"
 msgstr "Ødelagte pakker"
 
-#: cmdline/apt-get.cc:1854
+#: cmdline/apt-get.cc:1861
 msgid "The following extra packages will be installed:"
 msgstr "Følgende ekstra pakker vil bli installert."
 
-#: cmdline/apt-get.cc:1944
+#: cmdline/apt-get.cc:1951
 msgid "Suggested packages:"
 msgstr "Foreslåtte pakker:"
 
-#: cmdline/apt-get.cc:1945
+#: cmdline/apt-get.cc:1952
 msgid "Recommended packages:"
 msgstr "Anbefalte pakker"
 
-#: cmdline/apt-get.cc:1987
+#: cmdline/apt-get.cc:1994
 #, c-format
 msgid "Couldn't find package %s"
 msgstr "Klarte ikke å finne pakken %s"
 
-#: cmdline/apt-get.cc:1994
+#: cmdline/apt-get.cc:2001
 #, c-format
 msgid "%s set to automatically installed.\n"
 msgstr "%s satt til automatisk installasjon.\n"
 
-#: cmdline/apt-get.cc:2015
+#: cmdline/apt-get.cc:2022
 msgid "Calculating upgrade... "
 msgstr "Beregner oppgradering... "
 
-#: cmdline/apt-get.cc:2018 methods/ftp.cc:707 methods/connect.cc:111
+#: cmdline/apt-get.cc:2025 methods/ftp.cc:707 methods/connect.cc:111
 msgid "Failed"
 msgstr "Mislyktes"
 
-#: cmdline/apt-get.cc:2023
+#: cmdline/apt-get.cc:2030
 msgid "Done"
 msgstr "Utført"
 
-#: cmdline/apt-get.cc:2090 cmdline/apt-get.cc:2098
+#: cmdline/apt-get.cc:2097 cmdline/apt-get.cc:2105
 msgid "Internal error, problem resolver broke stuff"
 msgstr "Intern feil, problemløser ødela noe"
 
-#: cmdline/apt-get.cc:2122 cmdline/apt-get.cc:2155
+#: cmdline/apt-get.cc:2129 cmdline/apt-get.cc:2162
 msgid "Unable to lock the download directory"
 msgstr "Klarer ikke å låse nedlastingsmappa"
 
-#: cmdline/apt-get.cc:2198
+#: cmdline/apt-get.cc:2205
 msgid "Must specify at least one package to fetch source for"
 msgstr "Du må angi minst en pakke du vil ha kildekoden til"
 
-#: cmdline/apt-get.cc:2238 cmdline/apt-get.cc:2519
+#: cmdline/apt-get.cc:2246 cmdline/apt-get.cc:2535
 #, c-format
 msgid "Unable to find a source package for %s"
 msgstr "Klarer ikke å finne en kildekodepakke for %s"
 
-#: cmdline/apt-get.cc:2254
+#: cmdline/apt-get.cc:2265
 #, c-format
 msgid ""
 "NOTICE: '%s' packaging is maintained in the '%s' version control system at:\n"
@@ -1206,7 +1206,7 @@ msgstr ""
 "MERK: «%s»-pakker blir vedlikeholdt i versjonskontrollsystemet «%s» på:\n"
 "%s\n"
 
-#: cmdline/apt-get.cc:2259
+#: cmdline/apt-get.cc:2270
 #, c-format
 msgid ""
 "Please use:\n"
@@ -1217,85 +1217,85 @@ msgstr ""
 "bzr get %s\n"
 "for å hente siste (muligens ikke utgitte) oppdateringer for pakken.\n"
 
-#: cmdline/apt-get.cc:2310
+#: cmdline/apt-get.cc:2321
 #, c-format
 msgid "Skipping already downloaded file '%s'\n"
 msgstr "Hopper over allerede nedlastet fil «%s»\n"
 
-#: cmdline/apt-get.cc:2345
+#: cmdline/apt-get.cc:2361
 #, c-format
 msgid "You don't have enough free space in %s"
 msgstr "Du har ikke nok ledig plass i %s"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement strings, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:2353
+#: cmdline/apt-get.cc:2369
 #, c-format
 msgid "Need to get %sB/%sB of source archives.\n"
 msgstr "Trenger å skaffe %sB av %sB fra kildekodearkivet.\n"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement string, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:2358
+#: cmdline/apt-get.cc:2374
 #, c-format
 msgid "Need to get %sB of source archives.\n"
 msgstr "Trenger å skaffe %sB fra kildekodearkivet.\n"
 
-#: cmdline/apt-get.cc:2364
+#: cmdline/apt-get.cc:2380
 #, c-format
 msgid "Fetch source %s\n"
 msgstr "Skaffer kildekode %s\n"
 
-#: cmdline/apt-get.cc:2397
+#: cmdline/apt-get.cc:2413
 msgid "Failed to fetch some archives."
 msgstr "Klarte ikke å skaffe alle arkivene."
 
-#: cmdline/apt-get.cc:2427
+#: cmdline/apt-get.cc:2443
 #, c-format
 msgid "Skipping unpack of already unpacked source in %s\n"
 msgstr "Omgår utpakking av allerede utpakket kilde i %s\n"
 
-#: cmdline/apt-get.cc:2439
+#: cmdline/apt-get.cc:2455
 #, c-format
 msgid "Unpack command '%s' failed.\n"
 msgstr "Utpakkingskommandoen «%s» mislyktes.\n"
 
-#: cmdline/apt-get.cc:2440
+#: cmdline/apt-get.cc:2456
 #, c-format
 msgid "Check if the 'dpkg-dev' package is installed.\n"
 msgstr "Sjekk om pakken «dpkg-dev» er installert.\n"
 
-#: cmdline/apt-get.cc:2457
+#: cmdline/apt-get.cc:2473
 #, c-format
 msgid "Build command '%s' failed.\n"
 msgstr "Byggekommandoen «%s» mislyktes.\n"
 
-#: cmdline/apt-get.cc:2477
+#: cmdline/apt-get.cc:2493
 msgid "Child process failed"
 msgstr "Barneprosessen mislyktes"
 
-#: cmdline/apt-get.cc:2493
+#: cmdline/apt-get.cc:2509
 msgid "Must specify at least one package to check builddeps for"
 msgstr "Du må angi minst en pakke du vil sjekke «builddeps» for"
 
-#: cmdline/apt-get.cc:2524
+#: cmdline/apt-get.cc:2540
 #, c-format
 msgid "Unable to get build-dependency information for %s"
 msgstr "Klarer ikke å skaffe informasjon om bygge-avhengighetene for %s"
 
-#: cmdline/apt-get.cc:2544
+#: cmdline/apt-get.cc:2560
 #, c-format
 msgid "%s has no build depends.\n"
 msgstr "%s har ingen avhengigheter.\n"
 
-#: cmdline/apt-get.cc:2595
+#: cmdline/apt-get.cc:2611
 #, c-format
 msgid ""
 "%s dependency for %s cannot be satisfied because the package %s cannot be "
 "found"
 msgstr "Kravet %s for %s kan ikke oppfylles fordi pakken %s ikke finnes"
 
-#: cmdline/apt-get.cc:2648
+#: cmdline/apt-get.cc:2664
 #, c-format
 msgid ""
 "%s dependency for %s cannot be satisfied because no available versions of "
@@ -1304,32 +1304,32 @@ msgstr ""
 "Kravet %s for %s kan ikke oppfylles fordi det ikke finnes noen tilgjengelige "
 "versjoner av pakken %s som oppfyller versjonskravene"
 
-#: cmdline/apt-get.cc:2684
+#: cmdline/apt-get.cc:2700
 #, c-format
 msgid "Failed to satisfy %s dependency for %s: Installed package %s is too new"
 msgstr ""
 "Klarte ikke å tilfredsstille %s avhengighet for %s: den installerte pakken "
 "%s er for ny"
 
-#: cmdline/apt-get.cc:2711
+#: cmdline/apt-get.cc:2727
 #, c-format
 msgid "Failed to satisfy %s dependency for %s: %s"
 msgstr "Klarte ikke å tilfredsstille %s avhengighet for %s: %s"
 
-#: cmdline/apt-get.cc:2727
+#: cmdline/apt-get.cc:2743
 #, c-format
 msgid "Build-dependencies for %s could not be satisfied."
 msgstr "Klarte ikke å tilfredstille bygg-avhengighetene for %s."
 
-#: cmdline/apt-get.cc:2732
+#: cmdline/apt-get.cc:2748
 msgid "Failed to process build dependencies"
 msgstr "Klarte ikke å behandle forutsetningene for bygging"
 
-#: cmdline/apt-get.cc:2763
+#: cmdline/apt-get.cc:2779
 msgid "Supported modules:"
 msgstr "Støttede moduler:"
 
-#: cmdline/apt-get.cc:2804
+#: cmdline/apt-get.cc:2820
 msgid ""
 "Usage: apt-get [options] command\n"
 "       apt-get [options] install|remove pkg1 [pkg2 ...]\n"
@@ -1417,7 +1417,7 @@ msgstr ""
 "for mer informasjon og flere valg.\n"
 "                       Denne APT har kraften til en Superku.\n"
 
-#: cmdline/apt-get.cc:2960
+#: cmdline/apt-get.cc:2976
 msgid ""
 "NOTE: This is only a simulation!\n"
 "      apt-get needs root privileges for real execution.\n"
@@ -1668,7 +1668,7 @@ msgstr "Fila %s/%s skriver over den tilsvarende fila i pakken %s"
 #. Only warn if there are no sources.list.d.
 #. Only warn if there is no sources.list file.
 #: apt-inst/extract.cc:464 apt-pkg/contrib/cdromutl.cc:179
-#: apt-pkg/contrib/fileutl.cc:311 apt-pkg/sourcelist.cc:204
+#: apt-pkg/contrib/fileutl.cc:316 apt-pkg/sourcelist.cc:204
 #: apt-pkg/sourcelist.cc:210 apt-pkg/acquire.cc:450 apt-pkg/init.cc:100
 #: apt-pkg/init.cc:108 apt-pkg/clean.cc:33 apt-pkg/policy.cc:307
 #: methods/mirror.cc:87
@@ -1784,27 +1784,28 @@ msgstr "Feil ved tolking av MD5. Offset %lu"
 msgid "This is not a valid DEB archive, missing '%s' member"
 msgstr "Dette er ikke et gyldig DEB-arkiv, mangler «%s»-medlemmet"
 
-#: apt-inst/deb/debfile.cc:50
+#. FIXME: add data.tar.xz here - adding it now would require a Translation round for a very small gain
+#: apt-inst/deb/debfile.cc:52
 #, c-format
 msgid "This is not a valid DEB archive, it has no '%s', '%s' or '%s' member"
 msgstr ""
 "Dette er ikke et gyldig DEB-arkiv, det har ikke noe «%s»-, «%s»- eller «%s»-"
 "medlem"
 
-#: apt-inst/deb/debfile.cc:110
+#: apt-inst/deb/debfile.cc:112
 #, c-format
 msgid "Couldn't change to %s"
 msgstr "Klarte ikke å bytte til %s"
 
-#: apt-inst/deb/debfile.cc:140
+#: apt-inst/deb/debfile.cc:146
 msgid "Internal error, could not locate member"
 msgstr "Intern feil, fant ikke medlem"
 
-#: apt-inst/deb/debfile.cc:173
+#: apt-inst/deb/debfile.cc:179
 msgid "Failed to locate a valid control file"
 msgstr "Fant ingen gyldig kontrollfil"
 
-#: apt-inst/deb/debfile.cc:258
+#: apt-inst/deb/debfile.cc:264
 msgid "Unparsable control file"
 msgstr "Kontrollfila kan ikke tolkes"
 
@@ -1919,7 +1920,7 @@ msgstr "Tidsavbrudd på forbindelsen"
 msgid "Server closed the connection"
 msgstr "Tjeneren lukket forbindelsen"
 
-#: methods/ftp.cc:344 apt-pkg/contrib/fileutl.cc:784 methods/rsh.cc:190
+#: methods/ftp.cc:344 apt-pkg/contrib/fileutl.cc:789 methods/rsh.cc:190
 msgid "Read error"
 msgstr "Lesefeil"
 
@@ -1931,7 +1932,7 @@ msgstr "Et svar oversvømte bufferen."
 msgid "Protocol corruption"
 msgstr "Protokollødeleggelse"
 
-#: methods/ftp.cc:452 apt-pkg/contrib/fileutl.cc:826 methods/rsh.cc:232
+#: methods/ftp.cc:452 apt-pkg/contrib/fileutl.cc:831 methods/rsh.cc:232
 msgid "Write error"
 msgstr "Skrivefeil"
 
@@ -2385,92 +2386,92 @@ msgstr "Klarer ikke å endre %s"
 msgid "Failed to stat the cdrom"
 msgstr "Klarer ikke å få statusen på CD-spilleren"
 
-#: apt-pkg/contrib/fileutl.cc:154
+#: apt-pkg/contrib/fileutl.cc:159
 #, c-format
 msgid "Not using locking for read only lock file %s"
 msgstr "Bruker ikke låsing for den skrivebeskyttede låsefila %s"
 
-#: apt-pkg/contrib/fileutl.cc:159
+#: apt-pkg/contrib/fileutl.cc:164
 #, c-format
 msgid "Could not open lock file %s"
 msgstr "Klarte ikke åpne låsefila %s"
 
-#: apt-pkg/contrib/fileutl.cc:177
+#: apt-pkg/contrib/fileutl.cc:182
 #, c-format
 msgid "Not using locking for nfs mounted lock file %s"
 msgstr "Bruker ikke låsing på den nfs-monterte låsefila %s"
 
-#: apt-pkg/contrib/fileutl.cc:181
+#: apt-pkg/contrib/fileutl.cc:186
 #, c-format
 msgid "Could not get lock %s"
 msgstr "Får ikke låst %s"
 
-#: apt-pkg/contrib/fileutl.cc:643
+#: apt-pkg/contrib/fileutl.cc:648
 #, c-format
 msgid "Waited for %s but it wasn't there"
 msgstr "Ventet på %s, men den ble ikke funnet"
 
-#: apt-pkg/contrib/fileutl.cc:655
+#: apt-pkg/contrib/fileutl.cc:660
 #, c-format
 msgid "Sub-process %s received a segmentation fault."
 msgstr "Underprosessen %s mottok et minnefeilsignal."
 
-#: apt-pkg/contrib/fileutl.cc:657
+#: apt-pkg/contrib/fileutl.cc:662
 #, c-format
 msgid "Sub-process %s received signal %u."
 msgstr "Underprosessen %s mottok signalet %u."
 
-#: apt-pkg/contrib/fileutl.cc:661
+#: apt-pkg/contrib/fileutl.cc:666
 #, c-format
 msgid "Sub-process %s returned an error code (%u)"
 msgstr "Underprosessen %s ga en feilkode (%u)"
 
-#: apt-pkg/contrib/fileutl.cc:663
+#: apt-pkg/contrib/fileutl.cc:668
 #, c-format
 msgid "Sub-process %s exited unexpectedly"
 msgstr "Underprosessen %s avsluttet uventet"
 
-#: apt-pkg/contrib/fileutl.cc:728
+#: apt-pkg/contrib/fileutl.cc:733
 #, c-format
 msgid "Could not open file %s"
 msgstr "Klarte ikke åpne fila %s"
 
-#: apt-pkg/contrib/fileutl.cc:745
+#: apt-pkg/contrib/fileutl.cc:750
 #, c-format
 msgid "Could not open file descriptor %d"
 msgstr "Klarte ikke åpne fildeskriptor %d"
 
-#: apt-pkg/contrib/fileutl.cc:805
+#: apt-pkg/contrib/fileutl.cc:810
 #, c-format
 msgid "read, still have %lu to read but none left"
 msgstr "lese, har fremdeles %lu igjen å lese, men ingen igjen"
 
-#: apt-pkg/contrib/fileutl.cc:838
+#: apt-pkg/contrib/fileutl.cc:843
 #, c-format
 msgid "write, still have %lu to write but couldn't"
 msgstr "skrive, har fremdeles %lu igjen å skrive, men klarte ikke å"
 
-#: apt-pkg/contrib/fileutl.cc:967
+#: apt-pkg/contrib/fileutl.cc:979
 #, c-format
 msgid "Problem closing the gzip file %s"
 msgstr "Problem ved låsing av gzip-fila %s"
 
-#: apt-pkg/contrib/fileutl.cc:970
+#: apt-pkg/contrib/fileutl.cc:982
 #, c-format
 msgid "Problem closing the file %s"
 msgstr "Problem ved låsing av fila %s"
 
-#: apt-pkg/contrib/fileutl.cc:975
+#: apt-pkg/contrib/fileutl.cc:987
 #, c-format
 msgid "Problem renaming the file %s to %s"
 msgstr "Problem ved endring av navn på fila %s til %s"
 
-#: apt-pkg/contrib/fileutl.cc:986
+#: apt-pkg/contrib/fileutl.cc:998
 #, c-format
 msgid "Problem unlinking the file %s"
 msgstr "Problem ved oppheving av lenke til fila %s"
 
-#: apt-pkg/contrib/fileutl.cc:999
+#: apt-pkg/contrib/fileutl.cc:1011
 msgid "Problem syncing the file"
 msgstr "Problem ved oppdatering av fila"
 

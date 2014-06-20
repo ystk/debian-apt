@@ -92,7 +92,7 @@ setupenvironment() {
 	mkdir rootdir aptarchive keys
 	cd rootdir
 	mkdir -p etc/apt/apt.conf.d etc/apt/sources.list.d etc/apt/trusted.gpg.d etc/apt/preferences.d
-	mkdir -p var/cache var/lib var/log
+	mkdir -p var/cache var/lib var/log tmp
 	mkdir -p var/lib/dpkg/info var/lib/dpkg/updates var/lib/dpkg/triggers
 	local STATUSFILE=$(echo "$(basename $0)" | sed -e 's/^test-/status-/' -e 's/^skip-/status-/')
 	if [ -f "${TESTDIR}/${STATUSFILE}" ]; then
@@ -251,9 +251,9 @@ createaptftparchiveconfig() {
 	echo -n '";
 };
 Default {
-	Packages::Compress ". gzip bzip2 lzma";
-	Sources::Compress ". gzip bzip2 lzma";
-	Contents::Compress ". gzip bzip2 lzma";
+	Packages::Compress ". gzip bzip2 lzma xz";
+	Sources::Compress ". gzip bzip2 lzma xz";
+	Contents::Compress ". gzip bzip2 lzma xz";
 };
 TreeDefault {
 	Directory "pool/";
@@ -332,6 +332,7 @@ buildaptarchivefromfiles() {
 		cat Packages | gzip > Packages.gz
 		cat Packages | bzip2 > Packages.bz2
 		cat Packages | lzma > Packages.lzma
+		cat Packages | xz > Packages.xz
 		msgdone "info"
 	fi
 	if [ -f Sources ]; then
@@ -339,6 +340,7 @@ buildaptarchivefromfiles() {
 		cat Sources | gzip > Sources.gz
 		cat Sources | bzip2 > Sources.bz2
 		cat Sources | lzma > Sources.lzma
+		cat Sources | xz > Sources.xz
 		msgdone "info"
 	fi
 	msgninfo "\tRelease file… "
@@ -525,4 +527,36 @@ testdpkgnoninstalled() {
 		return 1
 	fi
 	msgpass
+}
+
+testsuccess() {
+	if [ "$1" = '--nomsg' ]; then
+		shift
+	else
+		msgtest 'Test for successful execution of' "$*"
+	fi
+	local OUTPUT="${TMPWORKINGDIRECTORY}/rootdir/tmp/testsuccess.output"
+	if $@ >${OUTPUT} 2>&1; then
+		msgpass
+	else
+		echo >&2
+		cat >&2 $OUTPUT
+		msgfail
+	fi
+}
+
+testfailure() {
+	if [ "$1" = '--nomsg' ]; then
+		shift
+	else
+		msgtest 'Test for failure in execution of' "$*"
+	fi
+	local OUTPUT="${TMPWORKINGDIRECTORY}/rootdir/tmp/testfailure.output"
+	if $@ >${OUTPUT} 2>&1; then
+		echo >&2
+		cat >&2 $OUTPUT
+		msgfail
+	else
+		msgpass
+	fi
 }

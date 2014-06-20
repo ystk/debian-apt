@@ -1,9 +1,41 @@
-apt (0.8.10.3skerlet1) unstable; urgency=low
+apt (0.8.10.3+squeeze2) squeeze-lts; urgency=high
 
-  [ Skerlet ]
-  * Initial version for Skerlet
+  * SECURITY UPDATE: apt-get source validation (closes: #749795)
+    - CVE-2014-0478
+  * SECURITY UPDATE: sensitive information disclosure via incorrect
+    hostname validation (LP: #868353)
+    - methods/https.cc: properly set CURLOPT_SSL_VERIFYHOST.
+    - CVE-2011-3634
 
- -- Skerlet Project Team <skerlet@swc.toshiba.co.jp>  Fri, 05 Aug 2011 16:51:23 +0900
+ -- Michael Vogt <mvo@debian.org>  Thu, 12 Jun 2014 14:30:59 +0200
+
+apt (0.8.10.3+squeeze1) stable; urgency=low
+
+  [ Michael Vogt ]
+  * debian/control:
+    - make Vcs-Bzr point to http://bzr.debian.org/apt/apt/debian-squeeze
+      branch
+  * apt-pkg/acquire-item.cc:
+    - mark pkgAcqIndexTrans as Index-File to avoid asking the
+      user to insert the CD on each apt-get update, closes: #614300
+
+  [ Christian Perrier ]
+  * Fix error in French translation of manpages (apt_preferences(5)).
+    Merci, Rémi Vanicat. Closes: #613689
+
+  [ David Kalnischkies ]
+  * apt-pkg/contrib/fileutl.cc:
+    - reorder the loaded filesize bytes for big endian (Closes: #612986)
+      Thanks to Jörg Sommer for the detailed analyse!
+  * ftparchive/multicompress.cc, apt-inst/deb/debfile.cc:
+    - support xz compressor to create xz-compressed Indexes and be able
+      to open data.tar.xz files
+  * ftparchive/writer.cc:
+    - include xz-compressed Packages and Sources files in Release file
+  * apt-pkg/deb/debsrcrecords.cc:
+    - support xz-compressed source v3 debian.tar files
+
+ -- Julian Andres Klode <jak@debian.org>  Fri, 15 Apr 2011 09:23:08 +0200
 
 apt (0.8.10.3) unstable; urgency=low
 

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt_po_km\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-25 11:54+0100\n"
+"POT-Creation-Date: 2014-06-12 15:48+0200\n"
 "PO-Revision-Date: 2006-10-10 09:48+0700\n"
 "Last-Translator: Khoem Sokhem <khoemsokhem@khmeros.info>\n"
 "Language-Team: Khmer <support@khmeros.info>\n"
@@ -156,7 +156,7 @@ msgstr "  តារាង​កំណែ ៖"
 
 #: cmdline/apt-cache.cc:1738 cmdline/apt-cdrom.cc:197 cmdline/apt-config.cc:70
 #: cmdline/apt-extracttemplates.cc:225 ftparchive/apt-ftparchive.cc:589
-#: cmdline/apt-get.cc:2758 cmdline/apt-sortpkgs.cc:144
+#: cmdline/apt-get.cc:2774 cmdline/apt-sortpkgs.cc:144
 #, fuzzy, c-format
 msgid "%s %s for %s compiled on %s %s\n"
 msgstr "%s %s សម្រាប់ %s %s បាន​ចងក្រងនៅលើ​%s %s\n"
@@ -562,12 +562,12 @@ msgstr "  %s គ្មាន​ធាតុ​បដិសេធ​ប្រភ�
 msgid "  %s has no binary override entry either\n"
 msgstr "  %s គ្មាន​ធាតុប​ដិសេធគោល​ពីរ​ដែរ\n"
 
-#: ftparchive/contents.cc:321
+#: ftparchive/contents.cc:325
 #, c-format
 msgid "Internal error, could not locate member %s"
 msgstr "កំហុស​ខាងក្នុង ​មិន​អាច​កំណត់​ទីតាំង​សមាជិក​ %s បានឡើយ"
 
-#: ftparchive/contents.cc:358 ftparchive/contents.cc:389
+#: ftparchive/contents.cc:362 ftparchive/contents.cc:393
 msgid "realloc - Failed to allocate memory"
 msgstr "realloc - បរាជ័យ​ក្នុង​ការ​​បម្រុង​​ទុក​សតិ​"
 
@@ -596,63 +596,63 @@ msgstr "Malformed បដិសេធ %s បន្ទាត់​ %lu #3"
 msgid "Failed to read the override file %s"
 msgstr "បាន​បរាជ័យ​ក្នុង​ការ​អានឯកសារ​បដិសេធ %s"
 
-#: ftparchive/multicompress.cc:72
+#: ftparchive/multicompress.cc:73
 #, c-format
 msgid "Unknown compression algorithm '%s'"
 msgstr "មិន​ស្គាល់​ក្បួន​ដោះស្រាយ​ការបង្ហាប់​ '%s'"
 
-#: ftparchive/multicompress.cc:102
+#: ftparchive/multicompress.cc:103
 #, c-format
 msgid "Compressed output %s needs a compression set"
 msgstr "​ទិន្នផល​ដែល​បាន​បង្ហាប់​​ %s ត្រូវ​ការ​កំណត់​ការបង្ហាប់​"
 
-#: ftparchive/multicompress.cc:169 methods/rsh.cc:91
+#: ftparchive/multicompress.cc:170 methods/rsh.cc:91
 msgid "Failed to create IPC pipe to subprocess"
 msgstr "បរាជ័យ​ក្នុង​ការ​បង្កើត​បំពង់​ IPC សម្រាប់​ដំណើរ​ការ​រង​"
 
-#: ftparchive/multicompress.cc:195
+#: ftparchive/multicompress.cc:196
 msgid "Failed to create FILE*"
 msgstr "បរាជ័យ​ក្នុង​ការ​បង្កើត​ FILE*"
 
-#: ftparchive/multicompress.cc:198
+#: ftparchive/multicompress.cc:199
 msgid "Failed to fork"
 msgstr "បាន​បរាជ័យ​ក្នុងការ​ដាក់ជា​ពីរផ្នែក​"
 
-#: ftparchive/multicompress.cc:212
+#: ftparchive/multicompress.cc:213
 msgid "Compress child"
 msgstr "បង្ហាប់កូន"
 
-#: ftparchive/multicompress.cc:235
+#: ftparchive/multicompress.cc:236
 #, c-format
 msgid "Internal error, failed to create %s"
 msgstr "កំហុស​ខាងក្នុង​ បរាជ័យ​ក្នុង​ការ​បង្កើត​ %s"
 
-#: ftparchive/multicompress.cc:286
+#: ftparchive/multicompress.cc:287
 msgid "Failed to create subprocess IPC"
 msgstr "បរាជ័យ​ក្នុង​ការ​បង្កើត​ដំណើរការ​រង​ IPC"
 
-#: ftparchive/multicompress.cc:321
+#: ftparchive/multicompress.cc:322
 msgid "Failed to exec compressor "
 msgstr "បរាជ័យ​ក្នុង​ការ​ប្រតិបត្តិ​កម្មវិធី​បង្ហាប់ "
 
-#: ftparchive/multicompress.cc:360
+#: ftparchive/multicompress.cc:361
 msgid "decompressor"
 msgstr "កម្មវិធី​ពន្លា"
 
-#: ftparchive/multicompress.cc:403
+#: ftparchive/multicompress.cc:404
 msgid "IO to subprocess/file failed"
 msgstr "IO សម្រាប់​ដំណើរការ​រង​/ឯកសារ​ បាន​បរាជ័យ​"
 
-#: ftparchive/multicompress.cc:455
+#: ftparchive/multicompress.cc:456
 msgid "Failed to read while computing MD5"
 msgstr "បាន​បរាជ័យ​ក្នុង​ការអាន​ នៅពេល​គណនា MD5"
 
-#: ftparchive/multicompress.cc:472
+#: ftparchive/multicompress.cc:473
 #, c-format
 msgid "Problem unlinking %s"
 msgstr "មានបញ្ហា​ក្នុងការ​ផ្ដាច់តំណ %s"
 
-#: ftparchive/multicompress.cc:487 apt-inst/extract.cc:185
+#: ftparchive/multicompress.cc:488 apt-inst/extract.cc:185
 #, c-format
 msgid "Failed to rename %s to %s"
 msgstr "បរាជ័យ​ក្នុង​ការ​ប្តូរ​ឈ្មោះ %s ទៅ %s"
@@ -845,7 +845,7 @@ msgstr "មិនអាចធ្វើការដំឡើង %s ឡើងវ�
 msgid "%s is already the newest version.\n"
 msgstr "%s ជាកំណែ​ដែលថ្មីបំផុតរួចទៅហើយ ។\n"
 
-#: cmdline/apt-get.cc:823 cmdline/apt-get.cc:1992
+#: cmdline/apt-get.cc:823 cmdline/apt-get.cc:1999
 #, fuzzy, c-format
 msgid "%s set to manually installed.\n"
 msgstr "ប៉ុន្តែ​ %s នឹង​ត្រូវ​បាន​ដំឡើ​ង"
@@ -883,90 +883,90 @@ msgstr "អ្នក​ប្រហែល​ជា​ចង់រត់ 'apt-get
 msgid "Unmet dependencies. Try using -f."
 msgstr "ភាព​អាស្រ័យ​ដែល​ខុស​គ្នា ។ ព្យាយាម​ការ​ប្រើ -f ។"
 
-#: cmdline/apt-get.cc:981
+#: cmdline/apt-get.cc:964
 msgid "WARNING: The following packages cannot be authenticated!"
 msgstr "ព្រមាន​ ៖ មិនអាច​ធ្វើការផ្ទៀងផ្ទាត់ភាពត្រឹមត្រូវកញ្ចប់ខាងក្រោមបានឡើយ !"
 
-#: cmdline/apt-get.cc:985
+#: cmdline/apt-get.cc:968
 msgid "Authentication warning overridden.\n"
 msgstr "បានបដិសេធ​ការព្រមាន​ការផ្ទៀងផ្ទាត់ភាព​ត្រឹមត្រូវ ។\n"
 
-#: cmdline/apt-get.cc:992
-msgid "Install these packages without verification [y/N]? "
-msgstr "ដំឡើង​កញ្ចប់​ទាំងនេះ ​ដោយគ្មានការពិនិត្យ​បញ្ជាក់ [y/N] ? "
-
-#: cmdline/apt-get.cc:994
+#: cmdline/apt-get.cc:973 cmdline/apt-get.cc:980
 msgid "Some packages could not be authenticated"
 msgstr "មិនអាច​ផ្ទៀងផ្ទាត់ភាពត្រឹមត្រូវកញ្ចប់​មួយចំនួន​បានឡើយ​"
 
-#: cmdline/apt-get.cc:1003 cmdline/apt-get.cc:1166
+#: cmdline/apt-get.cc:978
+msgid "Install these packages without verification [y/N]? "
+msgstr "ដំឡើង​កញ្ចប់​ទាំងនេះ ​ដោយគ្មានការពិនិត្យ​បញ្ជាក់ [y/N] ? "
+
+#: cmdline/apt-get.cc:989 cmdline/apt-get.cc:1173
 msgid "There are problems and -y was used without --force-yes"
 msgstr "មាន​បញ្ហា​ ហើយ -y ត្រូវ​បាន​ប្រើ​ដោយគ្មាន​​ --force​-yes"
 
-#: cmdline/apt-get.cc:1044
+#: cmdline/apt-get.cc:1051
 msgid "Internal error, InstallPackages was called with broken packages!"
 msgstr "កំហុស​ខាងក្នុង កញ្ចប់​ដំឡើង​ត្រូវ​បាន​ហៅ​​ជាមួយ​កញ្ចប់​ដែល​ខូច !"
 
-#: cmdline/apt-get.cc:1053
+#: cmdline/apt-get.cc:1060
 msgid "Packages need to be removed but remove is disabled."
 msgstr "កញ្ចប់ ​ត្រូវការឲ្យ​យក​ចេញ​​ ប៉ុន្តែមិនអនុញ្ញាត​ឲ្យយកចេញឡើយ ។"
 
-#: cmdline/apt-get.cc:1064
+#: cmdline/apt-get.cc:1071
 msgid "Internal error, Ordering didn't finish"
 msgstr "កំហុស​ខាងក្នុង​ ការ​រៀប​តាម​លំដាប់​មិន​បាន​បញ្ចប់ឡើយ"
 
-#: cmdline/apt-get.cc:1104
+#: cmdline/apt-get.cc:1111
 msgid "How odd.. The sizes didn't match, email apt@packages.debian.org"
 msgstr "យី អី​ក៏​ចម្លែង​ម្លេះ.. ទំហំ​មិន​ដូច​គ្នា​ឡើយ ។ សូម​ផ្ញើ​អ៊ីមែល​ទៅ apt@packages.debian.org"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement strings, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:1111
+#: cmdline/apt-get.cc:1118
 #, c-format
 msgid "Need to get %sB/%sB of archives.\n"
 msgstr "ត្រូវការ​​យក​ %sB/%sB នៃ​ប័ណ្ណសារ ។​\n"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement string, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:1116
+#: cmdline/apt-get.cc:1123
 #, c-format
 msgid "Need to get %sB of archives.\n"
 msgstr "ត្រូវ​ការយក​ %sB នៃ​ប័ណ្ណសារ ។\n"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement string, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:1123
+#: cmdline/apt-get.cc:1130
 #, fuzzy, c-format
 msgid "After this operation, %sB of additional disk space will be used.\n"
 msgstr "បន្ទាប់​ពី​ពន្លា​ %sB នៃ​ការ​បន្ថែម​​ទំហំ​ថាស​ត្រូវ​បាន​ប្រើ ។\n"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement string, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:1128
+#: cmdline/apt-get.cc:1135
 #, fuzzy, c-format
 msgid "After this operation, %sB disk space will be freed.\n"
 msgstr "បន្ទាប់​ពី​ពន្លា​ %sB ទំហំ​ថាសនឹង​​ទំនេរ ។ \n"
 
-#: cmdline/apt-get.cc:1143 cmdline/apt-get.cc:1146 cmdline/apt-get.cc:2332
-#: cmdline/apt-get.cc:2335
+#: cmdline/apt-get.cc:1150 cmdline/apt-get.cc:1153 cmdline/apt-get.cc:2348
+#: cmdline/apt-get.cc:2351
 #, c-format
 msgid "Couldn't determine free space in %s"
 msgstr "មិន​អាច​កំណត់​ទំហំ​ទំនេរ​ក្នុង​ %s បានឡើយ"
 
-#: cmdline/apt-get.cc:1156
+#: cmdline/apt-get.cc:1163
 #, c-format
 msgid "You don't have enough free space in %s."
 msgstr "អ្នក​គ្មាន​ទំហំ​​ទំនេរ​គ្រប់គ្រាន់​ក្នុង​​ %s ឡើយ ។"
 
-#: cmdline/apt-get.cc:1172 cmdline/apt-get.cc:1192
+#: cmdline/apt-get.cc:1179 cmdline/apt-get.cc:1199
 msgid "Trivial Only specified but this is not a trivial operation."
 msgstr "បានបញ្ជាក់​តែប្រតិបត្តិការដែលមិនសំខាន់ប៉ុណ្ណោះ ប៉ុន្តែ​នេះមិនមែនជាប្រតិបត្តិការមិនសំខាន់នោះទេ ។"
 
-#: cmdline/apt-get.cc:1174
+#: cmdline/apt-get.cc:1181
 msgid "Yes, do as I say!"
 msgstr "បាទ/ចាស ធ្វើ​ដូច​ដែល​ខ្ញុំ​និយាយ !"
 
-#: cmdline/apt-get.cc:1176
+#: cmdline/apt-get.cc:1183
 #, c-format
 msgid ""
 "You are about to do something potentially harmful.\n"
@@ -977,28 +977,28 @@ msgstr ""
 "ដើម្បី​បន្ត ​​វាយ​ក្នុង​ឃ្លា​ '%s'\n"
 " ?] "
 
-#: cmdline/apt-get.cc:1182 cmdline/apt-get.cc:1201
+#: cmdline/apt-get.cc:1189 cmdline/apt-get.cc:1208
 msgid "Abort."
 msgstr "បោះបង់ ។"
 
-#: cmdline/apt-get.cc:1197
+#: cmdline/apt-get.cc:1204
 msgid "Do you want to continue [Y/n]? "
 msgstr "តើ​អ្នក​ចង់​បន្តឬ​ [បាទ ចាស/ទេ​] ? "
 
-#: cmdline/apt-get.cc:1269 cmdline/apt-get.cc:2392 apt-pkg/algorithms.cc:1470
+#: cmdline/apt-get.cc:1276 cmdline/apt-get.cc:2408 apt-pkg/algorithms.cc:1470
 #, c-format
 msgid "Failed to fetch %s  %s\n"
 msgstr "បរាជ័យ​ក្នុង​ការ​ទៅ​ប្រមូល​យក​ %s  %s\n"
 
-#: cmdline/apt-get.cc:1287
+#: cmdline/apt-get.cc:1294
 msgid "Some files failed to download"
 msgstr "ឯកសារ​មួយ​ចំនួន​បាន​បរាជ័យ​ក្នុង​ការ​ទាញ​យក​"
 
-#: cmdline/apt-get.cc:1288 cmdline/apt-get.cc:2401
+#: cmdline/apt-get.cc:1295 cmdline/apt-get.cc:2417
 msgid "Download complete and in download only mode"
 msgstr "បានបញ្ចប់ការទាញ​យក​ ហើយ​តែ​ក្នុង​របៀប​​ទាញ​យក​ប៉ុណ្ណោះ"
 
-#: cmdline/apt-get.cc:1294
+#: cmdline/apt-get.cc:1301
 msgid ""
 "Unable to fetch some archives, maybe run apt-get update or try with --fix-"
 "missing?"
@@ -1006,19 +1006,19 @@ msgstr ""
 "អនុញ្ញាត​ឲ្យ​ទៅ​ប្រមូល​យក​ប័ណ្ណសារ​មួយ​ចំនួន​ ប្រហែល​ជា​រត់​ភាព​ទាន់​សម័យ apt-get ឬ ព្យាយាមប្រើ​ជាមួយ --"
 "fix- ដែលបាត់ឬ់ ?"
 
-#: cmdline/apt-get.cc:1298
+#: cmdline/apt-get.cc:1305
 msgid "--fix-missing and media swapping is not currently supported"
 msgstr "--fix- ដែលបាត់​ និង ​ស្វប​មេឌៀ​ដែល​មិនបាន​​គាំទ្រនៅពេល​បច្ចុប្បន្ន​"
 
-#: cmdline/apt-get.cc:1303
+#: cmdline/apt-get.cc:1310
 msgid "Unable to correct missing packages."
 msgstr "មិន​អាច​កែ​កញ្ចប់​ដែលបាត់បង់​បានឡើយ ។"
 
-#: cmdline/apt-get.cc:1304
+#: cmdline/apt-get.cc:1311
 msgid "Aborting install."
 msgstr "កំពុង​បោះបង់​ការ​ដំឡើង​ ។"
 
-#: cmdline/apt-get.cc:1332
+#: cmdline/apt-get.cc:1339
 msgid ""
 "The following package disappeared from your system as\n"
 "all files have been overwritten by other packages:"
@@ -1028,35 +1028,35 @@ msgid_plural ""
 msgstr[0] ""
 msgstr[1] ""
 
-#: cmdline/apt-get.cc:1336
+#: cmdline/apt-get.cc:1343
 msgid "Note: This is done automatic and on purpose by dpkg."
 msgstr ""
 
-#: cmdline/apt-get.cc:1466
+#: cmdline/apt-get.cc:1473
 #, c-format
 msgid "Ignore unavailable target release '%s' of package '%s'"
 msgstr ""
 
-#: cmdline/apt-get.cc:1498
+#: cmdline/apt-get.cc:1505
 #, fuzzy, c-format
 msgid "Picking '%s' as source package instead of '%s'\n"
 msgstr "មិនអាចថ្លែង បញ្ជី​កញ្ចប់​ប្រភពចប់​ បានឡើយ %s"
 
 #. if (VerTag.empty() == false && Last == 0)
-#: cmdline/apt-get.cc:1536
+#: cmdline/apt-get.cc:1543
 #, c-format
 msgid "Ignore unavailable version '%s' of package '%s'"
 msgstr ""
 
-#: cmdline/apt-get.cc:1552
+#: cmdline/apt-get.cc:1559
 msgid "The update command takes no arguments"
 msgstr "ពាក្យ​បញ្ជា​ដែលធ្វើ​ឲ្យ​ទាន់​សម័យ​គ្មាន​អាគុយម៉ង់​ទេ"
 
-#: cmdline/apt-get.cc:1618
+#: cmdline/apt-get.cc:1625
 msgid "We are not supposed to delete stuff, can't start AutoRemover"
 msgstr ""
 
-#: cmdline/apt-get.cc:1666
+#: cmdline/apt-get.cc:1673
 #, fuzzy
 msgid ""
 "The following package was automatically installed and is no longer required:"
@@ -1066,7 +1066,7 @@ msgid_plural ""
 msgstr[0] "កញ្ចប់​ថ្មី​ខាងក្រោម​នឹង​ត្រូវ​បាន​ដំឡើង​ ៖"
 msgstr[1] "កញ្ចប់​ថ្មី​ខាងក្រោម​នឹង​ត្រូវ​បាន​ដំឡើង​ ៖"
 
-#: cmdline/apt-get.cc:1670
+#: cmdline/apt-get.cc:1677
 #, fuzzy, c-format
 msgid "%lu package was automatically installed and is no longer required.\n"
 msgid_plural ""
@@ -1074,11 +1074,11 @@ msgid_plural ""
 msgstr[0] "កញ្ចប់​ថ្មី​ខាងក្រោម​នឹង​ត្រូវ​បាន​ដំឡើង​ ៖"
 msgstr[1] "កញ្ចប់​ថ្មី​ខាងក្រោម​នឹង​ត្រូវ​បាន​ដំឡើង​ ៖"
 
-#: cmdline/apt-get.cc:1672
+#: cmdline/apt-get.cc:1679
 msgid "Use 'apt-get autoremove' to remove them."
 msgstr ""
 
-#: cmdline/apt-get.cc:1677
+#: cmdline/apt-get.cc:1684
 msgid ""
 "Hmm, seems like the AutoRemover destroyed something which really\n"
 "shouldn't happen. Please file a bug report against apt."
@@ -1094,31 +1094,31 @@ msgstr ""
 #. "that package should be filed.") << endl;
 #. }
 #.
-#: cmdline/apt-get.cc:1680 cmdline/apt-get.cc:1822
+#: cmdline/apt-get.cc:1687 cmdline/apt-get.cc:1829
 msgid "The following information may help to resolve the situation:"
 msgstr "ព័ត៌មាន​ដូចតទៅនេះ អាចជួយ​ដោះស្រាយ​ស្ថានភាព​បាន ៖"
 
-#: cmdline/apt-get.cc:1684
+#: cmdline/apt-get.cc:1691
 #, fuzzy
 msgid "Internal Error, AutoRemover broke stuff"
 msgstr "កំហុស​ខាងក្នុង អ្នក​ដោះស្រាយ​បញ្ហា​បានធ្វើឲ្យខូច​ឧបករណ៍"
 
-#: cmdline/apt-get.cc:1703
+#: cmdline/apt-get.cc:1710
 msgid "Internal error, AllUpgrade broke stuff"
 msgstr "កំហុស​ខាងក្នុង ការធ្វើឲ្យប្រសើរ​ទាំងអស់បានធ្វើឲ្យ​ឧបករណ៍​ខូច"
 
-#: cmdline/apt-get.cc:1792
+#: cmdline/apt-get.cc:1799
 msgid "You might want to run 'apt-get -f install' to correct these:"
 msgstr "អ្នក​ប្រហែល​ជា​ចង់​រត់ 'apt-get -f install' ដើម្បី​កែ​ពួក​វា​ទាំង​នេះ ៖"
 
-#: cmdline/apt-get.cc:1795
+#: cmdline/apt-get.cc:1802
 msgid ""
 "Unmet dependencies. Try 'apt-get -f install' with no packages (or specify a "
 "solution)."
 msgstr ""
 "ភាពអស្រ័យ​ដែល​ខុស​គ្នា ។ ព្យាយាម​ 'apt-get -f install' ដោយ​គ្មាន​កញ្ចប់ (ឬ បញ្ជាក់​ដំណោះស្រាយ) ។"
 
-#: cmdline/apt-get.cc:1807
+#: cmdline/apt-get.cc:1814
 msgid ""
 "Some packages could not be installed. This may mean that you have\n"
 "requested an impossible situation or if you are using the unstable\n"
@@ -1130,69 +1130,69 @@ msgstr ""
 "ដែលបាន​ទាមទារនឹងមិនទាន់បានបង្កើត​ឡើយ​\n"
 " ឬ ​បានយក​ចេញ​ពីការមកដល់ ។"
 
-#: cmdline/apt-get.cc:1825
+#: cmdline/apt-get.cc:1832
 msgid "Broken packages"
 msgstr "កញ្ចប់​ដែល​បាន​ខូច​"
 
-#: cmdline/apt-get.cc:1854
+#: cmdline/apt-get.cc:1861
 msgid "The following extra packages will be installed:"
 msgstr "កញ្ចប់​បន្ថែម​ដូចតទៅនេះ នឹងត្រូវបាន​ដំឡើង ៖"
 
-#: cmdline/apt-get.cc:1944
+#: cmdline/apt-get.cc:1951
 msgid "Suggested packages:"
 msgstr "កញ្ចប់​ដែល​បាន​ផ្ដល់​យោបល់ ៖"
 
-#: cmdline/apt-get.cc:1945
+#: cmdline/apt-get.cc:1952
 msgid "Recommended packages:"
 msgstr "កញ្ចប់​ដែល​បាន​ផ្ដល់​អនុសាសន៍ ៖"
 
-#: cmdline/apt-get.cc:1987
+#: cmdline/apt-get.cc:1994
 #, c-format
 msgid "Couldn't find package %s"
 msgstr "មិន​អាច​រក​កញ្ចប់ %s បានទេ"
 
-#: cmdline/apt-get.cc:1994
+#: cmdline/apt-get.cc:2001
 #, fuzzy, c-format
 msgid "%s set to automatically installed.\n"
 msgstr "ប៉ុន្តែ​ %s នឹង​ត្រូវ​បាន​ដំឡើ​ង"
 
-#: cmdline/apt-get.cc:2015
+#: cmdline/apt-get.cc:2022
 msgid "Calculating upgrade... "
 msgstr "កំពុង​គណនា​ការ​ធ្វើ​ឲ្យ​ប្រសើរ... "
 
-#: cmdline/apt-get.cc:2018 methods/ftp.cc:707 methods/connect.cc:111
+#: cmdline/apt-get.cc:2025 methods/ftp.cc:707 methods/connect.cc:111
 msgid "Failed"
 msgstr "បាន​បរាជ័យ"
 
-#: cmdline/apt-get.cc:2023
+#: cmdline/apt-get.cc:2030
 msgid "Done"
 msgstr "ធ្វើរួច​"
 
-#: cmdline/apt-get.cc:2090 cmdline/apt-get.cc:2098
+#: cmdline/apt-get.cc:2097 cmdline/apt-get.cc:2105
 msgid "Internal error, problem resolver broke stuff"
 msgstr "កំហុស​ខាងក្នុង អ្នក​ដោះស្រាយ​បញ្ហា​បានធ្វើឲ្យខូច​ឧបករណ៍"
 
-#: cmdline/apt-get.cc:2122 cmdline/apt-get.cc:2155
+#: cmdline/apt-get.cc:2129 cmdline/apt-get.cc:2162
 msgid "Unable to lock the download directory"
 msgstr "មិន​អាច​ចាក់​សោ​ថត​ទាញ​យក​បាន​ឡើយ"
 
-#: cmdline/apt-get.cc:2198
+#: cmdline/apt-get.cc:2205
 msgid "Must specify at least one package to fetch source for"
 msgstr "យ៉ាងហោចណាស់​ត្រូវ​​បញ្ជាក់​​កញ្ចប់​មួយ ​ដើម្បី​ទៅ​​ប្រមូល​យក​ប្រភព​សម្រាប់"
 
-#: cmdline/apt-get.cc:2238 cmdline/apt-get.cc:2519
+#: cmdline/apt-get.cc:2246 cmdline/apt-get.cc:2535
 #, c-format
 msgid "Unable to find a source package for %s"
 msgstr "មិន​អាច​រក​កញ្ចប់ប្រភព​​សម្រាប់ %s បានឡើយ"
 
-#: cmdline/apt-get.cc:2254
+#: cmdline/apt-get.cc:2265
 #, c-format
 msgid ""
 "NOTICE: '%s' packaging is maintained in the '%s' version control system at:\n"
 "%s\n"
 msgstr ""
 
-#: cmdline/apt-get.cc:2259
+#: cmdline/apt-get.cc:2270
 #, c-format
 msgid ""
 "Please use:\n"
@@ -1200,85 +1200,85 @@ msgid ""
 "to retrieve the latest (possibly unreleased) updates to the package.\n"
 msgstr ""
 
-#: cmdline/apt-get.cc:2310
+#: cmdline/apt-get.cc:2321
 #, c-format
 msgid "Skipping already downloaded file '%s'\n"
 msgstr "កំពុង​រំលង​ឯកសារ​ដែល​បាន​ទាញយក​រួច​ '%s'\n"
 
-#: cmdline/apt-get.cc:2345
+#: cmdline/apt-get.cc:2361
 #, c-format
 msgid "You don't have enough free space in %s"
 msgstr "អ្នក​ពុំ​មាន​ទំហំ​ទំនេរ​គ្រប់គ្រាន់​ទេ​នៅក្នុង​ %s ឡើយ"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement strings, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:2353
+#: cmdline/apt-get.cc:2369
 #, c-format
 msgid "Need to get %sB/%sB of source archives.\n"
 msgstr "ត្រូវការ​យក​ %sB/%sB នៃ​ប័ណ្ណសារ​ប្រភព ។\n"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement string, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:2358
+#: cmdline/apt-get.cc:2374
 #, c-format
 msgid "Need to get %sB of source archives.\n"
 msgstr "ត្រូវការ​យក​ %sB នៃ​ប័ណ្ណសារ​ប្រភព​ ។\n"
 
-#: cmdline/apt-get.cc:2364
+#: cmdline/apt-get.cc:2380
 #, c-format
 msgid "Fetch source %s\n"
 msgstr "ទៅប្រមូល​ប្រភព​ %s\n"
 
-#: cmdline/apt-get.cc:2397
+#: cmdline/apt-get.cc:2413
 msgid "Failed to fetch some archives."
 msgstr "បរាជ័យ​ក្នុងការទៅប្រមូលយក​ប័ណ្ណសារ​មួយចំនួន ។"
 
-#: cmdline/apt-get.cc:2427
+#: cmdline/apt-get.cc:2443
 #, c-format
 msgid "Skipping unpack of already unpacked source in %s\n"
 msgstr "កំពុង​រំលង​ការស្រាយ​នៃប្រភព​ដែលបានស្រាយរួច​នៅក្នុង %s\n"
 
-#: cmdline/apt-get.cc:2439
+#: cmdline/apt-get.cc:2455
 #, c-format
 msgid "Unpack command '%s' failed.\n"
 msgstr "ពាក្យ​បញ្ជា​ស្រាយ '%s' បាន​បរាជ័យ​ ។\n"
 
-#: cmdline/apt-get.cc:2440
+#: cmdline/apt-get.cc:2456
 #, c-format
 msgid "Check if the 'dpkg-dev' package is installed.\n"
 msgstr "ពិនិត្យ​ប្រសិន​បើកញ្ចប់ 'dpkg-dev' មិន​ទាន់​បាន​ដំឡើង​ ។\n"
 
-#: cmdline/apt-get.cc:2457
+#: cmdline/apt-get.cc:2473
 #, c-format
 msgid "Build command '%s' failed.\n"
 msgstr "សាងសង​ពាក្យ​បញ្ជា​ '%s' បានបរាជ័យ​ ។\n"
 
-#: cmdline/apt-get.cc:2477
+#: cmdline/apt-get.cc:2493
 msgid "Child process failed"
 msgstr "ដំណើរ​ការ​កូន​បាន​បរាជ័យ​"
 
-#: cmdline/apt-get.cc:2493
+#: cmdline/apt-get.cc:2509
 msgid "Must specify at least one package to check builddeps for"
 msgstr "ត្រូវតែ​បញ្ជាក់​យ៉ាងហោចណាស់​មួយកញ្ចប់ដើម្បីពិនិត្យ builddeps សម្រាប់"
 
-#: cmdline/apt-get.cc:2524
+#: cmdline/apt-get.cc:2540
 #, c-format
 msgid "Unable to get build-dependency information for %s"
 msgstr "មិន​អាច​សាងសង់​​ព័ត៌មាន​ភាពអស្រ័យ​សម្រាប់ %s"
 
-#: cmdline/apt-get.cc:2544
+#: cmdline/apt-get.cc:2560
 #, c-format
 msgid "%s has no build depends.\n"
 msgstr "%s មិនមានភាពអាស្រ័យ​ស្ថាបនាឡើយ​ ។\n"
 
-#: cmdline/apt-get.cc:2595
+#: cmdline/apt-get.cc:2611
 #, c-format
 msgid ""
 "%s dependency for %s cannot be satisfied because the package %s cannot be "
 "found"
 msgstr "%s ភាពអស្រ័យ​សម្រាប់​ %s មិន​អាច​ធ្វើ​ឲ្យ​ពេញចិត្ត​ ព្រោះ​រក​​ %s កញ្ចប់​មិន​ឃើញ​ "
 
-#: cmdline/apt-get.cc:2648
+#: cmdline/apt-get.cc:2664
 #, c-format
 msgid ""
 "%s dependency for %s cannot be satisfied because no available versions of "
@@ -1287,30 +1287,30 @@ msgstr ""
 "ភាពអាស្រ័យ %s សម្រាប់ %s មិនអាច​តម្រូវចិត្តបានទេ ព្រោះ មិនមាន​កំណែ​នៃកញ្ចប់ %s ដែលអាច​តម្រូវចិត្ត​"
 "តម្រូវការ​កំណែបានឡើយ"
 
-#: cmdline/apt-get.cc:2684
+#: cmdline/apt-get.cc:2700
 #, c-format
 msgid "Failed to satisfy %s dependency for %s: Installed package %s is too new"
 msgstr "បរាជ័យ​ក្នុងការ​តម្រូវចិត្តភាពអាស្រ័យ %s សម្រាប់ %s ៖ កញ្ចប់ %s ដែលបានដំឡើង គឺថ្មីពេក"
 
-#: cmdline/apt-get.cc:2711
+#: cmdline/apt-get.cc:2727
 #, c-format
 msgid "Failed to satisfy %s dependency for %s: %s"
 msgstr "បរាជ័យ​ក្នុងការ​តម្រូវចិត្តភាពអាស្រ័យ %s សម្រាប់ %s: %s"
 
-#: cmdline/apt-get.cc:2727
+#: cmdline/apt-get.cc:2743
 #, c-format
 msgid "Build-dependencies for %s could not be satisfied."
 msgstr "ភាពអាស្រ័យ​ដែល​បង្កើត​ %s មិន​អាច​បំពេញ​សេចក្ដី​ត្រូវការ​បាន​ទេ ។"
 
-#: cmdline/apt-get.cc:2732
+#: cmdline/apt-get.cc:2748
 msgid "Failed to process build dependencies"
 msgstr "បាន​បរាជ័យ​ក្នុង​ការ​ដំណើរ​​ការ​បង្កើត​ភាព​អាស្រ័យ"
 
-#: cmdline/apt-get.cc:2763
+#: cmdline/apt-get.cc:2779
 msgid "Supported modules:"
 msgstr "ម៉ូឌុល​ដែល​គាំទ្រ ៖ "
 
-#: cmdline/apt-get.cc:2804
+#: cmdline/apt-get.cc:2820
 #, fuzzy
 msgid ""
 "Usage: apt-get [options] command\n"
@@ -1395,7 +1395,7 @@ msgstr ""
 "pages for more information and options.\n"
 "                       This APT has Super Cow Powers.\n"
 
-#: cmdline/apt-get.cc:2960
+#: cmdline/apt-get.cc:2976
 msgid ""
 "NOTE: This is only a simulation!\n"
 "      apt-get needs root privileges for real execution.\n"
@@ -1641,7 +1641,7 @@ msgstr "ឯកសារ​ %s/%s សរសេរជាន់​ពីលើ​�
 #. Only warn if there are no sources.list.d.
 #. Only warn if there is no sources.list file.
 #: apt-inst/extract.cc:464 apt-pkg/contrib/cdromutl.cc:179
-#: apt-pkg/contrib/fileutl.cc:311 apt-pkg/sourcelist.cc:204
+#: apt-pkg/contrib/fileutl.cc:316 apt-pkg/sourcelist.cc:204
 #: apt-pkg/sourcelist.cc:210 apt-pkg/acquire.cc:450 apt-pkg/init.cc:100
 #: apt-pkg/init.cc:108 apt-pkg/clean.cc:33 apt-pkg/policy.cc:307
 #: methods/mirror.cc:87
@@ -1755,25 +1755,26 @@ msgstr "កំហុស​ក្នុងការញែក​ MD5 ។ អុ�
 msgid "This is not a valid DEB archive, missing '%s' member"
 msgstr "នេះ​ជាមិនមែនជា​ប័ណ្ណសារ​ DEB ​ត្រឹមត្រូវទេ បាត់បង់សមាជិក​ '%s'​"
 
-#: apt-inst/deb/debfile.cc:50
+#. FIXME: add data.tar.xz here - adding it now would require a Translation round for a very small gain
+#: apt-inst/deb/debfile.cc:52
 #, fuzzy, c-format
 msgid "This is not a valid DEB archive, it has no '%s', '%s' or '%s' member"
 msgstr "នេះជា​ប័ណ្ណសារ DEB មិន​ត្រឹមត្រូវ វាគ្មានសមាជិក '%s' ឬ '%s'"
 
-#: apt-inst/deb/debfile.cc:110
+#: apt-inst/deb/debfile.cc:112
 #, c-format
 msgid "Couldn't change to %s"
 msgstr "មិនអាច​ប្ដូរ​ទៅជា​ %s បានឡើយ"
 
-#: apt-inst/deb/debfile.cc:140
+#: apt-inst/deb/debfile.cc:146
 msgid "Internal error, could not locate member"
 msgstr "កំហុស​ខាងក្នុង មិន​អាចដាក់ទីតាំង​ឲ្យ​សមាជិក​បានឡើយ"
 
-#: apt-inst/deb/debfile.cc:173
+#: apt-inst/deb/debfile.cc:179
 msgid "Failed to locate a valid control file"
 msgstr "បរាជ័យ​ក្នុងការដាក់ទិតាំង​ឯកសារ​ត្រួតពិនិត្យ​ដែលត្រឹមត្រូវ​"
 
-#: apt-inst/deb/debfile.cc:258
+#: apt-inst/deb/debfile.cc:264
 msgid "Unparsable control file"
 msgstr "ឯកសារត្រួតពិនិត្យ​ដែលមិនអាច​ញែកបាន"
 
@@ -1885,7 +1886,7 @@ msgstr "អស់ពេល​ក្នុងការតភ្ជាប់​"
 msgid "Server closed the connection"
 msgstr "ម៉ាស៊ីន​បម្រើ​បាន​បិទ​ការតភ្ជាប់​"
 
-#: methods/ftp.cc:344 apt-pkg/contrib/fileutl.cc:784 methods/rsh.cc:190
+#: methods/ftp.cc:344 apt-pkg/contrib/fileutl.cc:789 methods/rsh.cc:190
 msgid "Read error"
 msgstr "ការអាន​មានកំហុស"
 
@@ -1897,7 +1898,7 @@ msgstr "ឆ្លើយតប​សតិ​បណ្តោះអាសន្ន
 msgid "Protocol corruption"
 msgstr "ការបង្ខូច​ពិធីការ​"
 
-#: methods/ftp.cc:452 apt-pkg/contrib/fileutl.cc:826 methods/rsh.cc:232
+#: methods/ftp.cc:452 apt-pkg/contrib/fileutl.cc:831 methods/rsh.cc:232
 msgid "Write error"
 msgstr "ការសរសេរ​មានកំហុស"
 
@@ -2346,92 +2347,92 @@ msgstr "មិនអាច​ប្ដូរទៅ %s បានឡើយ"
 msgid "Failed to stat the cdrom"
 msgstr "បរាជ័យក្នុងការ​ថ្លែង ស៊ីឌីរ៉ូម"
 
-#: apt-pkg/contrib/fileutl.cc:154
+#: apt-pkg/contrib/fileutl.cc:159
 #, c-format
 msgid "Not using locking for read only lock file %s"
 msgstr "មិន​ប្រើប្រាស់​ការចាក់សោ សម្រាប់តែឯកសារចាក់សោ​ដែលបានតែអានប៉ុណ្ណោះ %s"
 
-#: apt-pkg/contrib/fileutl.cc:159
+#: apt-pkg/contrib/fileutl.cc:164
 #, c-format
 msgid "Could not open lock file %s"
 msgstr "មិន​អាច​បើក​ឯកសារ​ចាក់សោ​ %s បានឡើយ"
 
-#: apt-pkg/contrib/fileutl.cc:177
+#: apt-pkg/contrib/fileutl.cc:182
 #, c-format
 msgid "Not using locking for nfs mounted lock file %s"
 msgstr "មិនប្រើ​ការចាក់សោ សម្រាប់ nfs ឯកសារ​ចាក់សោដែលបានម៉ោន%s"
 
-#: apt-pkg/contrib/fileutl.cc:181
+#: apt-pkg/contrib/fileutl.cc:186
 #, c-format
 msgid "Could not get lock %s"
 msgstr "មិន​អាច​ចាក់សោ %s បានឡើយ"
 
-#: apt-pkg/contrib/fileutl.cc:643
+#: apt-pkg/contrib/fileutl.cc:648
 #, c-format
 msgid "Waited for %s but it wasn't there"
 msgstr "រង់ចាំប់​ %s ប៉ុន្តែ ​វា​មិន​នៅទីនោះ"
 
-#: apt-pkg/contrib/fileutl.cc:655
+#: apt-pkg/contrib/fileutl.cc:660
 #, c-format
 msgid "Sub-process %s received a segmentation fault."
 msgstr "ដំណើរការ​រង​ %s បាន​ទទួល​កំហុស​ការ​ចែកជាចម្រៀក​ ។"
 
-#: apt-pkg/contrib/fileutl.cc:657
+#: apt-pkg/contrib/fileutl.cc:662
 #, fuzzy, c-format
 msgid "Sub-process %s received signal %u."
 msgstr "ដំណើរការ​រង​ %s បាន​ទទួល​កំហុស​ការ​ចែកជាចម្រៀក​ ។"
 
-#: apt-pkg/contrib/fileutl.cc:661
+#: apt-pkg/contrib/fileutl.cc:666
 #, c-format
 msgid "Sub-process %s returned an error code (%u)"
 msgstr "ដំណើរការ​រង​ %s បានត្រឡប់​ទៅកាន់​កូដ​មាន​កំហុស​ (%u)"
 
-#: apt-pkg/contrib/fileutl.cc:663
+#: apt-pkg/contrib/fileutl.cc:668
 #, c-format
 msgid "Sub-process %s exited unexpectedly"
 msgstr "ដំណើរការ​រង​ %s បានចេញ ដោយ​មិន​រំពឹង​ទុក​ "
 
-#: apt-pkg/contrib/fileutl.cc:728
+#: apt-pkg/contrib/fileutl.cc:733
 #, c-format
 msgid "Could not open file %s"
 msgstr "មិន​អាច​បើក​ឯកសារ​ %s បានឡើយ"
 
-#: apt-pkg/contrib/fileutl.cc:745
+#: apt-pkg/contrib/fileutl.cc:750
 #, fuzzy, c-format
 msgid "Could not open file descriptor %d"
 msgstr "មិន​អាច​បើក​បំពុង​សម្រាប់​ %s បានឡើយ"
 
-#: apt-pkg/contrib/fileutl.cc:805
+#: apt-pkg/contrib/fileutl.cc:810
 #, c-format
 msgid "read, still have %lu to read but none left"
 msgstr "អាន​, នៅតែ​មាន %lu ដើម្បី​អាន​ ប៉ុន្តែ​គ្មាន​អ្វី​នៅសល់"
 
-#: apt-pkg/contrib/fileutl.cc:838
+#: apt-pkg/contrib/fileutl.cc:843
 #, c-format
 msgid "write, still have %lu to write but couldn't"
 msgstr "សរសេរ​, នៅតែមាន​ %lu ដើម្បី​សរសេរ​ ប៉ុន្តែ​មិន​អាច​"
 
-#: apt-pkg/contrib/fileutl.cc:967
+#: apt-pkg/contrib/fileutl.cc:979
 #, fuzzy, c-format
 msgid "Problem closing the gzip file %s"
 msgstr "មាន​បញ្ហា​ក្នុងការ​បិទ​ឯកសារ"
 
-#: apt-pkg/contrib/fileutl.cc:970
+#: apt-pkg/contrib/fileutl.cc:982
 #, fuzzy, c-format
 msgid "Problem closing the file %s"
 msgstr "មាន​បញ្ហា​ក្នុងការ​បិទ​ឯកសារ"
 
-#: apt-pkg/contrib/fileutl.cc:975
+#: apt-pkg/contrib/fileutl.cc:987
 #, fuzzy, c-format
 msgid "Problem renaming the file %s to %s"
 msgstr "មានបញ្ហា​ក្នុង​ការធ្វើ​សមកាលកម្មឯកសារ​"
 
-#: apt-pkg/contrib/fileutl.cc:986
+#: apt-pkg/contrib/fileutl.cc:998
 #, fuzzy, c-format
 msgid "Problem unlinking the file %s"
 msgstr "មានបញ្ហា​ក្នុងការ​ផ្ដាច់តំណ​ឯកសារ"
 
-#: apt-pkg/contrib/fileutl.cc:999
+#: apt-pkg/contrib/fileutl.cc:1011
 msgid "Problem syncing the file"
 msgstr "មានបញ្ហា​ក្នុង​ការធ្វើ​សមកាលកម្មឯកសារ​"
 
