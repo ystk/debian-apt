@@ -1,0 +1,184 @@
+'\" t
+.\"     Title: apt-cdrom
+.\"    Author: Jason Gunthorpe
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 09\ \&June\ \&2012
+.\"    Manual: APT
+.\"    Source: APT 1.0.6
+.\"  Language: English
+.\"
+.TH "APT\-CDROM" "8" "09\ \&June\ \&2012" "APT 1.0.6" "APT"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+apt-cdrom \- APT CD\-ROM management utility
+.SH "SYNOPSIS"
+.HP \w'\fBapt\-cdrom\fR\ 'u
+\fBapt\-cdrom\fR [\fB\-rmfan\fR] [\fB\-d=\fR\fB\fIcdrom_mount_point\fR\fR] [\fB\-o=\fR\fB\fIconfig_string\fR\fR] [\fB\-c=\fR\fB\fIconfig_file\fR\fR] {add | ident | {\-v\ |\ \-\-version} | {\-h\ |\ \-\-help}}
+.SH "DESCRIPTION"
+.PP
+\fBapt\-cdrom\fR
+is used to add a new CD\-ROM to APT\*(Aqs list of available sources\&.
+\fBapt\-cdrom\fR
+takes care of determining the structure of the disc as well as correcting for several possible mis\-burns and verifying the index files\&.
+.PP
+It is necessary to use
+\fBapt\-cdrom\fR
+to add CDs to the APT system; it cannot be done by hand\&. Furthermore each disc in a multi\-CD set must be inserted and scanned separately to account for possible mis\-burns\&.
+.PP
+Unless the
+\fB\-h\fR, or
+\fB\-\-help\fR
+option is given, one of the commands below must be present\&.
+.PP
+\fBadd\fR
+.RS 4
+add
+is used to add a new disc to the source list\&. It will unmount the CD\-ROM device, prompt for a disc to be inserted and then proceed to scan it and copy the index files\&. If the disc does not have a proper
+\&.disk
+directory you will be prompted for a descriptive title\&.
+.sp
+APT uses a CD\-ROM ID to track which disc is currently in the drive and maintains a database of these IDs in
+/var/lib/apt/cdroms\&.list
+.RE
+.PP
+\fBident\fR
+.RS 4
+A debugging tool to report the identity of the current disc as well as the stored file name
+.RE
+.SH "OPTIONS"
+.PP
+All command line options may be set using the configuration file, the descriptions indicate the configuration option to set\&. For boolean options you can override the config file by using something like
+\fB\-f\-\fR,\fB\-\-no\-f\fR,
+\fB\-f=no\fR
+or several other variations\&.
+.PP
+\fB\-\-no\-auto\-detect\fR, \fB\-\-cdrom\fR
+.RS 4
+Do not try to auto\-detect the CD\-ROM path\&. Usually combined with the
+\fB\-\-cdrom\fR
+option\&. Configuration Item:
+Acquire::cdrom::AutoDetect\&.
+.RE
+.PP
+\fB\-d\fR, \fB\-\-cdrom\fR
+.RS 4
+Mount point; specify the location to mount the CD\-ROM\&. This mount point must be listed in
+/etc/fstab
+and properly configured\&. Configuration Item:
+Acquire::cdrom::mount\&.
+.RE
+.PP
+\fB\-r\fR, \fB\-\-rename\fR
+.RS 4
+Rename a disc; change the label of a disc or override the disc\*(Aqs given label\&. This option will cause
+\fBapt\-cdrom\fR
+to prompt for a new label\&. Configuration Item:
+APT::CDROM::Rename\&.
+.RE
+.PP
+\fB\-m\fR, \fB\-\-no\-mount\fR
+.RS 4
+No mounting; prevent
+\fBapt\-cdrom\fR
+from mounting and unmounting the mount point\&. Configuration Item:
+APT::CDROM::NoMount\&.
+.RE
+.PP
+\fB\-f\fR, \fB\-\-fast\fR
+.RS 4
+Fast Copy; Assume the package files are valid and do not check every package\&. This option should be used only if
+\fBapt\-cdrom\fR
+has been run on this disc before and did not detect any errors\&. Configuration Item:
+APT::CDROM::Fast\&.
+.RE
+.PP
+\fB\-a\fR, \fB\-\-thorough\fR
+.RS 4
+Thorough Package Scan; This option may be needed with some old Debian 1\&.1/1\&.2 discs that have Package files in strange places\&. It takes much longer to scan the CD but will pick them all up\&.
+.RE
+.PP
+\fB\-n\fR, \fB\-\-just\-print\fR, \fB\-\-recon\fR, \fB\-\-no\-act\fR
+.RS 4
+No Changes; Do not change the
+\fBsources.list\fR(5)
+file and do not write index files\&. Everything is still checked however\&. Configuration Item:
+APT::CDROM::NoAct\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Show a short usage summary\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-version\fR
+.RS 4
+Show the program version\&.
+.RE
+.PP
+\fB\-c\fR, \fB\-\-config\-file\fR
+.RS 4
+Configuration File; Specify a configuration file to use\&. The program will read the default configuration file and then this configuration file\&. If configuration settings need to be set before the default configuration files are parsed specify a file with the
+\fBAPT_CONFIG\fR
+environment variable\&. See
+\fBapt.conf\fR(5)
+for syntax information\&.
+.RE
+.PP
+\fB\-o\fR, \fB\-\-option\fR
+.RS 4
+Set a Configuration Option; This will set an arbitrary configuration option\&. The syntax is
+\fB\-o Foo::Bar=bar\fR\&.
+\fB\-o\fR
+and
+\fB\-\-option\fR
+can be used multiple times to set different options\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBapt.conf\fR(5),
+\fBapt-get\fR(8),
+\fBsources.list\fR(5)
+.SH "DIAGNOSTICS"
+.PP
+\fBapt\-cdrom\fR
+returns zero on normal operation, decimal 100 on error\&.
+.SH "BUGS"
+.PP
+\m[blue]\fBAPT bug page\fR\m[]\&\s-2\u[1]\d\s+2\&. If you wish to report a bug in APT, please see
+/usr/share/doc/debian/bug\-reporting\&.txt
+or the
+\fBreportbug\fR(1)
+command\&.
+.SH "AUTHORS"
+.PP
+\fBJason Gunthorpe\fR
+.RS 4
+.RE
+.PP
+\fBAPT team\fR
+.RS 4
+.RE
+.SH "NOTES"
+.IP " 1." 4
+APT bug page
+.RS 4
+\%http://bugs.debian.org/src:apt
+.RE

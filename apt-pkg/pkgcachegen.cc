@@ -18,20 +18,26 @@
 #include <apt-pkg/progress.h>
 #include <apt-pkg/sourcelist.h>
 #include <apt-pkg/configuration.h>
-#include <apt-pkg/aptconfiguration.h>
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/sptr.h>
 #include <apt-pkg/pkgsystem.h>
 #include <apt-pkg/macros.h>
-#include <apt-pkg/tagfile.h>
 #include <apt-pkg/metaindex.h>
 #include <apt-pkg/fileutl.h>
+#include <apt-pkg/hashsum_template.h>
+#include <apt-pkg/indexfile.h>
+#include <apt-pkg/md5.h>
+#include <apt-pkg/mmap.h>
+#include <apt-pkg/pkgcache.h>
+#include <apt-pkg/cacheiterators.h>
 
+#include <stddef.h>
+#include <string.h>
+#include <iostream>
+#include <string>
 #include <vector>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
 
 #include <apti18n.h>
 									/*}}}*/
@@ -118,11 +124,11 @@ void pkgCacheGenerator::ReMap(void const * const oldMap, void const * const newM
 
    Cache.ReMap(false);
 
-   CurrentFile += (pkgCache::PackageFile*) newMap - (pkgCache::PackageFile*) oldMap;
+   CurrentFile += (pkgCache::PackageFile const * const) newMap - (pkgCache::PackageFile const * const) oldMap;
 
    for (size_t i = 0; i < _count(UniqHash); ++i)
       if (UniqHash[i] != 0)
-	 UniqHash[i] += (pkgCache::StringItem*) newMap - (pkgCache::StringItem*) oldMap;
+	 UniqHash[i] += (pkgCache::StringItem const * const) newMap - (pkgCache::StringItem const * const) oldMap;
 
    for (std::vector<pkgCache::GrpIterator*>::const_iterator i = Dynamic<pkgCache::GrpIterator>::toReMap.begin();
 	i != Dynamic<pkgCache::GrpIterator>::toReMap.end(); ++i)
@@ -296,40 +302,41 @@ bool pkgCacheGenerator::MergeListPackage(ListParser &List, pkgCache::PkgIterator
 
    // Find the right version to write the description
    MD5SumValue CurMd5 = List.Description_md5();
+   if (CurMd5.Value().empty() == true || List.Description().empty() == true)
+      return true;
    std::string CurLang = List.DescriptionLanguage();
 
    for (Ver = Pkg.VersionList(); Ver.end() == false; ++Ver)
    {
-      pkgCache::DescIterator Desc = Ver.DescriptionList();
+      pkgCache::DescIterator VerDesc = Ver.DescriptionList();
 
       // a version can only have one md5 describing it
-      if (Desc.end() == true || MD5SumValue(Desc.md5()) != CurMd5)
+      if (VerDesc.end() == true || MD5SumValue(VerDesc.md5()) != CurMd5)
 	 continue;
 
       // don't add a new description if we have one for the given
       // md5 && language
-      if (IsDuplicateDescription(Desc, CurMd5, CurLang) == true)
+      if (IsDuplicateDescription(VerDesc, CurMd5, CurLang) == true)
 	 continue;
 
+      pkgCache::DescIterator Desc;
       Dynamic<pkgCache::DescIterator> DynDesc(Desc);
-      // we add at the end, so that the start is constant as we need
-      // that to be able to efficiently share these lists
-      map_ptrloc *LastDesc = &Ver->DescriptionList;
-      for (;Desc.end() == false && Desc->NextDesc != 0; ++Desc);
-      if (Desc.end() == false)
-	 LastDesc = &Desc->NextDesc;
 
-      void const * const oldMap = Map.Data();
-      map_ptrloc const descindex = NewDescription(Desc, CurLang, CurMd5, *LastDesc);
+      map_ptrloc const descindex = NewDescription(Desc, CurLang, CurMd5, VerDesc->md5sum);
       if (unlikely(descindex == 0 && _error->PendingError()))
 	 return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			      Pkg.Name(), "NewDescription", 1);
-      if (oldMap != Map.Data())
-	 LastDesc += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
-      *LastDesc = descindex;
+
       Desc->ParentPkg = Pkg.Index();
 
-      if ((*LastDesc == 0 && _error->PendingError()) || NewFileDesc(Desc,List) == false)
+      // we add at the end, so that the start is constant as we need
+      // that to be able to efficiently share these lists
+      VerDesc = Ver.DescriptionList(); // old value might be invalid after ReMap
+      for (;VerDesc.end() == false && VerDesc->NextDesc != 0; ++VerDesc);
+      map_ptrloc * const LastNextDesc = (VerDesc.end() == true) ? &Ver->DescriptionList : &VerDesc->NextDesc;
+      *LastNextDesc = descindex;
+
+      if (NewFileDesc(Desc,List) == false)
 	 return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			      Pkg.Name(), "NewFileDesc", 1);
 
@@ -349,7 +356,7 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
    map_ptrloc *LastVer = &Pkg->VersionList;
    void const * oldMap = Map.Data();
 
-   unsigned long const Hash = List.VersionHash();
+   unsigned short const Hash = List.VersionHash();
    if (Ver.end() == false)
    {
       /* We know the list is sorted so we use that fact in the search.
@@ -362,7 +369,7 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
 	 if (Res > 0)
 	    break;
 	 // Versionstrings are equal - is hash also equal?
-	 if (Res == 0 && Ver->Hash == Hash)
+	 if (Res == 0 && List.SameVersion(Hash, Ver) == true)
 	    break;
 	 // proceed with the next till we have either the right
 	 // or we found another version (which will be lower)
@@ -391,16 +398,14 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
    }
 
    // Add a new version
-   map_ptrloc const verindex = NewVersion(Ver,Version,*LastVer);
+   map_ptrloc const verindex = NewVersion(Ver, Version, Pkg.Index(), Hash, *LastVer);
    if (verindex == 0 && _error->PendingError())
       return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "NewVersion", 1);
 
    if (oldMap != Map.Data())
-	 LastVer += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
+	 LastVer += (map_ptrloc const * const) Map.Data() - (map_ptrloc const * const) oldMap;
    *LastVer = verindex;
-   Ver->ParentPkg = Pkg.Index();
-   Ver->Hash = Hash;
 
    if (unlikely(List.NewVersion(Ver) == false))
       return _error->Error(_("Error occurred while processing %s (%s%d)"),
@@ -464,11 +469,8 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
 	       pkgCache::VerIterator ConVersion = D.ParentVer();
 	       Dynamic<pkgCache::VerIterator> DynV(ConVersion);
 	       // duplicate the Conflicts/Breaks/Replaces for :none arch
-	       if (D->Version == 0)
-		  NewDepends(Pkg, ConVersion, "", 0, D->Type, OldDepLast);
-	       else
-		  NewDepends(Pkg, ConVersion, D.TargetVer(),
-			     D->CompareOp, D->Type, OldDepLast);
+	       NewDepends(Pkg, ConVersion, D->Version,
+		     D->CompareOp, D->Type, OldDepLast);
 	    }
 	 }
       }
@@ -486,7 +488,7 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
 
    /* Record the Description (it is not translated) */
    MD5SumValue CurMd5 = List.Description_md5();
-   if (CurMd5.Value().empty() == true)
+   if (CurMd5.Value().empty() == true || List.Description().empty() == true)
       return true;
    std::string CurLang = List.DescriptionLanguage();
 
@@ -509,19 +511,16 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
    // We haven't found reusable descriptions, so add the first description
    pkgCache::DescIterator Desc = Ver.DescriptionList();
    Dynamic<pkgCache::DescIterator> DynDesc(Desc);
-   map_ptrloc *LastDesc = &Ver->DescriptionList;
 
-   oldMap = Map.Data();
-   map_ptrloc const descindex = NewDescription(Desc, CurLang, CurMd5, *LastDesc);
+   map_ptrloc const descindex = NewDescription(Desc, CurLang, CurMd5, 0);
    if (unlikely(descindex == 0 && _error->PendingError()))
       return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "NewDescription", 2);
-   if (oldMap != Map.Data())
-       LastDesc += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
-   *LastDesc = descindex;
-   Desc->ParentPkg = Pkg.Index();
 
-   if ((*LastDesc == 0 && _error->PendingError()) || NewFileDesc(Desc,List) == false)
+   Desc->ParentPkg = Pkg.Index();
+   Ver->DescriptionList = descindex;
+
+   if (NewFileDesc(Desc,List) == false)
       return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "NewFileDesc", 2);
 
@@ -559,12 +558,12 @@ bool pkgCacheGenerator::MergeFileProvides(ListParser &List)
       if (Counter % 100 == 0 && Progress != 0)
 	 Progress->Progress(List.Offset());
 
-      unsigned long Hash = List.VersionHash();
+      unsigned short Hash = List.VersionHash();
       pkgCache::VerIterator Ver = Pkg.VersionList();
       Dynamic<pkgCache::VerIterator> DynVer(Ver);
       for (; Ver.end() == false; ++Ver)
       {
-	 if (Ver->Hash == Hash && Version.c_str() == Ver.VerStr())
+	 if (List.SameVersion(Hash, Ver) == true && Version == Ver.VerStr())
 	 {
 	    if (List.CollectFileProvides(Cache,Ver) == false)
 	       return _error->Error(_("Error occurred while processing %s (%s%d)"),
@@ -602,8 +601,11 @@ bool pkgCacheGenerator::NewGroup(pkgCache::GrpIterator &Grp, const string &Name)
 
    // Insert it into the hash table
    unsigned long const Hash = Cache.Hash(Name);
-   Grp->Next = Cache.HeaderP->GrpHashTable[Hash];
-   Cache.HeaderP->GrpHashTable[Hash] = Group;
+   map_ptrloc *insertAt = &Cache.HeaderP->GrpHashTable[Hash];
+   while (*insertAt != 0 && strcasecmp(Name.c_str(), Cache.StrP + (Cache.GrpP + *insertAt)->Name) > 0)
+      insertAt = &(Cache.GrpP + *insertAt)->Next;
+   Grp->Next = *insertAt;
+   *insertAt = Group;
 
    Grp->ID = Cache.HeaderP->GroupCount++;
    return true;
@@ -632,11 +634,14 @@ bool pkgCacheGenerator::NewPackage(pkgCache::PkgIterator &Pkg,const string &Name
    // Insert the package into our package list
    if (Grp->FirstPackage == 0) // the group is new
    {
+      Grp->FirstPackage = Package;
       // Insert it into the hash table
       unsigned long const Hash = Cache.Hash(Name);
-      Pkg->NextPackage = Cache.HeaderP->PkgHashTable[Hash];
-      Cache.HeaderP->PkgHashTable[Hash] = Package;
-      Grp->FirstPackage = Package;
+      map_ptrloc *insertAt = &Cache.HeaderP->PkgHashTable[Hash];
+      while (*insertAt != 0 && strcasecmp(Name.c_str(), Cache.StrP + (Cache.PkgP + *insertAt)->Name) > 0)
+	 insertAt = &(Cache.PkgP + *insertAt)->NextPackage;
+      Pkg->NextPackage = *insertAt;
+      *insertAt = Package;
    }
    else // Group the Packages together
    {
@@ -675,6 +680,7 @@ bool pkgCacheGenerator::AddImplicitDepends(pkgCache::GrpIterator &G,
    bool const coInstall = ((V->MultiArch & pkgCache::Version::Same) == pkgCache::Version::Same);
    pkgCache::PkgIterator D = G.PackageList();
    Dynamic<pkgCache::PkgIterator> DynD(D);
+   map_ptrloc const VerStrIdx = V->VerStr;
    for (; D.end() != true; D = G.NextPkg(D))
    {
       if (Arch == D.Arch() || D->VersionList == 0)
@@ -685,16 +691,16 @@ bool pkgCacheGenerator::AddImplicitDepends(pkgCache::GrpIterator &G,
       if (coInstall == true)
       {
 	 // Replaces: ${self}:other ( << ${binary:Version})
-	 NewDepends(D, V, V.VerStr(),
+	 NewDepends(D, V, VerStrIdx,
 		    pkgCache::Dep::Less, pkgCache::Dep::Replaces,
 		    OldDepLast);
 	 // Breaks: ${self}:other (!= ${binary:Version})
-	 NewDepends(D, V, V.VerStr(),
+	 NewDepends(D, V, VerStrIdx,
 		    pkgCache::Dep::NotEquals, pkgCache::Dep::DpkgBreaks,
 		    OldDepLast);
       } else {
 	 // Conflicts: ${self}:other
-	 NewDepends(D, V, "",
+	 NewDepends(D, V, 0,
 		    pkgCache::Dep::NoOp, pkgCache::Dep::Conflicts,
 		    OldDepLast);
       }
@@ -711,17 +717,18 @@ bool pkgCacheGenerator::AddImplicitDepends(pkgCache::VerIterator &V,
    bool const coInstall = ((V->MultiArch & pkgCache::Version::Same) == pkgCache::Version::Same);
    if (coInstall == true)
    {
+      map_ptrloc const VerStrIdx = V->VerStr;
       // Replaces: ${self}:other ( << ${binary:Version})
-      NewDepends(D, V, V.VerStr(),
+      NewDepends(D, V, VerStrIdx,
 		 pkgCache::Dep::Less, pkgCache::Dep::Replaces,
 		 OldDepLast);
       // Breaks: ${self}:other (!= ${binary:Version})
-      NewDepends(D, V, V.VerStr(),
+      NewDepends(D, V, VerStrIdx,
 		 pkgCache::Dep::NotEquals, pkgCache::Dep::DpkgBreaks,
 		 OldDepLast);
    } else {
       // Conflicts: ${self}:other
-      NewDepends(D, V, "",
+      NewDepends(D, V, 0,
 		 pkgCache::Dep::NoOp, pkgCache::Dep::Conflicts,
 		 OldDepLast);
    }
@@ -767,6 +774,8 @@ bool pkgCacheGenerator::NewFileVer(pkgCache::VerIterator &Ver,
 /* This puts a version structure in the linked list */
 unsigned long pkgCacheGenerator::NewVersion(pkgCache::VerIterator &Ver,
 					    const string &VerStr,
+					    map_ptrloc const ParentPkg,
+					    unsigned long const Hash,
 					    unsigned long Next)
 {
    // Get a structure
@@ -778,12 +787,37 @@ unsigned long pkgCacheGenerator::NewVersion(pkgCache::VerIterator &Ver,
    Ver = pkgCache::VerIterator(Cache,Cache.VerP + Version);
    //Dynamic<pkgCache::VerIterator> DynV(Ver); // caller MergeListVersion already takes care of it
    Ver->NextVer = Next;
+   Ver->ParentPkg = ParentPkg;
+   Ver->Hash = Hash;
    Ver->ID = Cache.HeaderP->VersionCount++;
+
+   // try to find the version string in the group for reuse
+   pkgCache::PkgIterator Pkg = Ver.ParentPkg();
+   pkgCache::GrpIterator Grp = Pkg.Group();
+   if (Pkg.end() == false && Grp.end() == false)
+   {
+      for (pkgCache::PkgIterator P = Grp.PackageList(); P.end() == false; P = Grp.NextPkg(P))
+      {
+	 if (Pkg == P)
+	    continue;
+	 for (pkgCache::VerIterator V = P.VersionList(); V.end() == false; ++V)
+	 {
+	    int const cmp = strcmp(V.VerStr(), VerStr.c_str());
+	    if (cmp == 0)
+	    {
+	       Ver->VerStr = V->VerStr;
+	       return Version;
+	    }
+	    else if (cmp < 0)
+	       break;
+	 }
+      }
+   }
+   // haven't found the version string, so create
    map_ptrloc const idxVerStr = WriteStringInMap(VerStr);
    if (unlikely(idxVerStr == 0))
       return 0;
    Ver->VerStr = idxVerStr;
-   
    return Version;
 }
 									/*}}}*/
@@ -825,9 +859,9 @@ bool pkgCacheGenerator::NewFileDesc(pkgCache::DescIterator &Desc,
 // ---------------------------------------------------------------------
 /* This puts a description structure in the linked list */
 map_ptrloc pkgCacheGenerator::NewDescription(pkgCache::DescIterator &Desc,
-					    const string &Lang, 
-                                            const MD5SumValue &md5sum,
-					    map_ptrloc Next)
+					    const string &Lang,
+					    const MD5SumValue &md5sum,
+					    map_ptrloc idxmd5str)
 {
    // Get a structure
    map_ptrloc const Description = AllocateInMap(sizeof(pkgCache::Description));
@@ -836,14 +870,21 @@ map_ptrloc pkgCacheGenerator::NewDescription(pkgCache::DescIterator &Desc,
 
    // Fill it in
    Desc = pkgCache::DescIterator(Cache,Cache.DescP + Description);
-   Desc->NextDesc = Next;
    Desc->ID = Cache.HeaderP->DescriptionCount++;
-   map_ptrloc const idxlanguage_code = WriteStringInMap(Lang);
-   map_ptrloc const idxmd5sum = WriteStringInMap(md5sum.Value());
-   if (unlikely(idxlanguage_code == 0 || idxmd5sum == 0))
+   map_ptrloc const idxlanguage_code = WriteUniqString(Lang);
+   if (unlikely(idxlanguage_code == 0))
       return 0;
    Desc->language_code = idxlanguage_code;
-   Desc->md5sum = idxmd5sum;
+
+   if (idxmd5str != 0)
+      Desc->md5sum = idxmd5str;
+   else
+   {
+      map_ptrloc const idxmd5sum = WriteStringInMap(md5sum.Value());
+      if (unlikely(idxmd5sum == 0))
+	 return 0;
+      Desc->md5sum = idxmd5sum;
+   }
 
    return Description;
 }
@@ -859,33 +900,47 @@ bool pkgCacheGenerator::NewDepends(pkgCache::PkgIterator &Pkg,
 				   unsigned int const &Type,
 				   map_ptrloc* &OldDepLast)
 {
+   map_ptrloc index = 0;
+   if (Version.empty() == false)
+   {
+      int const CmpOp = Op & 0x0F;
+      // =-deps are used (79:1) for lockstep on same-source packages (e.g. data-packages)
+      if (CmpOp == pkgCache::Dep::Equals && strcmp(Version.c_str(), Ver.VerStr()) == 0)
+	 index = Ver->VerStr;
+
+      if (index == 0)
+      {
+	 void const * const oldMap = Map.Data();
+	 index = WriteStringInMap(Version);
+	 if (unlikely(index == 0))
+	    return false;
+	 if (OldDepLast != 0 && oldMap != Map.Data())
+	    OldDepLast += (map_ptrloc const * const) Map.Data() - (map_ptrloc const * const) oldMap;
+      }
+   }
+   return NewDepends(Pkg, Ver, index, Op, Type, OldDepLast);
+}
+bool pkgCacheGenerator::NewDepends(pkgCache::PkgIterator &Pkg,
+				   pkgCache::VerIterator &Ver,
+				   map_ptrloc const Version,
+				   unsigned int const &Op,
+				   unsigned int const &Type,
+				   map_ptrloc* &OldDepLast)
+{
    void const * const oldMap = Map.Data();
    // Get a structure
    map_ptrloc const Dependency = AllocateInMap(sizeof(pkgCache::Dependency));
    if (unlikely(Dependency == 0))
       return false;
-   
+
    // Fill it in
    pkgCache::DepIterator Dep(Cache,Cache.DepP + Dependency);
    Dynamic<pkgCache::DepIterator> DynDep(Dep);
    Dep->ParentVer = Ver.Index();
    Dep->Type = Type;
    Dep->CompareOp = Op;
+   Dep->Version = Version;
    Dep->ID = Cache.HeaderP->DependsCount++;
-
-   // Probe the reverse dependency list for a version string that matches
-   if (Version.empty() == false)
-   {
-/*      for (pkgCache::DepIterator I = Pkg.RevDependsList(); I.end() == false; I++)
-	 if (I->Version != 0 && I.TargetVer() == Version)
-	    Dep->Version = I->Version;*/
-      if (Dep->Version == 0) {
-	 map_ptrloc const index = WriteStringInMap(Version);
-	 if (unlikely(index == 0))
-	    return false;
-	 Dep->Version = index;
-      }
-   }
 
    // Link it to the package
    Dep->Package = Pkg.Index();
@@ -899,7 +954,7 @@ bool pkgCacheGenerator::NewDepends(pkgCache::PkgIterator &Pkg,
       for (pkgCache::DepIterator D = Ver.DependsList(); D.end() == false; ++D)
 	 OldDepLast = &D->NextDepends;
    } else if (oldMap != Map.Data())
-      OldDepLast += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
+      OldDepLast += (map_ptrloc const * const) Map.Data() - (map_ptrloc const * const) oldMap;
 
    Dep->NextDepends = *OldDepLast;
    *OldDepLast = Dep.Index();
@@ -996,6 +1051,12 @@ bool pkgCacheGenerator::ListParser::NewProvides(pkgCache::VerIterator &Ver,
    return true;
 }
 									/*}}}*/
+bool pkgCacheGenerator::ListParser::SameVersion(unsigned short const Hash,/*{{{*/
+      pkgCache::VerIterator const &Ver)
+{
+   return Hash == Ver->Hash;
+}
+									/*}}}*/
 // CacheGenerator::SelectFile - Select the current file being parsed	/*{{{*/
 // ---------------------------------------------------------------------
 /* This is used to select which file is to be associated with all newly
@@ -1076,8 +1137,8 @@ unsigned long pkgCacheGenerator::WriteUniqString(const char *S,
    if (unlikely(idxString == 0))
       return 0;
    if (oldMap != Map.Data()) {
-      Last += (map_ptrloc*) Map.Data() - (map_ptrloc*) oldMap;
-      I += (pkgCache::StringItem*) Map.Data() - (pkgCache::StringItem*) oldMap;
+      Last += (map_ptrloc const * const) Map.Data() - (map_ptrloc const * const) oldMap;
+      I += (pkgCache::StringItem const * const) Map.Data() - (pkgCache::StringItem const * const) oldMap;
    }
    *Last = Item;
 
@@ -1200,10 +1261,10 @@ static bool CheckValidity(const string &CacheFile,
 static unsigned long ComputeSize(FileIterator Start,FileIterator End)
 {
    unsigned long TotalSize = 0;
-   for (; Start != End; ++Start)
+   for (; Start < End; ++Start)
    {
       if ((*Start)->HasPackages() == false)
-	 continue;      
+	 continue;
       TotalSize += (*Start)->Size();
    }
    return TotalSize;
@@ -1284,7 +1345,7 @@ DynamicMMap* pkgCacheGenerator::CreateDynamicMMap(FileFd *CacheF, unsigned long 
    the cache will be stored there. This is pretty much mandetory if you
    are using AllowMem. AllowMem lets the function be run as non-root
    where it builds the cache 'fast' into a memory buffer. */
-__deprecated bool pkgMakeStatusCache(pkgSourceList &List,OpProgress &Progress,
+APT_DEPRECATED bool pkgMakeStatusCache(pkgSourceList &List,OpProgress &Progress,
 			MMap **OutMap, bool AllowMem)
    { return pkgCacheGenerator::MakeStatusCache(List, &Progress, OutMap, AllowMem); }
 bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress,
@@ -1485,7 +1546,7 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
 // CacheGenerator::MakeOnlyStatusCache - Build only a status files cache/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-__deprecated bool pkgMakeOnlyStatusCache(OpProgress &Progress,DynamicMMap **OutMap)
+APT_DEPRECATED bool pkgMakeOnlyStatusCache(OpProgress &Progress,DynamicMMap **OutMap)
    { return pkgCacheGenerator::MakeOnlyStatusCache(&Progress, OutMap); }
 bool pkgCacheGenerator::MakeOnlyStatusCache(OpProgress *Progress,DynamicMMap **OutMap)
 {
@@ -1531,7 +1592,7 @@ static bool IsDuplicateDescription(pkgCache::DescIterator Desc,
 }
 									/*}}}*/
 // CacheGenerator::FinishCache						/*{{{*/
-bool pkgCacheGenerator::FinishCache(OpProgress *Progress)
+bool pkgCacheGenerator::FinishCache(OpProgress * /*Progress*/)
 {
    return true;
 }

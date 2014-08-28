@@ -16,8 +16,13 @@
 #include <apt-pkg/srcrecords.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/sourcelist.h>
-#include <apt-pkg/strutl.h>
 #include <apt-pkg/metaindex.h>
+#include <apt-pkg/indexfile.h>
+#include <apt-pkg/macros.h>
+
+#include <string.h>
+#include <string>
+#include <vector>
 
 #include <apti18n.h>
 									/*}}}*/
@@ -42,7 +47,7 @@ pkgSrcRecords::pkgSrcRecords(pkgSourceList &List) : d(NULL), Files(0), Current(0
    }
    
    // Doesn't work without any source index files
-   if (Files.size() == 0)
+   if (Files.empty() == true)
    {
       _error->Error(_("You must put some 'source' URIs"
 		    " in your sources.list"));
@@ -70,9 +75,31 @@ bool pkgSrcRecords::Restart()
    Current = Files.begin();
    for (std::vector<Parser*>::iterator I = Files.begin();
         I != Files.end(); ++I)
-      (*I)->Restart();
-   
+      if ((*I)->Offset() != 0)
+	 (*I)->Restart();
+
    return true;
+}
+									/*}}}*/
+// SrcRecords::Step - Step to the next Source Record			/*{{{*/
+// ---------------------------------------------------------------------
+/* Step to the next source package record */
+const pkgSrcRecords::Parser* pkgSrcRecords::Step()
+{
+   if (Current == Files.end())
+      return 0;
+
+   // Step to the next record, possibly switching files
+   while ((*Current)->Step() == false)
+   {
+      if (_error->PendingError() == true)
+         return 0;
+      ++Current;
+      if (Current == Files.end())
+         return 0;
+   }
+
+   return *Current;
 }
 									/*}}}*/
 // SrcRecords::Find - Find the first source package with the given name	/*{{{*/
@@ -82,21 +109,11 @@ bool pkgSrcRecords::Restart()
    function to be called multiple times to get successive entries */
 pkgSrcRecords::Parser *pkgSrcRecords::Find(const char *Package,bool const &SrcOnly)
 {
-   if (Current == Files.end())
-      return 0;
-   
    while (true)
    {
-      // Step to the next record, possibly switching files
-      while ((*Current)->Step() == false)
-      {
-	 if (_error->PendingError() == true)
-	    return 0;
-	 ++Current;
-	 if (Current == Files.end())
-	    return 0;
-      }
-      
+      if(Step() == 0)
+         return 0;
+
       // IO error somehow
       if (_error->PendingError() == true)
 	 return 0;
@@ -121,14 +138,13 @@ pkgSrcRecords::Parser *pkgSrcRecords::Find(const char *Package,bool const &SrcOn
 /* */
 const char *pkgSrcRecords::Parser::BuildDepType(unsigned char const &Type)
 {
-   const char *fields[] = {"Build-Depends", 
-                           "Build-Depends-Indep",
+   const char *fields[] = {"Build-Depends",
+			   "Build-Depends-Indep",
 			   "Build-Conflicts",
 			   "Build-Conflicts-Indep"};
-   if (Type < 4) 
-      return fields[Type]; 
-   else 
+   if (unlikely(Type >= sizeof(fields)/sizeof(fields[0])))
       return "";
+   return fields[Type];
 }
 									/*}}}*/
 

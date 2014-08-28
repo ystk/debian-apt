@@ -16,7 +16,11 @@
 #include <apt-pkg/configuration.h>
 #include <apt-pkg/aptconfiguration.h>
 #include <apt-pkg/fileutl.h>
+#include <apt-pkg/pkgcache.h>
+#include <apt-pkg/cacheiterators.h>
 
+#include <string>
+#include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -30,7 +34,10 @@
 bool pkgArchiveCleaner::Go(std::string Dir,pkgCache &Cache)
 {
    bool CleanInstalled = _config->FindB("APT::Clean-Installed",true);
-      
+
+   if(Dir == "/")
+      return _error->Error(_("Clean of %s is not supported"), Dir.c_str());
+
    DIR *D = opendir(Dir.c_str());
    if (D == 0)
       return _error->Errno("opendir",_("Unable to read %s"),Dir.c_str());
@@ -105,7 +112,7 @@ bool pkgArchiveCleaner::Go(std::string Dir,pkgCache &Cache)
 	       break;
 	    }
 	    
-	    // See if this verison matches the file
+	    // See if this version matches the file
 	    if (IsFetchable == true && Ver == V.VerStr())
 	       break;
 	 }

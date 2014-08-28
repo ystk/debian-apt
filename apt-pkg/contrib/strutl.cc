@@ -21,6 +21,11 @@
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/error.h>
 
+#include <stddef.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string>
+#include <vector>
 #include <ctype.h>
 #include <string.h>
 #include <sstream>
@@ -33,10 +38,33 @@
 #include <iconv.h>
 
 #include <apti18n.h>
-
-using namespace std;
 									/*}}}*/
+using namespace std;
 
+// Strip - Remove white space from the front and back of a string       /*{{{*/
+// ---------------------------------------------------------------------
+namespace APT {
+   namespace String {
+std::string Strip(const std::string &s)
+{
+   size_t start = s.find_first_not_of(" \t\n");
+   // only whitespace
+   if (start == string::npos)
+      return "";
+   size_t end = s.find_last_not_of(" \t\n");
+   return s.substr(start, end-start+1);
+}
+
+bool Endswith(const std::string &s, const std::string &end)
+{
+   if (end.size() > s.size())
+      return false;
+   return (s.substr(s.size() - end.size(), s.size()) == end);
+}
+
+}
+}
+									/*}}}*/
 // UTF8ToCodeset - Convert some UTF-8 string for some codeset   	/*{{{*/
 // ---------------------------------------------------------------------
 /* This is handy to use before display some information for enduser  */
@@ -117,14 +145,20 @@ char *_strstrip(char *String)
 
    if (*String == 0)
       return String;
-
+   return _strrstrip(String);
+}
+									/*}}}*/
+// strrstrip - Remove white space from the back of a string	/*{{{*/
+// ---------------------------------------------------------------------
+char *_strrstrip(char *String)
+{
    char *End = String + strlen(String) - 1;
    for (;End != String - 1 && (*End == ' ' || *End == '\t' || *End == '\n' ||
 			       *End == '\r'); End--);
    End++;
    *End = 0;
    return String;
-};
+}
 									/*}}}*/
 // strtabexpand - Converts tabs into 8 spaces				/*{{{*/
 // ---------------------------------------------------------------------
@@ -397,26 +431,33 @@ string TimeToStr(unsigned long Sec)
 									/*}}}*/
 // SubstVar - Substitute a string for another string			/*{{{*/
 // ---------------------------------------------------------------------
-/* This replaces all occurances of Subst with Contents in Str. */
+/* This replaces all occurrences of Subst with Contents in Str. */
 string SubstVar(const string &Str,const string &Subst,const string &Contents)
 {
+   if (Subst.empty() == true)
+      return Str;
+
    string::size_type Pos = 0;
    string::size_type OldPos = 0;
    string Temp;
-   
-   while (OldPos < Str.length() && 
+
+   while (OldPos < Str.length() &&
 	  (Pos = Str.find(Subst,OldPos)) != string::npos)
    {
-      Temp += string(Str,OldPos,Pos) + Contents;
-      OldPos = Pos + Subst.length();      
+      if (OldPos != Pos)
+	 Temp.append(Str, OldPos, Pos - OldPos);
+      if (Contents.empty() == false)
+	 Temp.append(Contents);
+      OldPos = Pos + Subst.length();
    }
-   
+
    if (OldPos == 0)
       return Str;
-   
+
+   if (OldPos >= Str.length())
+      return Temp;
    return Temp + string(Str,OldPos);
 }
-
 string SubstVar(string Str,const struct SubstVar *Vars)
 {
    for (; Vars->Subst != 0; Vars++)
@@ -752,7 +793,8 @@ bool ReadMessages(int Fd, vector<string> &List)
       // Look for the end of the message
       for (char *I = Buffer; I + 1 < End; I++)
       {
-	 if (I[0] != '\n' || I[1] != '\n')
+	 if (I[1] != '\n' ||
+	       (I[0] != '\n' && strncmp(I, "\r\n\r\n", 4) != 0))
 	    continue;
 	 
 	 // Pull the message out
@@ -760,7 +802,7 @@ bool ReadMessages(int Fd, vector<string> &List)
 	 PartialMessage += Message;
 
 	 // Fix up the buffer
-	 for (; I < End && *I == '\n'; I++);
+	 for (; I < End && (*I == '\n' || *I == '\r'); ++I);
 	 End -= I-Buffer;	 
 	 memmove(Buffer,I,End-Buffer);
 	 I = Buffer;
@@ -896,7 +938,7 @@ bool FTPMDTMStrToTime(const char* const str,time_t &time)
 									/*}}}*/
 // StrToTime - Converts a string into a time_t				/*{{{*/
 // ---------------------------------------------------------------------
-/* This handles all 3 populare time formats including RFC 1123, RFC 1036
+/* This handles all 3 popular time formats including RFC 1123, RFC 1036
    and the C library asctime format. It requires the GNU library function
    'timegm' to convert a struct tm in UTC to a time_t. For some bizzar
    reason the C library does not provide any such function :< This also
@@ -936,6 +978,8 @@ bool StrToTime(const string &Val,time_t &Result)
    Tm.tm_isdst = 0;
    if (Month[0] != 0)
       Tm.tm_mon = MonthConv(Month);
+   else
+      Tm.tm_mon = 0; // we don't have a month, so pick something
    Tm.tm_year -= 1900;
    
    // Convert to local time and then to GMT
@@ -1098,15 +1142,48 @@ bool TokSplitString(char Tok,char *Input,char **List,
    also, but the advantage is that we have an iteratable vector */
 vector<string> VectorizeString(string const &haystack, char const &split)
 {
+   vector<string> exploded;
+   if (haystack.empty() == true)
+      return exploded;
    string::const_iterator start = haystack.begin();
    string::const_iterator end = start;
-   vector<string> exploded;
    do {
       for (; end != haystack.end() && *end != split; ++end);
       exploded.push_back(string(start, end));
       start = end + 1;
    } while (end != haystack.end() && (++end) != haystack.end());
    return exploded;
+}
+									/*}}}*/
+// StringSplit - split a string into a string vector by token		/*{{{*/
+// ---------------------------------------------------------------------
+/* See header for details.
+ */
+vector<string> StringSplit(std::string const &s, std::string const &sep,
+                           unsigned int maxsplit)
+{
+   vector<string> split;
+   size_t start, pos;
+
+   // no seperator given, this is bogus
+   if(sep.size() == 0)
+      return split;
+
+   start = pos = 0;
+   while (pos != string::npos)
+   {
+      pos = s.find(sep, start);
+      split.push_back(s.substr(start, pos-start));
+      
+      // if maxsplit is reached, the remaining string is the last item
+      if(split.size() >= maxsplit)
+      {
+         split[split.size()-1] = s.substr(start);
+         break;
+      }
+      start = pos+sep.size();
+   }
+   return split;
 }
 									/*}}}*/
 // RegexChoice - Simple regex list/list matcher				/*{{{*/
@@ -1119,7 +1196,7 @@ unsigned long RegexChoice(RxChoiceList *Rxs,const char **ListBegin,
       R->Hit = false;
 
    unsigned long Hits = 0;
-   for (; ListBegin != ListEnd; ListBegin++)
+   for (; ListBegin < ListEnd; ++ListBegin)
    {
       // Check if the name is a regex
       const char *I;
@@ -1226,12 +1303,12 @@ char *safe_snprintf(char *Buffer,char *End,const char *Format,...)
    va_list args;
    int Did;
 
-   va_start(args,Format);
-
    if (End <= Buffer)
       return End;
-
+   va_start(args,Format);
    Did = vsnprintf(Buffer,End - Buffer,Format,args);
+   va_end(args);
+
    if (Did < 0 || Buffer + Did > End)
       return End;
    return Buffer + Did;
@@ -1246,11 +1323,11 @@ string StripEpoch(const string &VerStr)
       return VerStr;
    return VerStr.substr(i+1);
 }
-
+									/*}}}*/
 // tolower_ascii - tolower() function that ignores the locale		/*{{{*/
 // ---------------------------------------------------------------------
 /* This little function is the most called method we have and tries
-   therefore to do the absolut minimum - and is noteable faster than
+   therefore to do the absolut minimum - and is notable faster than
    standard tolower/toupper and as a bonus avoids problems with different
    locales - we only operate on ascii chars anyway. */
 int tolower_ascii(int const c)
@@ -1261,9 +1338,9 @@ int tolower_ascii(int const c)
 }
 									/*}}}*/
 
-// CheckDomainList - See if Host is in a , seperate list		/*{{{*/
+// CheckDomainList - See if Host is in a , separate list		/*{{{*/
 // ---------------------------------------------------------------------
-/* The domain list is a comma seperate list of domains that are suffix
+/* The domain list is a comma separate list of domains that are suffix
    matched against the argument */
 bool CheckDomainList(const string &Host,const string &List)
 {
@@ -1284,14 +1361,26 @@ bool CheckDomainList(const string &Host,const string &List)
    return false;
 }
 									/*}}}*/
-// DeEscapeString - unescape (\0XX and \xXX) from a string      	/*{{{*/
+// strv_length - Return the length of a NULL-terminated string array	/*{{{*/
+// ---------------------------------------------------------------------
+/* */
+size_t strv_length(const char **str_array)
+{
+   size_t i;
+   for (i=0; str_array[i] != NULL; i++)
+      /* nothing */
+      ;
+   return i;
+}
+
+// DeEscapeString - unescape (\0XX and \xXX) from a string		/*{{{*/
 // ---------------------------------------------------------------------
 /* */
 string DeEscapeString(const string &input)
 {
    char tmp[3];
-   string::const_iterator it, escape_start;
-   string output, octal, hex;
+   string::const_iterator it;
+   string output;
    for (it = input.begin(); it != input.end(); ++it)
    {
       // just copy non-escape chars
@@ -1477,9 +1566,12 @@ URI::operator string()
           
       if (User.empty() == false)
       {
-	 Res +=  User;
+	 // FIXME: Technically userinfo is permitted even less
+	 // characters than these, but this is not conveniently
+	 // expressed with a blacklist.
+	 Res += QuoteString(User, ":/?#[]@");
 	 if (Password.empty() == false)
-	    Res += ":" + Password;
+	    Res += ":" + QuoteString(Password, ":/?#[]@");
 	 Res += "@";
       }
       
@@ -1518,7 +1610,6 @@ string URI::SiteOnly(const string &URI)
    U.User.clear();
    U.Password.clear();
    U.Path.clear();
-   U.Port = 0;
    return U;
 }
 									/*}}}*/
@@ -1530,7 +1621,6 @@ string URI::NoUserPassword(const string &URI)
    ::URI U(URI);
    U.User.clear();
    U.Password.clear();
-   U.Port = 0;
    return U;
 }
 									/*}}}*/

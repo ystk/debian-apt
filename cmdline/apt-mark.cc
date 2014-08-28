@@ -11,18 +11,31 @@
 #include <apt-pkg/cacheset.h>
 #include <apt-pkg/cmndline.h>
 #include <apt-pkg/error.h>
-#include <apt-pkg/init.h>
-#include <apt-pkg/strutl.h>
-#include <apt-pkg/pkgsystem.h>
 #include <apt-pkg/fileutl.h>
+#include <apt-pkg/init.h>
+#include <apt-pkg/pkgsystem.h>
+#include <apt-pkg/strutl.h>
+#include <apt-pkg/cacheiterators.h>
+#include <apt-pkg/configuration.h>
+#include <apt-pkg/depcache.h>
+#include <apt-pkg/macros.h>
+#include <apt-pkg/pkgcache.h>
 
-#include <algorithm>
+#include <apt-private/private-cmndline.h>
+
 #include <errno.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
 #include <fcntl.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 
 #include <apti18n.h>
 									/*}}}*/
@@ -33,7 +46,7 @@ ostream c1out(0);
 ostream c2out(0);
 ofstream devnull("/dev/null");
 /* DoAuto - mark packages as automatically/manually installed		{{{*/
-bool DoAuto(CommandLine &CmdL)
+static bool DoAuto(CommandLine &CmdL)
 {
    pkgCacheFile CacheFile;
    pkgCache *Cache = CacheFile.GetPkgCache();
@@ -80,7 +93,7 @@ bool DoAuto(CommandLine &CmdL)
 /* DoMarkAuto - mark packages as automatically/manually installed	{{{*/
 /* Does the same as DoAuto but tries to do it exactly the same why as
    the python implementation did it so it can be a drop-in replacement */
-bool DoMarkAuto(CommandLine &CmdL)
+static bool DoMarkAuto(CommandLine &CmdL)
 {
    pkgCacheFile CacheFile;
    pkgCache *Cache = CacheFile.GetPkgCache();
@@ -117,7 +130,7 @@ bool DoMarkAuto(CommandLine &CmdL)
 }
 									/*}}}*/
 /* ShowAuto - show automatically installed packages (sorted)		{{{*/
-bool ShowAuto(CommandLine &CmdL)
+static bool ShowAuto(CommandLine &CmdL)
 {
    pkgCacheFile CacheFile;
    pkgCache *Cache = CacheFile.GetPkgCache();
@@ -157,7 +170,7 @@ bool ShowAuto(CommandLine &CmdL)
 }
 									/*}}}*/
 /* DoHold - mark packages as hold by dpkg				{{{*/
-bool DoHold(CommandLine &CmdL)
+static bool DoHold(CommandLine &CmdL)
 {
    pkgCacheFile CacheFile;
    pkgCache *Cache = CacheFile.GetPkgCache();
@@ -202,13 +215,13 @@ bool DoHold(CommandLine &CmdL)
    if (dpkgAssertMultiArch == 0)
    {
       std::string const chrootDir = _config->FindDir("DPkg::Chroot-Directory");
-      if (chrootDir != "/" && chroot(chrootDir.c_str()) != 0)
-	 _error->WarningE("getArchitecture", "Couldn't chroot into %s for dpkg --assert-multi-arch", chrootDir.c_str());
       // redirect everything to the ultimate sink as we only need the exit-status
       int const nullfd = open("/dev/null", O_RDONLY);
       dup2(nullfd, STDIN_FILENO);
       dup2(nullfd, STDOUT_FILENO);
       dup2(nullfd, STDERR_FILENO);
+      if (chrootDir != "/" && chroot(chrootDir.c_str()) != 0 && chdir("/") != 0)
+	 _error->WarningE("getArchitecture", "Couldn't chroot into %s for dpkg --assert-multi-arch", chrootDir.c_str());
       execvp(Args[0], (char**) &Args[0]);
       _error->WarningE("dpkgGo", "Can't detect if dpkg supports multi-arch!");
       _exit(2);
@@ -277,7 +290,7 @@ bool DoHold(CommandLine &CmdL)
    {
       close(external[1]);
       std::string const chrootDir = _config->FindDir("DPkg::Chroot-Directory");
-      if (chrootDir != "/" && chroot(chrootDir.c_str()) != 0)
+      if (chrootDir != "/" && chroot(chrootDir.c_str()) != 0 && chdir("/") != 0)
 	 _error->WarningE("getArchitecture", "Couldn't chroot into %s for dpkg --set-selections", chrootDir.c_str());
       int const nullfd = open("/dev/null", O_RDONLY);
       dup2(external[0], STDIN_FILENO);
@@ -333,7 +346,7 @@ bool DoHold(CommandLine &CmdL)
 }
 									/*}}}*/
 /* ShowHold - show packages set on hold in dpkg status			{{{*/
-bool ShowHold(CommandLine &CmdL)
+static bool ShowHold(CommandLine &CmdL)
 {
    pkgCacheFile CacheFile;
    pkgCache *Cache = CacheFile.GetPkgCache();
@@ -370,7 +383,7 @@ bool ShowHold(CommandLine &CmdL)
 // ShowHelp - Show a help screen					/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-bool ShowHelp(CommandLine &CmdL)
+static bool ShowHelp(CommandLine &)
 {
    ioprintf(cout,_("%s %s for %s compiled on %s %s\n"),PACKAGE,PACKAGE_VERSION,
 	    COMMON_ARCH,__DATE__,__TIME__);
@@ -384,6 +397,11 @@ bool ShowHelp(CommandLine &CmdL)
       "Commands:\n"
       "   auto - Mark the given packages as automatically installed\n"
       "   manual - Mark the given packages as manually installed\n"
+      "   hold - Mark a package as held back\n"
+      "   unhold - Unset a package set as held back\n"
+      "   showauto - Print the list of automatically installed packages\n"
+      "   showmanual - Print the list of manually installed packages\n"
+      "   showhold - Print the list of package on hold\n"
       "\n"
       "Options:\n"
       "  -h  This help text.\n"
@@ -400,21 +418,6 @@ bool ShowHelp(CommandLine &CmdL)
 									/*}}}*/
 int main(int argc,const char *argv[])					/*{{{*/
 {
-   CommandLine::Args Args[] = {
-      {'h',"help","help",0},
-      {0,"version","version",0},
-      {'q',"quiet","quiet",CommandLine::IntLevel},
-      {'q',"silent","quiet",CommandLine::IntLevel},
-      {'v',"verbose","APT::MarkAuto::Verbose",0},
-      {'s',"simulate","APT::Mark::Simulate",0},
-      {'s',"just-print","APT::Mark::Simulate",0},
-      {'s',"recon","APT::Mark::Simulate",0},
-      {'s',"dry-run","APT::Mark::Simulate",0},
-      {'s',"no-act","APT::Mark::Simulate",0},
-      {'f',"file","Dir::State::extended_states",CommandLine::HasArg},
-      {'c',"config-file",0,CommandLine::ConfigFile},
-      {'o',"option",0,CommandLine::ArbItem},
-      {0,0,0,0}};
    CommandLine::Dispatch Cmds[] = {{"help",&ShowHelp},
 				   {"auto",&DoAuto},
 				   {"manual",&DoAuto},
@@ -432,12 +435,14 @@ int main(int argc,const char *argv[])					/*{{{*/
 				   {"unmarkauto", &DoMarkAuto},
                                    {0,0}};
 
+   std::vector<CommandLine::Args> Args = getCommandArgs("apt-mark", CommandLine::GetCommand(Cmds, argc, argv));
+
    // Set up gettext support
    setlocale(LC_ALL,"");
    textdomain(PACKAGE);
 
    // Parse the command line and initialize the package library
-   CommandLine CmdL(Args,_config);
+   CommandLine CmdL(Args.data(),_config);
    if (pkgInitConfig(*_config) == false ||
        CmdL.Parse(argc,argv) == false ||
        pkgInitSystem(*_config,_system) == false)

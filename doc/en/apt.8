@@ -1,0 +1,243 @@
+'\" t
+.\"     Title: apt
+.\"    Author: APT team
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 25\ \&November\ \&2013
+.\"    Manual: APT
+.\"    Source: APT 1.0.6
+.\"  Language: English
+.\"
+.TH "APT" "8" "25\ \&November\ \&2013" "APT 1.0.6" "APT"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+apt \- command\-line interface
+.SH "SYNOPSIS"
+.HP \w'\fBapt\fR\ 'u
+\fBapt\fR [\fB\-h\fR] [\fB\-o=\fR\fB\fIconfig_string\fR\fR] [\fB\-c=\fR\fB\fIconfig_file\fR\fR] [\fB\-t=\fR\fB\fItarget_release\fR\fR] [\fB\-a=\fR\fB\fIarchitecture\fR\fR] {list | search | show | update | install\ \fIpkg\fR\ [{=\fIpkg_version_number\fR\ |\ /\fItarget_release\fR}]...  | remove\ \fIpkg\fR...  | upgrade | full\-upgrade | edit\-sources | {\-v\ |\ \-\-version} | {\-h\ |\ \-\-help}}
+.SH "DESCRIPTION"
+.PP
+\fBapt\fR
+(Advanced Package Tool) is the command\-line tool for handling packages\&. It provides a commandline interface for the package management of the system\&. See also
+\fBapt-get\fR(8)
+and
+\fBapt-cache\fR(8)
+for more low\-level command options\&.
+.PP
+\fBlist\fR
+.RS 4
+list
+is used to display a list of packages\&. It supports shell pattern for matching package names and the following options:
+\fB\-\-installed\fR,
+\fB\-\-upgradable\fR,
+\fB\-\-all\-versions\fR
+are supported\&.
+.RE
+.PP
+\fBsearch\fR
+.RS 4
+search
+searches for the given term(s) and display matching packages\&.
+.RE
+.PP
+\fBshow\fR
+.RS 4
+show
+shows the package information for the given package(s)\&.
+.RE
+.PP
+\fBinstall\fR
+.RS 4
+install
+is followed by one or more package names desired for installation or upgrading\&.
+.sp
+A specific version of a package can be selected for installation by following the package name with an equals and the version of the package to select\&. This will cause that version to be located and selected for install\&. Alternatively a specific distribution can be selected by following the package name with a slash and the version of the distribution or the Archive name (stable, testing, unstable)\&.
+.RE
+.PP
+\fBremove\fR
+.RS 4
+remove
+is identical to
+install
+except that packages are removed instead of installed\&. Note that removing a package leaves its configuration files on the system\&. If a plus sign is appended to the package name (with no intervening space), the identified package will be installed instead of removed\&.
+.RE
+.PP
+\fBedit\-sources\fR
+.RS 4
+edit\-sources
+lets you edit your sources\&.list file and provides basic sanity checks\&.
+.RE
+.PP
+\fBupdate\fR
+.RS 4
+update
+is used to resynchronize the package index files from their sources\&.
+.RE
+.PP
+\fBupgrade\fR
+.RS 4
+upgrade
+is used to install the newest versions of all packages currently installed on the system from the sources enumerated in
+/etc/apt/sources\&.list\&. New package will be installed, but existing package will never removed\&.
+.RE
+.PP
+\fBfull\-upgrade\fR
+.RS 4
+full\-upgrade
+performs the function of upgrade but may also remove installed packages if that is required in order to resolve a package conflict\&.
+.RE
+.SH "OPTIONS"
+.PP
+All command line options may be set using the configuration file, the descriptions indicate the configuration option to set\&. For boolean options you can override the config file by using something like
+\fB\-f\-\fR,\fB\-\-no\-f\fR,
+\fB\-f=no\fR
+or several other variations\&.
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Show a short usage summary\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-version\fR
+.RS 4
+Show the program version\&.
+.RE
+.PP
+\fB\-c\fR, \fB\-\-config\-file\fR
+.RS 4
+Configuration File; Specify a configuration file to use\&. The program will read the default configuration file and then this configuration file\&. If configuration settings need to be set before the default configuration files are parsed specify a file with the
+\fBAPT_CONFIG\fR
+environment variable\&. See
+\fBapt.conf\fR(5)
+for syntax information\&.
+.RE
+.PP
+\fB\-o\fR, \fB\-\-option\fR
+.RS 4
+Set a Configuration Option; This will set an arbitrary configuration option\&. The syntax is
+\fB\-o Foo::Bar=bar\fR\&.
+\fB\-o\fR
+and
+\fB\-\-option\fR
+can be used multiple times to set different options\&.
+.RE
+.SH "SCRIPT USAGE"
+.PP
+The
+\fBapt\fR(8)
+commandline is designed as a end\-user tool and it may change the output between versions\&. While it tries to not break backward compatibility there is no guarantee for it either\&. All features of
+\fBapt\fR(8)
+are available in
+\fBapt-cache\fR(8)
+and
+\fBapt-get\fR(8)
+via APT options\&. Please prefer using these commands in your scripts\&.
+.SH "DIFFERENCES TO APT-GET(8)"
+.PP
+The
+\fBapt\fR
+command is meant to be pleasant for end users and does not need to be backward compatible like
+\fBapt-get\fR(8)\&. Therefore some options are different:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The option
+DPkg::Progress\-Fancy
+is enabled\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The option
+APT::Color
+is enabled\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A new
+list
+command is available similar to
+dpkg \-\-list\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The option
+upgrade
+has
+\-\-with\-new\-pkgs
+enabled by default\&.
+.RE
+.sp
+.SH "SEE ALSO"
+.PP
+\fBapt-get\fR(8),
+\fBapt-cache\fR(8),
+\fBsources.list\fR(5),
+\fBapt.conf\fR(5),
+\fBapt-config\fR(8), The APT User\*(Aqs guide in /usr/share/doc/apt\-doc/,
+\fBapt_preferences\fR(5), the APT Howto\&.
+.SH "DIAGNOSTICS"
+.PP
+\fBapt\fR
+returns zero on normal operation, decimal 100 on error\&.
+.SH "BUGS"
+.PP
+\m[blue]\fBAPT bug page\fR\m[]\&\s-2\u[1]\d\s+2\&. If you wish to report a bug in APT, please see
+/usr/share/doc/debian/bug\-reporting\&.txt
+or the
+\fBreportbug\fR(1)
+command\&.
+.SH "AUTHOR"
+.PP
+\fBAPT team\fR
+.RS 4
+.RE
+.SH "NOTES"
+.IP " 1." 4
+APT bug page
+.RS 4
+\%http://bugs.debian.org/src:apt
+.RE

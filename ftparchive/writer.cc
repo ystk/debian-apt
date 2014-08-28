@@ -13,26 +13,37 @@
 // Include Files							/*{{{*/
 #include <config.h>
 
-#include <apt-pkg/strutl.h>
-#include <apt-pkg/error.h>
 #include <apt-pkg/configuration.h>
-#include <apt-pkg/aptconfiguration.h>
-#include <apt-pkg/md5.h>
-#include <apt-pkg/hashes.h>
 #include <apt-pkg/deblistparser.h>
+#include <apt-pkg/error.h>
+#include <apt-pkg/fileutl.h>
+#include <apt-pkg/gpgv.h>
+#include <apt-pkg/hashes.h>
+#include <apt-pkg/md5.h>
+#include <apt-pkg/strutl.h>
+#include <apt-pkg/debfile.h>
+#include <apt-pkg/pkgcache.h>
+#include <apt-pkg/sha1.h>
+#include <apt-pkg/sha2.h>
+#include <apt-pkg/tagfile.h>
 
+#include <ctype.h>
+#include <fnmatch.h>
+#include <ftw.h>
+#include <locale.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <ctime>
-#include <ftw.h>
-#include <fnmatch.h>
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <utility>
 
+#include "apt-ftparchive.h"
 #include "writer.h"
 #include "cachedb.h"
-#include "apt-ftparchive.h"
 #include "multicompress.h"
 
 #include <apti18n.h>
@@ -70,9 +81,9 @@ FTWScanner::FTWScanner(string const &Arch): Arch(Arch)
 									/*}}}*/
 // FTWScanner::Scanner - FTW Scanner					/*{{{*/
 // ---------------------------------------------------------------------
-/* This is the FTW scanner, it processes each directory element in the 
+/* This is the FTW scanner, it processes each directory element in the
    directory tree. */
-int FTWScanner::ScannerFTW(const char *File,const struct stat *sb,int Flag)
+int FTWScanner::ScannerFTW(const char *File,const struct stat * /*sb*/,int Flag)
 {
    if (Flag == FTW_DNR)
    {
@@ -282,7 +293,8 @@ bool FTWScanner::Delink(string &FileName,const char *OriginalPath,
 		  if (link(FileName.c_str(),OriginalPath) != 0)
 		  {
 		     // Panic! Restore the symlink
-		     symlink(OldLink,OriginalPath);
+		     if (symlink(OldLink,OriginalPath) != 0)
+                        _error->Errno("symlink", "failed to restore symlink");
 		     return _error->Errno("link",_("*** Failed to link %s to %s"),
 					  FileName.c_str(),
 					  OriginalPath);
@@ -373,10 +385,14 @@ bool FTWScanner::SetExts(string const &Vals)
 bool PackagesWriter::DoPackage(string FileName)
 {      
    // Pull all the data we need form the DB
-   if (Db.GetFileInfo(FileName, true, DoContents, true, DoMD5, DoSHA1, DoSHA256, DoSHA512, DoAlwaysStat)
-		  == false)
+   if (Db.GetFileInfo(FileName, 
+                      true,   /* DoControl */
+                      DoContents, 
+                      true,   /* GenContentsOnly */
+                      false,  /* DoSource */
+                      DoMD5, DoSHA1, DoSHA256, DoSHA512, DoAlwaysStat) == false)
    {
-      return false;
+     return false;
    }
 
    unsigned long long FileSize = Db.GetFileSize();
@@ -562,8 +578,9 @@ TranslationWriter::~TranslationWriter()
 // SourcesWriter::SourcesWriter - Constructor				/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-SourcesWriter::SourcesWriter(string const &BOverrides,string const &SOverrides,
-			     string const &ExtOverrides)
+SourcesWriter::SourcesWriter(string const &DB, string const &BOverrides,string const &SOverrides,
+			     string const &ExtOverrides) :
+   Db(DB), Stats(Db.Stats)
 {
    Output = stdout;
    AddPattern("*.dsc");
@@ -575,7 +592,9 @@ SourcesWriter::SourcesWriter(string const &BOverrides,string const &SOverrides,
    DoMD5 = _config->FindB("APT::FTPArchive::Sources::MD5",DoMD5);
    DoSHA1 = _config->FindB("APT::FTPArchive::Sources::SHA1",DoSHA1);
    DoSHA256 = _config->FindB("APT::FTPArchive::Sources::SHA256",DoSHA256);
+   DoSHA512 = _config->FindB("APT::FTPArchive::Sources::SHA512",DoSHA512);
    NoOverride = _config->FindB("APT::FTPArchive::NoOverrideMsg",false);
+   DoAlwaysStat = _config->FindB("APT::FTPArchive::AlwaysStat", false);
 
    // Read the override file
    if (BOverrides.empty() == false && BOver.ReadOverride(BOverrides) == false)
@@ -598,77 +617,39 @@ SourcesWriter::SourcesWriter(string const &BOverrides,string const &SOverrides,
 // ---------------------------------------------------------------------
 /* */
 bool SourcesWriter::DoPackage(string FileName)
-{      
-   // Open the archive
-   FileFd F(FileName,FileFd::ReadOnly);
-   if (_error->PendingError() == true)
-      return false;
-   
-   // Stat the file for later
-   struct stat St;
-   if (fstat(F.Fd(),&St) != 0)
-      return _error->Errno("fstat","Failed to stat %s",FileName.c_str());
-
-   if (St.st_size > 128*1024)
-      return _error->Error("DSC file '%s' is too large!",FileName.c_str());
-         
-   if (BufSize < (unsigned long long)St.st_size+1)
+{
+   // Pull all the data we need form the DB
+   if (Db.GetFileInfo(FileName,
+                      false,  /* DoControl */
+                      false,  /* DoContents */
+                      false,  /* GenContentsOnly */
+                      true,   /* DoSource */
+                      DoMD5, DoSHA1, DoSHA256, DoSHA512, DoAlwaysStat) == false)
    {
-      BufSize = St.st_size+1;
-      Buffer = (char *)realloc(Buffer,St.st_size+1);
-   }
-   
-   if (F.Read(Buffer,St.st_size) == false)
       return false;
+   }
 
-   // Hash the file
-   char *Start = Buffer;
-   char *BlkEnd = Buffer + St.st_size;
+   // we need to perform a "write" here (this is what finish is doing)
+   // because the call to Db.GetFileInfo() in the loop will change
+   // the "db cursor"
+   Db.Finish();
 
-   MD5Summation MD5;
-   SHA1Summation SHA1;
-   SHA256Summation SHA256;
-   SHA256Summation SHA512;
+   // read stuff
+   char *Start = Db.Dsc.Data;
+   char *BlkEnd = Db.Dsc.Data + Db.Dsc.Length;
 
-   if (DoMD5 == true)
-      MD5.Add((unsigned char *)Start,BlkEnd - Start);
-   if (DoSHA1 == true)
-      SHA1.Add((unsigned char *)Start,BlkEnd - Start);
-   if (DoSHA256 == true)
-      SHA256.Add((unsigned char *)Start,BlkEnd - Start);
-   if (DoSHA512 == true)
-      SHA512.Add((unsigned char *)Start,BlkEnd - Start);
-
-   // Add an extra \n to the end, just in case
+   // Add extra \n to the end, just in case (as in clearsigned they are missing)
    *BlkEnd++ = '\n';
-   
-   /* Remove the PGP trailer. Some .dsc's have this without a blank line 
-      before */
-   const char *Key = "-----BEGIN PGP SIGNATURE-----";
-   for (char *MsgEnd = Start; MsgEnd < BlkEnd - strlen(Key) -1; MsgEnd++)
-   {
-      if (*MsgEnd == '\n' && strncmp(MsgEnd+1,Key,strlen(Key)) == 0)
-      {
-	 MsgEnd[1] = '\n';
-	 break;
-      }      
-   }
-   
-   /* Read records until we locate the Source record. This neatly skips the
-      GPG header (which is RFC822 formed) without any trouble. */
+   *BlkEnd++ = '\n';
+
    pkgTagSection Tags;
-   do
-   {
-      unsigned Pos;
-      if (Tags.Scan(Start,BlkEnd - Start) == false)
-	 return _error->Error("Could not find a record in the DSC '%s'",FileName.c_str());
-      if (Tags.Find("Source",Pos) == true)
-	 break;
-      Start += Tags.size();
-   }
-   while (1);
+   if (Tags.Scan(Start,BlkEnd - Start) == false)
+      return _error->Error("Could not find a record in the DSC '%s'",FileName.c_str());
+   
+   if (Tags.Exists("Source") == false)
+      return _error->Error("Could not find a Source entry in the DSC '%s'",FileName.c_str());
    Tags.Trim();
-      
+
    // Lookup the overide information, finding first the best priority.
    string BestPrio;
    string Bins = Tags.FindS("Binary");
@@ -714,6 +695,10 @@ bool SourcesWriter::DoPackage(string FileName)
       OverItem = auto_ptr<Override::Item>(new Override::Item);
    }
    
+   struct stat St;
+   if (stat(FileName.c_str(), &St) != 0)
+      return _error->Errno("fstat","Failed to stat %s",FileName.c_str());
+
    auto_ptr<Override::Item> SOverItem(SOver.GetItem(Tags.FindS("Source")));
    // const auto_ptr<Override::Item> autoSOverItem(SOverItem);
    if (SOverItem.get() == 0)
@@ -732,27 +717,24 @@ bool SourcesWriter::DoPackage(string FileName)
    string const strippedName = flNotDir(FileName);
    std::ostringstream ostreamFiles;
    if (DoMD5 == true && Tags.Exists("Files"))
-      ostreamFiles << "\n " << string(MD5.Result()) << " " << St.st_size << " "
+      ostreamFiles << "\n " << Db.MD5Res.c_str() << " " << St.st_size << " "
 		   << strippedName << "\n " << Tags.FindS("Files");
    string const Files = ostreamFiles.str();
 
    std::ostringstream ostreamSha1;
    if (DoSHA1 == true && Tags.Exists("Checksums-Sha1"))
-      ostreamSha1 << "\n " << string(SHA1.Result()) << " " << St.st_size << " "
+      ostreamSha1 << "\n " << string(Db.SHA1Res.c_str()) << " " << St.st_size << " "
 		   << strippedName << "\n " << Tags.FindS("Checksums-Sha1");
-   string const ChecksumsSha1 = ostreamSha1.str();
 
    std::ostringstream ostreamSha256;
    if (DoSHA256 == true && Tags.Exists("Checksums-Sha256"))
-      ostreamSha256 << "\n " << string(SHA256.Result()) << " " << St.st_size << " "
+      ostreamSha256 << "\n " << string(Db.SHA256Res.c_str()) << " " << St.st_size << " "
 		   << strippedName << "\n " << Tags.FindS("Checksums-Sha256");
-   string const ChecksumsSha256 = ostreamSha256.str();
 
    std::ostringstream ostreamSha512;
-   if (Tags.Exists("Checksums-Sha512"))
-      ostreamSha512 << "\n " << string(SHA512.Result()) << " " << St.st_size << " "
+   if (DoSHA512 == true && Tags.Exists("Checksums-Sha512"))
+      ostreamSha512 << "\n " << string(Db.SHA512Res.c_str()) << " " << St.st_size << " "
 		   << strippedName << "\n " << Tags.FindS("Checksums-Sha512");
-   string const ChecksumsSha512 = ostreamSha512.str();
 
    // Strip the DirStrip prefix from the FileName and add the PathPrefix
    string NewFileName;
@@ -768,7 +750,7 @@ bool SourcesWriter::DoPackage(string FileName)
    string Directory = flNotFile(OriginalPath);
    string Package = Tags.FindS("Source");
 
-   // Perform the delinking operation over all of the files
+   // Perform operation over all of the files
    string ParseJnk;
    const char *C = Files.c_str();
    char *RealPath = NULL;
@@ -780,9 +762,44 @@ bool SourcesWriter::DoPackage(string FileName)
 	  ParseQuoteWord(C,ParseJnk) == false ||
 	  ParseQuoteWord(C,ParseJnk) == false)
 	 return _error->Error("Error parsing file record");
-      
-      char Jnk[2];
+
       string OriginalPath = Directory + ParseJnk;
+
+      // Add missing hashes to source files
+      if ((DoSHA1 == true && !Tags.Exists("Checksums-Sha1")) ||
+          (DoSHA256 == true && !Tags.Exists("Checksums-Sha256")) ||
+          (DoSHA512 == true && !Tags.Exists("Checksums-Sha512")))
+      {
+         if (Db.GetFileInfo(OriginalPath, 
+                            false, /* DoControl */
+                            false, /* DoContents */
+                            false, /* GenContentsOnly */
+                            false, /* DoSource */
+                            DoMD5, DoSHA1, DoSHA256, DoSHA512,
+                            DoAlwaysStat) == false)
+         {
+            return _error->Error("Error getting file info");
+         }
+
+         if (DoSHA1 == true && !Tags.Exists("Checksums-Sha1"))
+            ostreamSha1 << "\n " << string(Db.SHA1Res) << " "
+               << Db.GetFileSize() << " " << ParseJnk;
+
+         if (DoSHA256 == true && !Tags.Exists("Checksums-Sha256"))
+            ostreamSha256 << "\n " << string(Db.SHA256Res) << " "
+               << Db.GetFileSize() << " " << ParseJnk;
+
+         if (DoSHA512 == true && !Tags.Exists("Checksums-Sha512"))
+            ostreamSha512 << "\n " << string(Db.SHA512Res) << " "
+               << Db.GetFileSize() << " " << ParseJnk;
+
+         // write back the GetFileInfo() stats data 
+         Db.Finish();
+      }
+
+      // Perform the delinking operation
+      char Jnk[2];
+
       if (readlink(OriginalPath.c_str(),Jnk,sizeof(Jnk)) != -1 &&
 	  (RealPath = realpath(OriginalPath.c_str(),NULL)) != 0)
       {
@@ -796,6 +813,10 @@ bool SourcesWriter::DoPackage(string FileName)
    Directory = flNotFile(NewFileName);
    if (Directory.length() > 2)
       Directory.erase(Directory.end()-1);
+
+   string const ChecksumsSha1 = ostreamSha1.str();
+   string const ChecksumsSha256 = ostreamSha256.str();
+   string const ChecksumsSha512 = ostreamSha512.str();
 
    // This lists all the changes to the fields we are going to make.
    // (5 hardcoded + checksums + maintainer + end marker)
@@ -865,7 +886,15 @@ ContentsWriter::ContentsWriter(string const &DB, string const &Arch) :
    determine what the package name is. */
 bool ContentsWriter::DoPackage(string FileName, string Package)
 {
-   if (!Db.GetFileInfo(FileName, Package.empty(), true, false, false, false, false, false))
+   if (!Db.GetFileInfo(FileName, 
+                       Package.empty(), /* DoControl */
+                       true,            /* DoContents */
+                       false,           /* GenContentsOnly */
+                       false,           /* DoSource */
+                       false,           /* DoMD5 */
+                       false,           /* DoSHA1 */
+                       false,           /* DoSHA256 */
+                       false))          /* DoSHA512 */
    {
       return false;
    }
@@ -932,7 +961,7 @@ bool ContentsWriter::ReadFromPkgs(string const &PkgFile,string const &PkgCompres
 // ReleaseWriter::ReleaseWriter - Constructor				/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-ReleaseWriter::ReleaseWriter(string const &DB)
+ReleaseWriter::ReleaseWriter(string const &/*DB*/)
 {
    if (_config->FindB("APT::FTPArchive::Release::Default-Patterns", true) == true)
    {

@@ -9,10 +9,12 @@
 #include <apt-pkg/cachefilter.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/pkgcache.h>
+#include <apt-pkg/cacheiterators.h>
 #include <apt-pkg/strutl.h>
+#include <apt-pkg/macros.h>
 
 #include <string>
-
+#include <string.h>
 #include <regex.h>
 #include <fnmatch.h>
 
@@ -55,6 +57,17 @@ PackageNameMatchesRegEx::~PackageNameMatchesRegEx() {			/*{{{*/
 }
 									/*}}}*/
 
+// Fnmatch support					/*{{{*/
+//----------------------------------------------------------------------
+bool PackageNameMatchesFnmatch::operator() (pkgCache::PkgIterator const &Pkg) {/*{{{*/
+   return fnmatch(Pattern.c_str(), Pkg.Name(), FNM_CASEFOLD) == 0;
+}
+									/*}}}*/
+bool PackageNameMatchesFnmatch::operator() (pkgCache::GrpIterator const &Grp) {/*{{{*/
+   return fnmatch(Pattern.c_str(), Grp.Name(), FNM_CASEFOLD) == 0;
+}
+									/*}}}*/
+
 // CompleteArch to <kernel>-<cpu> tuple					/*{{{*/
 //----------------------------------------------------------------------
 /* The complete architecture, consisting of <kernel>-<cpu>. */
@@ -71,8 +84,7 @@ static std::string CompleteArch(std::string const &arch) {
 }
 									/*}}}*/
 PackageArchitectureMatchesSpecification::PackageArchitectureMatchesSpecification(std::string const &pattern, bool const isPattern) :/*{{{*/
-					literal(pattern), isPattern(isPattern), d(NULL) {
-	complete = CompleteArch(pattern);
+					literal(pattern), complete(CompleteArch(pattern)), isPattern(isPattern), d(NULL) {
 }
 									/*}}}*/
 bool PackageArchitectureMatchesSpecification::operator() (char const * const &arch) {/*{{{*/

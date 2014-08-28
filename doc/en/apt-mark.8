@@ -1,0 +1,169 @@
+'\" t
+.\"     Title: apt-mark
+.\"    Author: Mike O\*(AqConnor
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 09\ \&June\ \&2012
+.\"    Manual: APT
+.\"    Source: APT 1.0.6
+.\"  Language: English
+.\"
+.TH "APT\-MARK" "8" "09\ \&June\ \&2012" "APT 1.0.6" "APT"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+apt-mark \- mark/unmark a package as being automatically\-installed
+.SH "SYNOPSIS"
+.HP \w'\fBapt\-mark\fR\ 'u
+\fBapt\-mark\fR [\fB\-f=\fR\fB\fIfilename\fR\fR] {auto\ |\ manual\ |\ showauto\ |\ showmanual}\ \fIpkg\fR...  | {\-v\ |\ \-\-version} | {\-h\ |\ \-\-help} 
+.SH "DESCRIPTION"
+.PP
+\fBapt\-mark\fR
+will change whether a package has been marked as being automatically installed\&.
+.PP
+When you request that a package is installed, and as a result other packages are installed to satisfy its dependencies, the dependencies are marked as being automatically installed\&. Once these automatically installed packages are no longer depended on by any manually installed packages, they will be removed by e\&.g\&.
+\fBapt\-get\fR
+or
+\fBaptitude\fR\&.
+.PP
+\fBauto\fR
+.RS 4
+auto
+is used to mark a package as being automatically installed, which will cause the package to be removed when no more manually installed packages depend on this package\&.
+.RE
+.PP
+\fBmanual\fR
+.RS 4
+manual
+is used to mark a package as being manually installed, which will prevent the package from being automatically removed if no other packages depend on it\&.
+.RE
+.PP
+\fBhold\fR
+.RS 4
+hold
+is used to mark a package as held back, which will prevent the package from being automatically installed, upgraded or removed\&. The command is only a wrapper around
+\fBdpkg \-\-set\-selections\fR
+and the state is therefore maintained by
+\fBdpkg\fR(1)
+and not affected by the
+\fB\-\-file\fR
+option\&.
+.RE
+.PP
+\fBunhold\fR
+.RS 4
+unhold
+is used to cancel a previously set hold on a package to allow all actions again\&.
+.RE
+.PP
+\fBshowauto\fR
+.RS 4
+showauto
+is used to print a list of automatically installed packages with each package on a new line\&. All automatically installed packages will be listed if no package is given\&. If packages are given only those which are automatically installed will be shown\&.
+.RE
+.PP
+\fBshowmanual\fR
+.RS 4
+showmanual
+can be used in the same way as
+showauto
+except that it will print a list of manually installed packages instead\&.
+.RE
+.PP
+\fBshowhold\fR
+.RS 4
+showhold
+is used to print a list of packages on hold in the same way as for the other show commands\&.
+.RE
+.SH "OPTIONS"
+.PP
+\fB\-f=\fR\fB\fIfilename\fR\fR, \fB\-\-file=\fR\fB\fIfilename\fR\fR
+.RS 4
+Read/Write package stats from the filename given with the parameter
+\fIfilename\fR
+instead of from the default location, which is
+extended_status
+in the directory defined by the Configuration Item:
+Dir::State\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Show a short usage summary\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-version\fR
+.RS 4
+Show the program version\&.
+.RE
+.PP
+\fB\-c\fR, \fB\-\-config\-file\fR
+.RS 4
+Configuration File; Specify a configuration file to use\&. The program will read the default configuration file and then this configuration file\&. If configuration settings need to be set before the default configuration files are parsed specify a file with the
+\fBAPT_CONFIG\fR
+environment variable\&. See
+\fBapt.conf\fR(5)
+for syntax information\&.
+.RE
+.PP
+\fB\-o\fR, \fB\-\-option\fR
+.RS 4
+Set a Configuration Option; This will set an arbitrary configuration option\&. The syntax is
+\fB\-o Foo::Bar=bar\fR\&.
+\fB\-o\fR
+and
+\fB\-\-option\fR
+can be used multiple times to set different options\&.
+.RE
+.SH "FILES"
+.PP
+/var/lib/apt/extended_states
+.RS 4
+Status list of auto\-installed packages\&. Configuration Item:
+Dir::State::extended_states\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBapt-get\fR(8),\fBaptitude\fR(8),\fBapt.conf\fR(5)
+.SH "DIAGNOSTICS"
+.PP
+\fBapt\-mark\fR
+returns zero on normal operation, non\-zero on error\&.
+.SH "BUGS"
+.PP
+\m[blue]\fBAPT bug page\fR\m[]\&\s-2\u[1]\d\s+2\&. If you wish to report a bug in APT, please see
+/usr/share/doc/debian/bug\-reporting\&.txt
+or the
+\fBreportbug\fR(1)
+command\&.
+.SH "AUTHORS"
+.PP
+\fBMike O\*(AqConnor\fR
+.RS 4
+.RE
+.PP
+\fBAPT team\fR
+.RS 4
+.RE
+.SH "NOTES"
+.IP " 1." 4
+APT bug page
+.RS 4
+\%http://bugs.debian.org/src:apt
+.RE

@@ -33,7 +33,15 @@
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/sptr.h>
+#include <apt-pkg/cacheiterators.h>
+#include <apt-pkg/pkgcache.h>
+#include <apt-pkg/versionmatch.h>
 
+#include <ctype.h>
+#include <stddef.h>
+#include <string.h>
+#include <string>
+#include <vector>
 #include <iostream>
 #include <sstream>
 
@@ -166,10 +174,14 @@ pkgCache::VerIterator pkgPolicy::GetCandidateVer(pkgCache::PkgIterator const &Pk
       tracks the default when the default is taken away, and a permanent
       pin that stays at that setting.
     */
+   bool PrefSeen = false;
    for (pkgCache::VerIterator Ver = Pkg.VersionList(); Ver.end() == false; ++Ver)
    {
       /* Lets see if this version is the installed version */
       bool instVer = (Pkg.CurrentVer() == Ver);
+
+      if (Pref == Ver)
+	 PrefSeen = true;
 
       for (pkgCache::VerFileIterator VF = Ver.FileList(); VF.end() == false; ++VF)
       {
@@ -187,26 +199,33 @@ pkgCache::VerIterator pkgPolicy::GetCandidateVer(pkgCache::PkgIterator const &Pk
 	 {
 	    Pref = Ver;
 	    Max = Prio;
+	    PrefSeen = true;
 	 }
 	 if (Prio > MaxAlt)
 	 {
 	    PrefAlt = Ver;
 	    MaxAlt = Prio;
-	 }	 
-      }      
-      
+	 }
+      }
+
       if (instVer == true && Max < 1000)
       {
+	 /* Not having seen the Pref yet means we have a specific pin below 1000
+	    on a version below the current installed one, so ignore the specific pin
+	    as this would be a downgrade otherwise */
+	 if (PrefSeen == false || Pref.end() == true)
+	 {
+	    Pref = Ver;
+	    PrefSeen = true;
+	 }
 	 /* Elevate our current selection (or the status file itself)
 	    to the Pseudo-status priority. */
-	 if (Pref.end() == true)
-	    Pref = Ver;
 	 Max = 1000;
-	 
+
 	 // Fast path optimize.
 	 if (StatusOverride == false)
 	    break;
-      }            
+      }
    }
    // If we do not find our candidate, use the one with the highest pin.
    // This means that if there is a version available with pin > 0; there
@@ -314,7 +333,7 @@ pkgCache::VerIterator pkgPolicy::GetMatch(pkgCache::PkgIterator const &Pkg)
 // Policy::GetPriority - Get the priority of the package pin		/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-signed short pkgPolicy::GetPriority(pkgCache::PkgIterator const &Pkg)
+APT_PURE signed short pkgPolicy::GetPriority(pkgCache::PkgIterator const &Pkg)
 {
    if (Pins[Pkg->ID].Type != pkgVersionMatch::None)
    {
@@ -326,7 +345,7 @@ signed short pkgPolicy::GetPriority(pkgCache::PkgIterator const &Pkg)
    
    return 0;
 }
-signed short pkgPolicy::GetPriority(pkgCache::PkgFileIterator const &File)
+APT_PURE signed short pkgPolicy::GetPriority(pkgCache::PkgFileIterator const &File)
 {
    return PFPriority[File->ID];
 }
@@ -338,7 +357,7 @@ signed short pkgPolicy::GetPriority(pkgCache::PkgFileIterator const &File)
    all over the place rather than forcing a special format */
 class PreferenceSection : public pkgTagSection
 {
-   void TrimRecord(bool BeforeRecord, const char* &End)
+   void TrimRecord(bool /*BeforeRecord*/, const char* &End)
    {
       for (; Stop < End && (Stop[0] == '\n' || Stop[0] == '\r' || Stop[0] == '#'); Stop++)
 	 if (Stop[0] == '#')
@@ -394,6 +413,10 @@ bool ReadPinFile(pkgPolicy &Plcy,string File)
    PreferenceSection Tags;
    while (TF.Step(Tags) == true)
    {
+      // can happen when there are only comments in a record
+      if (Tags.Count() == 0)
+         continue;
+
       string Name = Tags.FindS("Package");
       if (Name.empty() == true)
 	 return _error->Error(_("Invalid record in the preferences file %s, no Package header"), File.c_str());

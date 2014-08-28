@@ -15,9 +15,11 @@
 #include <apt-pkg/error.h>
 #include <apt-pkg/pkgsystem.h>
 #include <apt-pkg/configuration.h>
+#include <apt-pkg/macros.h>
 
+#include <string.h>
+#include <string>
 #include <cstdlib>
-#include <sys/stat.h>
 
 #include <apti18n.h>
 									/*}}}*/
@@ -44,16 +46,8 @@ bool pkgInitConfig(Configuration &Cnf)
    Cnf.CndSet("APT::Install-Suggests", false);
    Cnf.CndSet("Dir","/");
    
-   // State   
+   // State
    Cnf.CndSet("Dir::State","var/lib/apt/");
-   
-   /* Just in case something goes horribly wrong, we can fall back to the
-      old /var/state paths.. */
-   struct stat St;   
-   if (stat("/var/lib/apt/.",&St) != 0 &&
-       stat("/var/state/apt/.",&St) == 0)
-      Cnf.CndSet("Dir::State","var/state/apt/");
-       
    Cnf.CndSet("Dir::State::lists","lists/");
    Cnf.CndSet("Dir::State::cdroms","cdroms.list");
    Cnf.CndSet("Dir::State::mirrors","mirrors/");
@@ -92,6 +86,7 @@ bool pkgInitConfig(Configuration &Cnf)
    Cnf.Set("Dir::Ignore-Files-Silently::", "\\.dpkg-[a-z]+$");
    Cnf.Set("Dir::Ignore-Files-Silently::", "\\.save$");
    Cnf.Set("Dir::Ignore-Files-Silently::", "\\.orig$");
+   Cnf.Set("Dir::Ignore-Files-Silently::", "\\.distUpgrade$");
 
    // Default cdrom mount point
    Cnf.CndSet("Acquire::cdrom::mount", "/media/cdrom/");
@@ -100,7 +95,7 @@ bool pkgInitConfig(Configuration &Cnf)
    
    // Read an alternate config file
    const char *Cfg = getenv("APT_CONFIG");
-   if (Cfg != 0)
+   if (Cfg != 0 && strlen(Cfg) != 0)
    {
       if (RealFileExists(Cfg) == true)
 	 Res &= ReadConfigFile(Cnf,Cfg);

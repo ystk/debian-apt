@@ -15,14 +15,25 @@
 #include <apt-pkg/debsrcrecords.h>
 #include <apt-pkg/deblistparser.h>
 #include <apt-pkg/debrecords.h>
-#include <apt-pkg/sourcelist.h>
 #include <apt-pkg/configuration.h>
 #include <apt-pkg/progress.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/acquire-item.h>
 #include <apt-pkg/debmetaindex.h>
+#include <apt-pkg/gpgv.h>
+#include <apt-pkg/fileutl.h>
+#include <apt-pkg/indexfile.h>
+#include <apt-pkg/mmap.h>
+#include <apt-pkg/pkgcache.h>
+#include <apt-pkg/cacheiterators.h>
+#include <apt-pkg/pkgcachegen.h>
+#include <apt-pkg/pkgrecords.h>
+#include <apt-pkg/srcrecords.h>
 
+#include <stdio.h>
+#include <iostream>
+#include <string>
 #include <sys/stat.h>
 									/*}}}*/
 
@@ -337,7 +348,12 @@ bool debPackagesIndex::Merge(pkgCacheGenerator &Gen,OpProgress *Prog) const
 
    if (releaseExists == true || FileExists(ReleaseFile) == true)
    {
-      FileFd Rel(ReleaseFile,FileFd::ReadOnly);
+      FileFd Rel;
+      // Beware: The 'Release' file might be clearsigned in case the
+      // signature for an 'InRelease' file couldn't be checked
+      if (OpenMaybeClearSignedFile(ReleaseFile, Rel) == false)
+	 return false;
+
       if (_error->PendingError() == true)
 	 return false;
       Parser.LoadReleaseInfo(File,Rel,Section);
@@ -509,7 +525,7 @@ bool debTranslationsIndex::Merge(pkgCacheGenerator &Gen,OpProgress *Prog) const
    if (FileExists(TranslationFile))
    {
      FileFd Trans(TranslationFile,FileFd::ReadOnly, FileFd::Extension);
-     debListParser TransParser(&Trans);
+     debTranslationsParser TransParser(&Trans);
      if (_error->PendingError() == true)
        return false;
      
@@ -644,7 +660,7 @@ pkgCache::PkgFileIterator debStatusIndex::FindInCache(pkgCache &Cache) const
 // StatusIndex::Exists - Check if the index is available		/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-bool debStatusIndex::Exists() const
+APT_CONST bool debStatusIndex::Exists() const
 {
    // Abort if the file does not exist.
    return true;

@@ -19,19 +19,18 @@
 #include <apt-pkg/algorithms.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/configuration.h>
-#include <apt-pkg/version.h>
 #include <apt-pkg/sptr.h>
-#include <apt-pkg/acquire-item.h>
 #include <apt-pkg/edsp.h>
-#include <apt-pkg/sourcelist.h>
-#include <apt-pkg/fileutl.h>
 #include <apt-pkg/progress.h>
+#include <apt-pkg/depcache.h>
+#include <apt-pkg/packagemanager.h>
+#include <apt-pkg/pkgcache.h>
+#include <apt-pkg/cacheiterators.h>
 
-#include <sys/types.h>
+#include <string.h>
+#include <string>
 #include <cstdlib>
-#include <algorithm>
 #include <iostream>
-#include <stdio.h>
 
 #include <apti18n.h>
 									/*}}}*/
@@ -336,174 +335,6 @@ bool pkgFixBroken(pkgDepCache &Cache)
    return Fix.Resolve(true);
 }
 									/*}}}*/
-// DistUpgrade - Distribution upgrade					/*{{{*/
-// ---------------------------------------------------------------------
-/* This autoinstalls every package and then force installs every 
-   pre-existing package. This creates the initial set of conditions which 
-   most likely contain problems because too many things were installed.
-   
-   The problem resolver is used to resolve the problems.
- */
-bool pkgDistUpgrade(pkgDepCache &Cache)
-{
-   std::string const solver = _config->Find("APT::Solver", "internal");
-   if (solver != "internal") {
-      OpTextProgress Prog(*_config);
-      return EDSP::ResolveExternal(solver.c_str(), Cache, false, true, false, &Prog);
-   }
-
-   pkgDepCache::ActionGroup group(Cache);
-
-   /* Upgrade all installed packages first without autoinst to help the resolver
-      in versioned or-groups to upgrade the old solver instead of installing
-      a new one (if the old solver is not the first one [anymore]) */
-   for (pkgCache::PkgIterator I = Cache.PkgBegin(); I.end() == false; ++I)
-      if (I->CurrentVer != 0)
-	 Cache.MarkInstall(I, false, 0, false);
-
-   /* Auto upgrade all installed packages, this provides the basis 
-      for the installation */
-   for (pkgCache::PkgIterator I = Cache.PkgBegin(); I.end() == false; ++I)
-      if (I->CurrentVer != 0)
-	 Cache.MarkInstall(I, true, 0, false);
-
-   /* Now, install each essential package which is not installed
-      (and not provided by another package in the same name group) */
-   std::string essential = _config->Find("pkgCacheGen::Essential", "all");
-   if (essential == "all")
-   {
-      for (pkgCache::GrpIterator G = Cache.GrpBegin(); G.end() == false; ++G)
-      {
-	 bool isEssential = false;
-	 bool instEssential = false;
-	 for (pkgCache::PkgIterator P = G.PackageList(); P.end() == false; P = G.NextPkg(P))
-	 {
-	    if ((P->Flags & pkgCache::Flag::Essential) != pkgCache::Flag::Essential)
-	       continue;
-	    isEssential = true;
-	    if (Cache[P].Install() == true)
-	    {
-	       instEssential = true;
-	       break;
-	    }
-	 }
-	 if (isEssential == false || instEssential == true)
-	    continue;
-	 pkgCache::PkgIterator P = G.FindPreferredPkg();
-	 Cache.MarkInstall(P, true, 0, false);
-      }
-   }
-   else if (essential != "none")
-      for (pkgCache::PkgIterator I = Cache.PkgBegin(); I.end() == false; ++I)
-	 if ((I->Flags & pkgCache::Flag::Essential) == pkgCache::Flag::Essential)
-	    Cache.MarkInstall(I, true, 0, false);
-   
-   /* We do it again over all previously installed packages to force 
-      conflict resolution on them all. */
-   for (pkgCache::PkgIterator I = Cache.PkgBegin(); I.end() == false; ++I)
-      if (I->CurrentVer != 0)
-	 Cache.MarkInstall(I, false, 0, false);
-
-   pkgProblemResolver Fix(&Cache);
-
-   // Hold back held packages.
-   if (_config->FindB("APT::Ignore-Hold",false) == false)
-   {
-      for (pkgCache::PkgIterator I = Cache.PkgBegin(); I.end() == false; ++I)
-      {
-	 if (I->SelectedState == pkgCache::State::Hold)
-	 {
-	    Fix.Protect(I);
-	    Cache.MarkKeep(I, false, false);
-	 }
-      }
-   }
-   
-   return Fix.Resolve();
-}
-									/*}}}*/
-// AllUpgrade - Upgrade as many packages as possible			/*{{{*/
-// ---------------------------------------------------------------------
-/* Right now the system must be consistent before this can be called.
-   It also will not change packages marked for install, it only tries
-   to install packages not marked for install */
-bool pkgAllUpgrade(pkgDepCache &Cache)
-{
-   std::string const solver = _config->Find("APT::Solver", "internal");
-   if (solver != "internal") {
-      OpTextProgress Prog(*_config);
-      return EDSP::ResolveExternal(solver.c_str(), Cache, true, false, false, &Prog);
-   }
-
-   pkgDepCache::ActionGroup group(Cache);
-
-   pkgProblemResolver Fix(&Cache);
-
-   if (Cache.BrokenCount() != 0)
-      return false;
-   
-   // Upgrade all installed packages
-   for (pkgCache::PkgIterator I = Cache.PkgBegin(); I.end() == false; ++I)
-   {
-      if (Cache[I].Install() == true)
-	 Fix.Protect(I);
-	  
-      if (_config->FindB("APT::Ignore-Hold",false) == false)
-	 if (I->SelectedState == pkgCache::State::Hold)
-	    continue;
-      
-      if (I->CurrentVer != 0 && Cache[I].InstallVer != 0)
-	 Cache.MarkInstall(I, false, 0, false);
-   }
-      
-   return Fix.ResolveByKeep();
-}
-									/*}}}*/
-// MinimizeUpgrade - Minimizes the set of packages to be upgraded	/*{{{*/
-// ---------------------------------------------------------------------
-/* This simply goes over the entire set of packages and tries to keep 
-   each package marked for upgrade. If a conflict is generated then 
-   the package is restored. */
-bool pkgMinimizeUpgrade(pkgDepCache &Cache)
-{   
-   pkgDepCache::ActionGroup group(Cache);
-
-   if (Cache.BrokenCount() != 0)
-      return false;
-   
-   // We loop for 10 tries to get the minimal set size.
-   bool Change = false;
-   unsigned int Count = 0;
-   do
-   {
-      Change = false;
-      for (pkgCache::PkgIterator I = Cache.PkgBegin(); I.end() == false; ++I)
-      {
-	 // Not interesting
-	 if (Cache[I].Upgrade() == false || Cache[I].NewInstall() == true)
-	    continue;
-
-	 // Keep it and see if that is OK
-	 Cache.MarkKeep(I, false, false);
-	 if (Cache.BrokenCount() != 0)
-	    Cache.MarkInstall(I, false, 0, false);
-	 else
-	 {
-	    // If keep didnt actually do anything then there was no change..
-	    if (Cache[I].Upgrade() == false)
-	       Change = true;
-	 }	 
-      }      
-      ++Count;
-   }
-   while (Change == true && Count < 10);
-
-   if (Cache.BrokenCount() != 0)
-      return _error->Error("Internal Error in pkgMinimizeUpgrade");
-   
-   return true;
-}
-									/*}}}*/
 // ProblemResolver::pkgProblemResolver - Constructor			/*{{{*/
 // ---------------------------------------------------------------------
 /* */
@@ -550,33 +381,51 @@ void pkgProblemResolver::MakeScores()
    unsigned long Size = Cache.Head().PackageCount;
    memset(Scores,0,sizeof(*Scores)*Size);
 
-   // Important Required Standard Optional Extra
+   // maps to pkgCache::State::VerPriority: 
+   //    Required Important Standard Optional Extra
    int PrioMap[] = {
       0,
-      _config->FindI("pkgProblemResolver::Scores::Important",3),
-      _config->FindI("pkgProblemResolver::Scores::Required",2),
+      _config->FindI("pkgProblemResolver::Scores::Required",3),
+      _config->FindI("pkgProblemResolver::Scores::Important",2),
       _config->FindI("pkgProblemResolver::Scores::Standard",1),
       _config->FindI("pkgProblemResolver::Scores::Optional",-1),
       _config->FindI("pkgProblemResolver::Scores::Extra",-2)
    };
    int PrioEssentials = _config->FindI("pkgProblemResolver::Scores::Essentials",100);
    int PrioInstalledAndNotObsolete = _config->FindI("pkgProblemResolver::Scores::NotObsolete",1);
-   int PrioDepends = _config->FindI("pkgProblemResolver::Scores::Depends",1);
-   int PrioRecommends = _config->FindI("pkgProblemResolver::Scores::Recommends",1);
+   int DepMap[] = {
+      0,
+      _config->FindI("pkgProblemResolver::Scores::Depends",1),
+      _config->FindI("pkgProblemResolver::Scores::PreDepends",1),
+      _config->FindI("pkgProblemResolver::Scores::Suggests",0),
+      _config->FindI("pkgProblemResolver::Scores::Recommends",1),
+      _config->FindI("pkgProblemResolver::Scores::Conflicts",-1),
+      _config->FindI("pkgProblemResolver::Scores::Replaces",0),
+      _config->FindI("pkgProblemResolver::Scores::Obsoletes",0),
+      _config->FindI("pkgProblemResolver::Scores::Breaks",-1),
+      _config->FindI("pkgProblemResolver::Scores::Enhances",0)
+   };
    int AddProtected = _config->FindI("pkgProblemResolver::Scores::AddProtected",10000);
    int AddEssential = _config->FindI("pkgProblemResolver::Scores::AddEssential",5000);
 
    if (_config->FindB("Debug::pkgProblemResolver::ShowScores",false) == true)
       clog << "Settings used to calculate pkgProblemResolver::Scores::" << endl
-         << "  Important => " << PrioMap[1] << endl
-         << "  Required => " << PrioMap[2] << endl
-         << "  Standard => " << PrioMap[3] << endl
-         << "  Optional => " << PrioMap[4] << endl
-         << "  Extra => " << PrioMap[5] << endl
+         << "  Required => " << PrioMap[pkgCache::State::Required] << endl
+         << "  Important => " << PrioMap[pkgCache::State::Important] << endl
+         << "  Standard => " << PrioMap[pkgCache::State::Standard] << endl
+         << "  Optional => " << PrioMap[pkgCache::State::Optional] << endl
+         << "  Extra => " << PrioMap[pkgCache::State::Extra] << endl
          << "  Essentials => " << PrioEssentials << endl
          << "  InstalledAndNotObsolete => " << PrioInstalledAndNotObsolete << endl
-         << "  Depends => " << PrioDepends << endl
-         << "  Recommends => " << PrioRecommends << endl
+         << "  Pre-Depends => " << DepMap[pkgCache::Dep::PreDepends] << endl
+         << "  Depends => " << DepMap[pkgCache::Dep::Depends] << endl
+         << "  Recommends => " << DepMap[pkgCache::Dep::Recommends] << endl
+         << "  Suggests => " << DepMap[pkgCache::Dep::Suggests] << endl
+         << "  Conflicts => " << DepMap[pkgCache::Dep::Conflicts] << endl
+         << "  Breaks => " << DepMap[pkgCache::Dep::DpkgBreaks] << endl
+         << "  Replaces => " << DepMap[pkgCache::Dep::Replaces] << endl
+         << "  Obsoletes => " << DepMap[pkgCache::Dep::Obsoletes] << endl
+         << "  Enhances => " << DepMap[pkgCache::Dep::Enhances] << endl
          << "  AddProtected => " << AddProtected << endl
          << "  AddEssential => " << AddEssential << endl;
 
@@ -591,39 +440,41 @@ void pkgProblemResolver::MakeScores()
       /* This is arbitrary, it should be high enough to elevate an
          essantial package above most other packages but low enough
 	 to allow an obsolete essential packages to be removed by
-	 a conflicts on a powerfull normal package (ie libc6) */
+	 a conflicts on a powerful normal package (ie libc6) */
       if ((I->Flags & pkgCache::Flag::Essential) == pkgCache::Flag::Essential
 	  || (I->Flags & pkgCache::Flag::Important) == pkgCache::Flag::Important)
 	 Score += PrioEssentials;
 
-      // We transform the priority
-      if (Cache[I].InstVerIter(Cache)->Priority <= 5)
-	 Score += PrioMap[Cache[I].InstVerIter(Cache)->Priority];
-      
+      pkgCache::VerIterator const InstVer = Cache[I].InstVerIter(Cache);
+      // We apply priorities only to downloadable packages, all others are prio:extra
+      // as an obsolete prio:standard package can't be that standard anymore…
+      if (InstVer->Priority <= pkgCache::State::Extra && InstVer.Downloadable() == true)
+	 Score += PrioMap[InstVer->Priority];
+      else
+	 Score += PrioMap[pkgCache::State::Extra];
+
       /* This helps to fix oddball problems with conflicting packages
-         on the same level. We enhance the score of installed packages 
-	 if those are not obsolete
-      */
+	 on the same level. We enhance the score of installed packages
+	 if those are not obsolete */
       if (I->CurrentVer != 0 && Cache[I].CandidateVer != 0 && Cache[I].CandidateVerIter(Cache).Downloadable())
 	 Score += PrioInstalledAndNotObsolete;
+
+      // propagate score points along dependencies
+      for (pkgCache::DepIterator D = InstVer.DependsList(); D.end() == false; ++D)
+      {
+	 if (DepMap[D->Type] == 0)
+	    continue;
+	 pkgCache::PkgIterator const T = D.TargetPkg();
+	 if (D->Version != 0)
+	 {
+	    pkgCache::VerIterator const IV = Cache[T].InstVerIter(Cache);
+	    if (IV.end() == true || D.IsSatisfied(IV) != D.IsNegative())
+	       continue;
+	 }
+	 Scores[T->ID] += DepMap[D->Type];
+      }
    }
 
-   // Now that we have the base scores we go and propogate dependencies
-   for (pkgCache::PkgIterator I = Cache.PkgBegin(); I.end() == false; ++I)
-   {
-      if (Cache[I].InstallVer == 0)
-	 continue;
-      
-      for (pkgCache::DepIterator D = Cache[I].InstVerIter(Cache).DependsList(); D.end() == false; ++D)
-      {
-	 if (D->Type == pkgCache::Dep::Depends || 
-	     D->Type == pkgCache::Dep::PreDepends)
-	    Scores[D.TargetPkg()->ID] += PrioDepends;
-	 else if (D->Type == pkgCache::Dep::Recommends)
-	    Scores[D.TargetPkg()->ID] += PrioRecommends;
-      }
-   }   
-   
    // Copy the scores to advoid additive looping
    SPtrArray<int> OldScores = new int[Size];
    memcpy(OldScores,Scores,sizeof(*Scores)*Size);
@@ -652,7 +503,7 @@ void pkgProblemResolver::MakeScores()
       }      
    }
 
-   /* Now we propogate along provides. This makes the packages that 
+   /* Now we propagate along provides. This makes the packages that
       provide important packages extremely important */
    for (pkgCache::PkgIterator I = Cache.PkgBegin(); I.end() == false; ++I)
    {
@@ -807,7 +658,7 @@ bool pkgProblemResolver::Resolve(bool BrokenFix)
    adjusting the package will inflict. 
       
    It goes from highest score to lowest and corrects all of the breaks by 
-   keeping or removing the dependant packages. If that fails then it removes
+   keeping or removing the dependent packages. If that fails then it removes
    the package itself and goes on. The routine should be able to intelligently
    go from any broken state to a fixed state. 
  
@@ -842,8 +693,10 @@ bool pkgProblemResolver::ResolveInternal(bool const BrokenFix)
    }
    while (Again == true);
 
-   if (Debug == true)
-      clog << "Starting" << endl;
+   if (Debug == true) {
+      clog << "Starting pkgProblemResolver with broken count: " 
+           << Cache.BrokenCount() << endl;
+   }
    
    MakeScores();
 
@@ -871,8 +724,10 @@ bool pkgProblemResolver::ResolveInternal(bool const BrokenFix)
          }
    }
 
-   if (Debug == true)
-      clog << "Starting 2" << endl;
+   if (Debug == true) {
+      clog << "Starting 2 pkgProblemResolver with broken count: " 
+           << Cache.BrokenCount() << endl;
+   }
 
    /* Now consider all broken packages. For each broken package we either
       remove the package or fix it's problem. We do this once, it should
@@ -993,7 +848,7 @@ bool pkgProblemResolver::ResolveInternal(bool const BrokenFix)
 
 	    /* Look across the version list. If there are no possible
 	       targets then we keep the package and bail. This is necessary
-	       if a package has a dep on another package that cant be found */
+	       if a package has a dep on another package that can't be found */
 	    SPtrArray<pkgCache::Version *> VList = Start.AllTargets();
 	    if (*VList == 0 && (Flags[I->ID] & Protected) != Protected &&
 		Start.IsNegative() == false &&
@@ -1032,8 +887,8 @@ bool pkgProblemResolver::ResolveInternal(bool const BrokenFix)
                }
 
 	       if (Debug == true)
-		  clog << "  Considering " << Pkg.FullName(false) << ' ' << (int)Scores[Pkg->ID] <<
-		  " as a solution to " << I.FullName(false) << ' ' << (int)Scores[I->ID] << endl;
+		  clog << "  Considering " << Pkg.FullName(false) << ' ' << Scores[Pkg->ID] <<
+		  " as a solution to " << I.FullName(false) << ' ' << Scores[I->ID] << endl;
 
 	       /* Try to fix the package under consideration rather than
 	          fiddle with the VList package */
@@ -1346,7 +1201,7 @@ bool pkgProblemResolver::ResolveByKeepInternal()
          continue;
 
       /* Keep the package. If this works then great, otherwise we have
-       	 to be significantly more agressive and manipulate its dependencies */
+	 to be significantly more aggressive and manipulate its dependencies */
       if ((Flags[I->ID] & Protected) == 0)
       {
 	 if (Debug == true)
@@ -1437,9 +1292,11 @@ bool pkgProblemResolver::ResolveByKeepInternal()
    return true;
 }
 									/*}}}*/
-// ProblemResolver::InstallProtect - Install all protected packages	/*{{{*/
+// ProblemResolver::InstallProtect - deprecated cpu-eating no-op	/*{{{*/
 // ---------------------------------------------------------------------
-/* This is used to make sure protected packages are installed */
+/* Actions issued with FromUser bit set are protected from further
+   modification (expect by other calls with FromUser set) nowadays , so we
+   don't need to reissue actions here, they are already set in stone. */
 void pkgProblemResolver::InstallProtect()
 {
    pkgDepCache::ActionGroup group(Cache);
@@ -1496,104 +1353,5 @@ void pkgPrioSortList(pkgCache &Cache,pkgCache::Version **List)
    for (pkgCache::Version **I = List; *I != 0; I++)
       Count++;
    qsort(List,Count,sizeof(*List),PrioComp);
-}
-									/*}}}*/
-// ListUpdate - construct Fetcher and update the cache files		/*{{{*/
-// ---------------------------------------------------------------------
-/* This is a simple wrapper to update the cache. it will fetch stuff
- * from the network (or any other sources defined in sources.list)
- */
-bool ListUpdate(pkgAcquireStatus &Stat, 
-		pkgSourceList &List, 
-		int PulseInterval)
-{
-   pkgAcquire Fetcher;
-   if (Fetcher.Setup(&Stat, _config->FindDir("Dir::State::Lists")) == false)
-      return false;
-
-   // Populate it with the source selection
-   if (List.GetIndexes(&Fetcher) == false)
-	 return false;
-
-   return AcquireUpdate(Fetcher, PulseInterval, true);
-}
-									/*}}}*/
-// AcquireUpdate - take Fetcher and update the cache files		/*{{{*/
-// ---------------------------------------------------------------------
-/* This is a simple wrapper to update the cache with a provided acquire
- * If you only need control over Status and the used SourcesList use
- * ListUpdate method instead.
- */
-bool AcquireUpdate(pkgAcquire &Fetcher, int const PulseInterval,
-		   bool const RunUpdateScripts, bool const ListCleanup)
-{
-   // Run scripts
-   if (RunUpdateScripts == true)
-      RunScripts("APT::Update::Pre-Invoke");
-
-   pkgAcquire::RunResult res;
-   if(PulseInterval > 0)
-      res = Fetcher.Run(PulseInterval);
-   else
-      res = Fetcher.Run();
-
-   if (res == pkgAcquire::Failed)
-      return false;
-
-   bool Failed = false;
-   bool TransientNetworkFailure = false;
-   for (pkgAcquire::ItemIterator I = Fetcher.ItemsBegin(); 
-	I != Fetcher.ItemsEnd(); ++I)
-   {
-      if ((*I)->Status == pkgAcquire::Item::StatDone)
-	 continue;
-
-      (*I)->Finished();
-
-      ::URI uri((*I)->DescURI());
-      uri.User.clear();
-      uri.Password.clear();
-      string descUri = string(uri);
-      _error->Warning(_("Failed to fetch %s  %s\n"), descUri.c_str(),
-	      (*I)->ErrorText.c_str());
-
-      if ((*I)->Status == pkgAcquire::Item::StatTransientNetworkError) 
-      {
-	 TransientNetworkFailure = true;
-	 continue;
-      }
-
-      Failed = true;
-   }
-   
-   // Clean out any old list files
-   // Keep "APT::Get::List-Cleanup" name for compatibility, but
-   // this is really a global option for the APT library now
-   if (!TransientNetworkFailure && !Failed && ListCleanup == true &&
-       (_config->FindB("APT::Get::List-Cleanup",true) == true &&
-	_config->FindB("APT::List-Cleanup",true) == true))
-   {
-      if (Fetcher.Clean(_config->FindDir("Dir::State::lists")) == false ||
-	  Fetcher.Clean(_config->FindDir("Dir::State::lists") + "partial/") == false)
-	 // something went wrong with the clean
-	 return false;
-   }
-   
-   if (TransientNetworkFailure == true)
-      _error->Warning(_("Some index files failed to download. They have been ignored, or old ones used instead."));
-   else if (Failed == true)
-      return _error->Error(_("Some index files failed to download. They have been ignored, or old ones used instead."));
-
-
-   // Run the success scripts if all was fine
-   if (RunUpdateScripts == true)
-   {
-      if(!TransientNetworkFailure && !Failed)
-	 RunScripts("APT::Update::Post-Invoke-Success");
-
-      // Run the other scripts
-      RunScripts("APT::Update::Post-Invoke");
-   }
-   return true;
 }
 									/*}}}*/

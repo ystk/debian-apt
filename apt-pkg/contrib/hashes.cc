@@ -16,8 +16,12 @@
 #include <apt-pkg/hashes.h>
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/configuration.h>
-#include <apt-pkg/macros.h>
+#include <apt-pkg/md5.h>
+#include <apt-pkg/sha1.h>
+#include <apt-pkg/sha2.h>
 
+#include <stddef.h>
+#include <algorithm>
 #include <unistd.h>
 #include <string>
 #include <iostream>
@@ -55,6 +59,26 @@ HashString::HashString(std::string StringedHash)			/*{{{*/
 									/*}}}*/
 bool HashString::VerifyFile(std::string filename) const			/*{{{*/
 {
+   std::string fileHash = GetHashForFile(filename);
+
+   if(_config->FindB("Debug::Hashes",false) == true)
+      std::clog << "HashString::VerifyFile: got: " << fileHash << " expected: " << toStr() << std::endl;
+
+   return (fileHash == Hash);
+}
+									/*}}}*/
+bool HashString::FromFile(std::string filename)          		/*{{{*/
+{
+   // pick the strongest hash
+   if (Type == "")
+      Type = _SupportedHashes[0];
+
+   Hash = GetHashForFile(filename);
+   return true;
+}
+									/*}}}*/
+std::string HashString::GetHashForFile(std::string filename) const      /*{{{*/
+{
    std::string fileHash;
 
    FileFd Fd(filename, FileFd::ReadOnly);
@@ -84,10 +108,7 @@ bool HashString::VerifyFile(std::string filename) const			/*{{{*/
    }
    Fd.Close();
 
-   if(_config->FindB("Debug::Hashes",false) == true)
-      std::clog << "HashString::VerifyFile: got: " << fileHash << " expected: " << toStr() << std::endl;
-
-   return (fileHash == Hash);
+   return fileHash;
 }
 									/*}}}*/
 const char** HashString::SupportedHashes()
@@ -95,7 +116,7 @@ const char** HashString::SupportedHashes()
    return _SupportedHashes;
 }
 
-bool HashString::empty() const
+APT_PURE bool HashString::empty() const
 {
    return (Type.empty() || Hash.empty());
 }
@@ -112,13 +133,12 @@ bool Hashes::AddFD(int const Fd,unsigned long long Size, bool const addMD5,
 		   bool const addSHA1, bool const addSHA256, bool const addSHA512)
 {
    unsigned char Buf[64*64];
-   ssize_t Res = 0;
-   int ToEOF = (Size == 0);
+   bool const ToEOF = (Size == UntilEOF);
    while (Size != 0 || ToEOF)
    {
       unsigned long long n = sizeof(Buf);
       if (!ToEOF) n = std::min(Size, n);
-      Res = read(Fd,Buf,n);
+      ssize_t const Res = read(Fd,Buf,n);
       if (Res < 0 || (!ToEOF && Res != (ssize_t) n)) // error, or short read
 	 return false;
       if (ToEOF && Res == 0) // EOF

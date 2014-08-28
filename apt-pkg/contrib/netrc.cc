@@ -15,14 +15,13 @@
 
 #include <apt-pkg/configuration.h>
 #include <apt-pkg/strutl.h>
-#include <apt-pkg/error.h>
-#include <apt-pkg/fileutl.h>
 
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stddef.h>
 #include <pwd.h>
 
 #include "netrc.h"
@@ -50,14 +49,10 @@ static int parsenetrc_string (char *host, std::string &login, std::string &passw
   FILE *file;
   int retcode = 1;
   int specific_login = (login.empty() == false);
-  char *home = NULL;
   bool netrc_alloc = false;
 
-  int state_our_login = false;  /* With specific_login,
-                                   found *our* login name */
-
   if (!netrcfile) {
-    home = getenv ("HOME"); /* portable environment reader */
+    char const * home = getenv ("HOME"); /* portable environment reader */
 
     if (!home) {
       struct passwd *pw;
@@ -86,6 +81,8 @@ static int parsenetrc_string (char *host, std::string &login, std::string &passw
     int state = NOTHING;
     char state_login = 0;        /* Found a login keyword */
     char state_password = 0;     /* Found a password keyword */
+    int state_our_login = false;  /* With specific_login,
+				     found *our* login name */
 
     while (!done && getline(&netrcbuffer, &netrcbuffer_size, file) != -1) {
       tok = strtok_r (netrcbuffer, " \t\n", &tok_buf);
@@ -200,7 +197,7 @@ void maybe_add_auth (URI &Uri, string NetRCFile)
       // if host did not work, try Host+Path next, this will trigger
       // a lookup uri.startswith(host) in the netrc file parser (because
       // of the "/"
-      char *hostpath = strdup(string(Uri.Host+Uri.Path).c_str());
+      char *hostpath = strdup((Uri.Host + Uri.Path).c_str());
       if (hostpath && parsenetrc_string(hostpath, login, password, netrcfile) == 0)
       {
 	 if (_config->FindB("Debug::Acquire::netrc", false) == true)

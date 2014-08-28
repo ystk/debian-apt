@@ -8,7 +8,7 @@
    Please see doc/apt-pkg/cache.sgml for a more detailed description of 
    this format. Also be sure to keep that file up-to-date!!
    
-   This is the general utility functions for cache managment. They provide
+   This is the general utility functions for cache management. They provide
    a complete set of accessor functions for the cache. The cacheiterators
    header contains the STL-like iterators that can be used to easially
    navigate the cache as well as seemlessly dereference the mmap'd 
@@ -29,12 +29,15 @@
 #include <apt-pkg/strutl.h>
 #include <apt-pkg/configuration.h>
 #include <apt-pkg/aptconfiguration.h>
+#include <apt-pkg/mmap.h>
 #include <apt-pkg/macros.h>
 
+#include <stddef.h>
+#include <string.h>
+#include <ostream>
+#include <vector>
 #include <string>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <ctype.h>
 
 #include <apti18n.h>
 									/*}}}*/
@@ -52,7 +55,11 @@ pkgCache::Header::Header()
    /* Whenever the structures change the major version should be bumped,
       whenever the generator changes the minor version should be bumped. */
    MajorVersion = 8;
-   MinorVersion = 0;
+#if (APT_PKG_MAJOR >= 4 && APT_PKG_MINOR >= 13)
+   MinorVersion = 2;
+#else
+   MinorVersion = 1;
+#endif
    Dirty = false;
    
    HeaderSz = sizeof(pkgCache::Header);
@@ -182,18 +189,17 @@ unsigned long pkgCache::sHash(const string &Str) const
 {
    unsigned long Hash = 0;
    for (string::const_iterator I = Str.begin(); I != Str.end(); ++I)
-      Hash = 5*Hash + tolower_ascii(*I);
+      Hash = 41 * Hash + tolower_ascii(*I);
    return Hash % _count(HeaderP->PkgHashTable);
 }
 
 unsigned long pkgCache::sHash(const char *Str) const
 {
-   unsigned long Hash = 0;
-   for (const char *I = Str; *I != 0; ++I)
-      Hash = 5*Hash + tolower_ascii(*I);
+   unsigned long Hash = tolower_ascii(*Str);
+   for (const char *I = Str + 1; *I != 0; ++I)
+      Hash = 41 * Hash + tolower_ascii(*I);
    return Hash % _count(HeaderP->PkgHashTable);
 }
-
 									/*}}}*/
 // Cache::SingleArchFindPkg - Locate a package by name			/*{{{*/
 // ---------------------------------------------------------------------
@@ -206,9 +212,14 @@ pkgCache::PkgIterator pkgCache::SingleArchFindPkg(const string &Name)
    Package *Pkg = PkgP + HeaderP->PkgHashTable[Hash(Name)];
    for (; Pkg != PkgP; Pkg = PkgP + Pkg->NextPackage)
    {
-      if (Pkg->Name != 0 && StrP[Pkg->Name] == Name[0] &&
-          stringcasecmp(Name,StrP + Pkg->Name) == 0)
-         return PkgIterator(*this,Pkg);
+      if (unlikely(Pkg->Name == 0))
+	 continue;
+
+      int const cmp = strcasecmp(Name.c_str(), StrP + Pkg->Name);
+      if (cmp == 0)
+	 return PkgIterator(*this, Pkg);
+      else if (cmp < 0)
+	 break;
    }
    return PkgIterator(*this,0);
 }
@@ -265,9 +276,14 @@ pkgCache::GrpIterator pkgCache::FindGrp(const string &Name) {
 	// Look at the hash bucket for the group
 	Group *Grp = GrpP + HeaderP->GrpHashTable[sHash(Name)];
 	for (; Grp != GrpP; Grp = GrpP + Grp->Next) {
-		if (Grp->Name != 0 && StrP[Grp->Name] == Name[0] &&
-		    stringcasecmp(Name, StrP + Grp->Name) == 0)
+		if (unlikely(Grp->Name == 0))
+		   continue;
+
+		int const cmp = strcasecmp(Name.c_str(), StrP + Grp->Name);
+		if (cmp == 0)
 			return GrpIterator(*this, Grp);
+		else if (cmp < 0)
+			break;
 	}
 
 	return GrpIterator(*this,0);
@@ -279,22 +295,22 @@ pkgCache::GrpIterator pkgCache::FindGrp(const string &Name) {
    type in the weird debian style.. */
 const char *pkgCache::CompTypeDeb(unsigned char Comp)
 {
-   const char *Ops[] = {"","<=",">=","<<",">>","=","!="};
-   if ((unsigned)(Comp & 0xF) < 7)
-      return Ops[Comp & 0xF];
-   return "";	 
+   const char * const Ops[] = {"","<=",">=","<<",">>","=","!="};
+   if (unlikely((unsigned)(Comp & 0xF) >= sizeof(Ops)/sizeof(Ops[0])))
+      return "";
+   return Ops[Comp & 0xF];
 }
 									/*}}}*/
 // Cache::CompType - Return a string describing the compare type	/*{{{*/
 // ---------------------------------------------------------------------
-/* This returns a string representation of the dependency compare 
+/* This returns a string representation of the dependency compare
    type */
 const char *pkgCache::CompType(unsigned char Comp)
 {
-   const char *Ops[] = {"","<=",">=","<",">","=","!="};
-   if ((unsigned)(Comp & 0xF) < 7)
-      return Ops[Comp & 0xF];
-   return "";	 
+   const char * const Ops[] = {"","<=",">=","<",">","=","!="};
+   if (unlikely((unsigned)(Comp & 0xF) >= sizeof(Ops)/sizeof(Ops[0])))
+      return "";
+   return Ops[Comp & 0xF];
 }
 									/*}}}*/
 // Cache::DepType - Return a string describing the dep type		/*{{{*/
@@ -405,7 +421,7 @@ pkgCache::PkgIterator pkgCache::GrpIterator::NextPkg(pkgCache::PkgIterator const
 // GrpIterator::operator ++ - Postfix incr				/*{{{*/
 // ---------------------------------------------------------------------
 /* This will advance to the next logical group in the hash table. */
-void pkgCache::GrpIterator::operator ++(int) 
+void pkgCache::GrpIterator::operator ++(int)
 {
    // Follow the current links
    if (S != Owner->GrpP)
@@ -417,12 +433,12 @@ void pkgCache::GrpIterator::operator ++(int)
       HashIndex++;
       S = Owner->GrpP + Owner->HeaderP->GrpHashTable[HashIndex];
    }
-};
+}
 									/*}}}*/
 // PkgIterator::operator ++ - Postfix incr				/*{{{*/
 // ---------------------------------------------------------------------
 /* This will advance to the next logical package in the hash table. */
-void pkgCache::PkgIterator::operator ++(int) 
+void pkgCache::PkgIterator::operator ++(int)
 {
    // Follow the current links
    if (S != Owner->PkgP)
@@ -434,7 +450,7 @@ void pkgCache::PkgIterator::operator ++(int)
       HashIndex++;
       S = Owner->PkgP + Owner->HeaderP->PkgHashTable[HashIndex];
    }
-};
+}
 									/*}}}*/
 // PkgIterator::State - Check the State of the package			/*{{{*/
 // ---------------------------------------------------------------------
@@ -466,31 +482,31 @@ pkgCache::PkgIterator::OkState pkgCache::PkgIterator::State() const
 // ---------------------------------------------------------------------
 /* Return string representing of the candidate version. */
 const char *
-pkgCache::PkgIterator::CandVersion() const 
+pkgCache::PkgIterator::CandVersion() const
 {
   //TargetVer is empty, so don't use it.
   VerIterator version = pkgPolicy(Owner).GetCandidateVer(*this);
   if (version.IsGood())
     return version.VerStr();
   return 0;
-};
+}
 									/*}}}*/
 // PkgIterator::CurVersion - Returns the current version string		/*{{{*/
 // ---------------------------------------------------------------------
 /* Return string representing of the current version. */
 const char *
-pkgCache::PkgIterator::CurVersion() const 
+pkgCache::PkgIterator::CurVersion() const
 {
   VerIterator version = CurrentVer();
   if (version.IsGood())
     return CurrentVer().VerStr();
   return 0;
-};
+}
 									/*}}}*/
 // ostream operator to handle string representation of a package	/*{{{*/
 // ---------------------------------------------------------------------
 /* Output name < cur.rent.version -> candid.ate.version | new.est.version > (section)
-   Note that the characters <|>() are all literal above. Versions will be ommited
+   Note that the characters <|>() are all literal above. Versions will be omitted
    if they provide no new information (e.g. there is no newer version than candidate)
    If no version and/or section can be found "none" is used. */
 std::ostream& 
@@ -625,8 +641,7 @@ pkgCache::Version **pkgCache::DepIterator::AllTargets() const
       {
 	 if (IsIgnorable(I.ParentPkg()) == true)
 	    continue;
-
-	 if (Owner->VS->CheckDep(I.VerStr(),S->CompareOp,TargetVer()) == false)
+	 if (IsSatisfied(I) == false)
 	    continue;
 
 	 Size++;
@@ -639,8 +654,7 @@ pkgCache::Version **pkgCache::DepIterator::AllTargets() const
       {
 	 if (IsIgnorable(I) == true)
 	    continue;
-
-	 if (Owner->VS->CheckDep(I.ProvideVersion(),S->CompareOp,TargetVer()) == false)
+	 if (IsSatisfied(I) == false)
 	    continue;
 
 	 Size++;
@@ -688,7 +702,7 @@ void pkgCache::DepIterator::GlobOr(DepIterator &Start,DepIterator &End)
 // ---------------------------------------------------------------------
 /* Deps like self-conflicts should be ignored as well as implicit conflicts
    on virtual packages. */
-bool pkgCache::DepIterator::IsIgnorable(PkgIterator const &Pkg) const
+bool pkgCache::DepIterator::IsIgnorable(PkgIterator const &/*Pkg*/) const
 {
    if (IsNegative() == false)
       return false;
@@ -748,6 +762,16 @@ bool pkgCache::DepIterator::IsMultiArchImplicit() const
    return false;
 }
 									/*}}}*/
+// DepIterator::IsSatisfied - check if a version satisfied the dependency /*{{{*/
+bool pkgCache::DepIterator::IsSatisfied(VerIterator const &Ver) const
+{
+   return Owner->VS->CheckDep(Ver.VerStr(),S->CompareOp,TargetVer());
+}
+bool pkgCache::DepIterator::IsSatisfied(PrvIterator const &Prv) const
+{
+   return Owner->VS->CheckDep(Prv.ProvideVersion(),S->CompareOp,TargetVer());
+}
+									/*}}}*/
 // ostream operator to handle string representation of a dependecy	/*{{{*/
 // ---------------------------------------------------------------------
 /* */
@@ -798,7 +822,7 @@ int pkgCache::VerIterator::CompareVer(const VerIterator &B) const
 // VerIterator::Downloadable - Checks if the version is downloadable	/*{{{*/
 // ---------------------------------------------------------------------
 /* */
-bool pkgCache::VerIterator::Downloadable() const
+APT_PURE bool pkgCache::VerIterator::Downloadable() const
 {
    VerFileIterator Files = FileList();
    for (; Files.end() == false; ++Files)
@@ -811,7 +835,7 @@ bool pkgCache::VerIterator::Downloadable() const
 // ---------------------------------------------------------------------
 /* This checks to see if any of the versions files are not NotAutomatic. 
    True if this version is selectable for automatic installation. */
-bool pkgCache::VerIterator::Automatic() const
+APT_PURE bool pkgCache::VerIterator::Automatic() const
 {
    VerFileIterator Files = FileList();
    for (; Files.end() == false; ++Files)
@@ -907,6 +931,18 @@ string pkgCache::VerIterator::RelStr() const
    return Res;
 }
 									/*}}}*/
+// VerIterator::MultiArchType - string representing MultiArch flag	/*{{{*/
+const char * pkgCache::VerIterator::MultiArchType() const
+{
+   if ((S->MultiArch & pkgCache::Version::Same) == pkgCache::Version::Same)
+      return "same";
+   else if ((S->MultiArch & pkgCache::Version::Foreign) == pkgCache::Version::Foreign)
+      return "foreign";
+   else if ((S->MultiArch & pkgCache::Version::Allowed) == pkgCache::Version::Allowed)
+      return "allowed";
+   return "none";
+}
+									/*}}}*/
 // PkgFileIterator::IsOk - Checks if the cache is in sync with the file	/*{{{*/
 // ---------------------------------------------------------------------
 /* This stats the file and compares its stats with the ones that were
@@ -949,7 +985,7 @@ string pkgCache::PkgFileIterator::RelStr()
 									/*}}}*/
 // VerIterator::TranslatedDescription - Return the a DescIter for locale/*{{{*/
 // ---------------------------------------------------------------------
-/* return a DescIter for the current locale or the default if none is 
+/* return a DescIter for the current locale or the default if none is
  * found
  */
 pkgCache::DescIterator pkgCache::VerIterator::TranslatedDescription() const
@@ -983,7 +1019,7 @@ pkgCache::DescIterator pkgCache::VerIterator::TranslatedDescription() const
       if (strcmp(Desc.LanguageCode(), "") == 0)
 	 return Desc;
    return DescriptionList();
-};
+}
 
 									/*}}}*/
 // PrvIterator::IsMultiArchImplicit - added by the cache generation	/*{{{*/
