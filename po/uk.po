@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt-all\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-06-12 15:48+0200\n"
+"POT-Creation-Date: 2014-09-16 13:43+0200\n"
 "PO-Revision-Date: 2006-07-29 15:57+0300\n"
 "Last-Translator: Artem Bondarenko <artem.brz@gmail.com>\n"
 "Language-Team: Українська <uk@li.org>\n"
@@ -1832,13 +1832,13 @@ msgstr "Неможливо відкрити канал (pipe) для %s"
 msgid "Read error from %s process"
 msgstr "Помилка читання з процесу %s"
 
-#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:43
+#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:60
 #: methods/gzip.cc:93 methods/gzip.cc:102 methods/rred.cc:486
 #: methods/rred.cc:495
 msgid "Failed to stat"
 msgstr "Не вдалося одержати атрибути"
 
-#: methods/bzip2.cc:147 methods/copy.cc:80 methods/gzip.cc:99
+#: methods/bzip2.cc:147 methods/copy.cc:105 methods/gzip.cc:99
 #: methods/rred.cc:492
 msgid "Failed to set modification time"
 msgstr "Не вдалося встановити час модифікації"
@@ -2935,13 +2935,13 @@ msgstr "Не вдалося перейменувати, %s (%s -> %s)."
 msgid "MD5Sum mismatch"
 msgstr "Невідповідність MD5Sum"
 
-#: apt-pkg/acquire-item.cc:746 apt-pkg/acquire-item.cc:1574
-#: apt-pkg/acquire-item.cc:1717
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
+#: apt-pkg/acquire-item.cc:1772
 #, fuzzy
 msgid "Hash Sum mismatch"
 msgstr "Невідповідність MD5Sum"
 
-#: apt-pkg/acquire-item.cc:1244
+#: apt-pkg/acquire-item.cc:1299
 #, fuzzy
 msgid "There is no public key available for the following key IDs:\n"
 msgstr "Відсутній публічний ключ для заданих ID ключа:\n"
@@ -2949,29 +2949,29 @@ msgstr "Відсутній публічний ключ для заданих ID 
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1281
+#: apt-pkg/acquire-item.cc:1336
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1302
+#: apt-pkg/acquire-item.cc:1357
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1328
+#: apt-pkg/acquire-item.cc:1383
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
 "updated and the previous index files will be used. GPG error: %s: %s\n"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1337
+#: apt-pkg/acquire-item.cc:1392
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1365
+#: apt-pkg/acquire-item.cc:1420
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -2980,7 +2980,7 @@ msgstr ""
 "Я не можу знайти файл для пакунку %s. Можливо, Ви захочете власноруч "
 "виправити цей пакунок. (due to missing arch)"
 
-#: apt-pkg/acquire-item.cc:1424
+#: apt-pkg/acquire-item.cc:1479
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -2989,14 +2989,14 @@ msgstr ""
 "Я не можу знайти файл для пакунку %s. Можливо, Ви захочете власноруч "
 "виправити цей пакунок."
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1534
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
 msgstr ""
 "Індексні файли пакунків пошкоджені. Немає поля Filename для пакунку %s."
 
-#: apt-pkg/acquire-item.cc:1566
+#: apt-pkg/acquire-item.cc:1621
 msgid "Size mismatch"
 msgstr "Невідповідність розміру"
 

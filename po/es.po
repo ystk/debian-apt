@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt 0.8.10\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-06-12 15:48+0200\n"
+"POT-Creation-Date: 2014-09-16 13:43+0200\n"
 "PO-Revision-Date: 2011-01-24 11:47+0100\n"
 "Last-Translator: Javier Fernández-Sanguino Peña <jfs@debian.org>\n"
 "Language-Team: Debian Spanish <debian-l10n-spanish@lists.debian.org>\n"
@@ -1895,13 +1895,13 @@ msgstr "No pude abrir una tubería para %s"
 msgid "Read error from %s process"
 msgstr "Error de lectura de %s procesos"
 
-#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:43
+#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:60
 #: methods/gzip.cc:93 methods/gzip.cc:102 methods/rred.cc:486
 #: methods/rred.cc:495
 msgid "Failed to stat"
 msgstr "No pude leer"
 
-#: methods/bzip2.cc:147 methods/copy.cc:80 methods/gzip.cc:99
+#: methods/bzip2.cc:147 methods/copy.cc:105 methods/gzip.cc:99
 #: methods/rred.cc:492
 msgid "Failed to set modification time"
 msgstr "No pude poner el tiempo de modificación"
@@ -3009,12 +3009,12 @@ msgstr "falló el cambio de nombre, %s (%s -> %s)."
 msgid "MD5Sum mismatch"
 msgstr "La suma MD5 difiere"
 
-#: apt-pkg/acquire-item.cc:746 apt-pkg/acquire-item.cc:1574
-#: apt-pkg/acquire-item.cc:1717
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
+#: apt-pkg/acquire-item.cc:1772
 msgid "Hash Sum mismatch"
 msgstr "La suma hash difiere"
 
-#: apt-pkg/acquire-item.cc:1244
+#: apt-pkg/acquire-item.cc:1299
 msgid "There is no public key available for the following key IDs:\n"
 msgstr ""
 "No existe ninguna clave pública disponible para los siguientes "
@@ -3023,18 +3023,18 @@ msgstr ""
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1281
+#: apt-pkg/acquire-item.cc:1336
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr ""
 "El archivo «Release» ha expirado, ignorando %s (inválido desde hace %s)"
 
-#: apt-pkg/acquire-item.cc:1302
+#: apt-pkg/acquire-item.cc:1357
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr "Distribución conflictiva: %s (se esperaba %s, pero se obtuvo %s)"
 
-#: apt-pkg/acquire-item.cc:1328
+#: apt-pkg/acquire-item.cc:1383
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
@@ -3044,12 +3044,12 @@ msgstr ""
 "está actualizado y se utilizarán los ficheros de índice antiguos. El error "
 "GPG es: %s: %s\n"
 
-#: apt-pkg/acquire-item.cc:1337
+#: apt-pkg/acquire-item.cc:1392
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr "Error de GPG: %s: %s"
 
-#: apt-pkg/acquire-item.cc:1365
+#: apt-pkg/acquire-item.cc:1420
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -3059,7 +3059,7 @@ msgstr ""
 "que necesita arreglar manualmente este paquete (debido a que falta una "
 "arquitectura)"
 
-#: apt-pkg/acquire-item.cc:1424
+#: apt-pkg/acquire-item.cc:1479
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -3068,7 +3068,7 @@ msgstr ""
 "No se pudo localizar un archivo para el paquete %s. Esto puede significar "
 "que necesita arreglar manualmente este paquete."
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1534
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
@@ -3076,7 +3076,7 @@ msgstr ""
 "Los archivos de índice de paquetes están dañados. No existe un campo "
 "«Filename:» para el paquete %s."
 
-#: apt-pkg/acquire-item.cc:1566
+#: apt-pkg/acquire-item.cc:1621
 msgid "Size mismatch"
 msgstr "El tamaño difiere"
 

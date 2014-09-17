@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt 0.8.0~pre1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-06-12 15:48+0200\n"
+"POT-Creation-Date: 2014-09-16 13:43+0200\n"
 "PO-Revision-Date: 2010-08-24 21:35+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
@@ -1846,13 +1846,13 @@ msgstr "Не удалось открыть канал для %s"
 msgid "Read error from %s process"
 msgstr "Ошибка чтения из процесса %s"
 
-#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:43
+#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:60
 #: methods/gzip.cc:93 methods/gzip.cc:102 methods/rred.cc:486
 #: methods/rred.cc:495
 msgid "Failed to stat"
 msgstr "Не удалось получить атрибуты"
 
-#: methods/bzip2.cc:147 methods/copy.cc:80 methods/gzip.cc:99
+#: methods/bzip2.cc:147 methods/copy.cc:105 methods/gzip.cc:99
 #: methods/rred.cc:492
 msgid "Failed to set modification time"
 msgstr "Не удалось установить время модификации"
@@ -2954,29 +2954,29 @@ msgstr "переименовать не удалось, %s (%s -> %s)."
 msgid "MD5Sum mismatch"
 msgstr "MD5Sum не совпадает"
 
-#: apt-pkg/acquire-item.cc:746 apt-pkg/acquire-item.cc:1574
-#: apt-pkg/acquire-item.cc:1717
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
+#: apt-pkg/acquire-item.cc:1772
 msgid "Hash Sum mismatch"
 msgstr "Хеш сумма не совпадает"
 
-#: apt-pkg/acquire-item.cc:1244
+#: apt-pkg/acquire-item.cc:1299
 msgid "There is no public key available for the following key IDs:\n"
 msgstr "Недоступен открытый ключ для следующих ID ключей:\n"
 
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1281
+#: apt-pkg/acquire-item.cc:1336
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr "Файл Release просрочен, игнорируется %s (недостоверный начиная с %s)"
 
-#: apt-pkg/acquire-item.cc:1302
+#: apt-pkg/acquire-item.cc:1357
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr "Конфликт распространения: %s (ожидался %s, но получен %s)"
 
-#: apt-pkg/acquire-item.cc:1328
+#: apt-pkg/acquire-item.cc:1383
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
@@ -2985,12 +2985,12 @@ msgstr ""
 "Произошла ошибка при проверке подписи. Репозиторий не обновлён и будут "
 "использованы предыдущие индексные файлы. Ошибка GPG: %s: %s\n"
 
-#: apt-pkg/acquire-item.cc:1337
+#: apt-pkg/acquire-item.cc:1392
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr "Ошибка GPG: %s: %s"
 
-#: apt-pkg/acquire-item.cc:1365
+#: apt-pkg/acquire-item.cc:1420
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -2999,7 +2999,7 @@ msgstr ""
 "Не удалось обнаружить файл пакета %s. Это может означать, что вам придётся "
 "вручную исправить этот пакет (возможно, пропущен arch)"
 
-#: apt-pkg/acquire-item.cc:1424
+#: apt-pkg/acquire-item.cc:1479
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -3008,13 +3008,13 @@ msgstr ""
 "Не удалось обнаружить файл пакета %s. Это может означать, что вам придётся "
 "вручную исправить этот пакет."
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1534
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
 msgstr "Некорректный перечень пакетов. Нет поля Filename: для пакета %s."
 
-#: apt-pkg/acquire-item.cc:1566
+#: apt-pkg/acquire-item.cc:1621
 msgid "Size mismatch"
 msgstr "Не совпадает размер"
 

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-06-12 15:48+0200\n"
+"POT-Creation-Date: 2014-09-16 13:43+0200\n"
 "PO-Revision-Date: 2010-08-30 02:31+0900\n"
 "Last-Translator: Changwoo Ryu <cwryu@debian.org>\n"
 "Language-Team: Korean <debian-l10n-korean@lists.debian.org>\n"
@@ -1800,13 +1800,13 @@ msgstr "%s에 대한 파이프를 열 수 없습니다"
 msgid "Read error from %s process"
 msgstr "%s 프로세스에서 읽는데 오류가 발생했습니다"
 
-#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:43
+#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:60
 #: methods/gzip.cc:93 methods/gzip.cc:102 methods/rred.cc:486
 #: methods/rred.cc:495
 msgid "Failed to stat"
 msgstr "파일 정보를 읽는데 실패했습니다"
 
-#: methods/bzip2.cc:147 methods/copy.cc:80 methods/gzip.cc:99
+#: methods/bzip2.cc:147 methods/copy.cc:105 methods/gzip.cc:99
 #: methods/rred.cc:492
 msgid "Failed to set modification time"
 msgstr "파일 변경 시각을 설정하는데 실패했습니다"
@@ -2884,29 +2884,29 @@ msgstr "이름 바꾸기가 실패했습니다. %s (%s -> %s)."
 msgid "MD5Sum mismatch"
 msgstr "MD5Sum이 맞지 않습니다"
 
-#: apt-pkg/acquire-item.cc:746 apt-pkg/acquire-item.cc:1574
-#: apt-pkg/acquire-item.cc:1717
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
+#: apt-pkg/acquire-item.cc:1772
 msgid "Hash Sum mismatch"
 msgstr "해시 합이 맞지 않습니다"
 
-#: apt-pkg/acquire-item.cc:1244
+#: apt-pkg/acquire-item.cc:1299
 msgid "There is no public key available for the following key IDs:\n"
 msgstr "다음 키 ID의 공개키가 없습니다:\n"
 
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1281
+#: apt-pkg/acquire-item.cc:1336
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr "Release 파일이 만료되었습니다. %s 무시. (%s 이후로 무효)"
 
-#: apt-pkg/acquire-item.cc:1302
+#: apt-pkg/acquire-item.cc:1357
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr "배포판 충돌: %s (예상값 %s, 실제값 %s)"
 
-#: apt-pkg/acquire-item.cc:1328
+#: apt-pkg/acquire-item.cc:1383
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
@@ -2915,12 +2915,12 @@ msgstr ""
 "디지털 서명 확인에 오류가 발생했습니다. 저장고를 업데이트하지 않고\n"
 "예전의 인덱스 파일을 사용합니다. GPG 오류: %s: %s\n"
 
-#: apt-pkg/acquire-item.cc:1337
+#: apt-pkg/acquire-item.cc:1392
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr "GPG 오류: %s: %s"
 
-#: apt-pkg/acquire-item.cc:1365
+#: apt-pkg/acquire-item.cc:1420
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -2929,7 +2929,7 @@ msgstr ""
 "%s 패키지의 파일을 찾을 수 없습니다. 수동으로 이 패키지를 고쳐야 할 수도 있습"
 "니다. (아키텍쳐가 빠졌기 때문입니다)"
 
-#: apt-pkg/acquire-item.cc:1424
+#: apt-pkg/acquire-item.cc:1479
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -2938,14 +2938,14 @@ msgstr ""
 "%s 패키지의 파일을 찾을 수 없습니다. 수동으로 이 패키지를 고쳐야 할 수도 있습"
 "니다."
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1534
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
 msgstr ""
 "패키지 인덱스 파일이 손상되었습니다. %s 패키지에 Filename: 필드가 없습니다."
 
-#: apt-pkg/acquire-item.cc:1566
+#: apt-pkg/acquire-item.cc:1621
 msgid "Size mismatch"
 msgstr "크기가 맞지 않습니다"
 

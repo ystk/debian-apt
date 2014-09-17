@@ -122,5 +122,35 @@ bool Hashes::AddFD(int Fd,unsigned long Size)
    }
    return true;
 }
+bool Hashes::AddFD(FileFd &Fd,unsigned long Size, bool const addMD5,
+		   bool const addSHA1, bool const addSHA256, bool const addSHA512)
+{
+   unsigned char Buf[64*64];
+   bool const ToEOF = (Size == 0);
+   while (Size != 0 || ToEOF)
+   {
+      unsigned long n = sizeof(Buf);
+      if (!ToEOF) n = std::min(Size, n);
+      unsigned long a = 0;
+      if (Fd.Read(Buf, n, &a) == false) // error
+	 return false;
+      if (ToEOF == false)
+      {
+	 if (a != n) // short read
+	    return false;
+      }
+      else if (a == 0) // EOF
+	 break;
+      Size -= a;
+      if (addMD5 == true)
+	 MD5.Add(Buf, a);
+      if (addSHA1 == true)
+	 SHA1.Add(Buf, a);
+      if (addSHA256 == true)
+	 SHA256.Add(Buf, a);
+   }
+   return true;
+}
+
 									/*}}}*/
 

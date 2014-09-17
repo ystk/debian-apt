@@ -25,6 +25,8 @@
 using std::min;
 using std::vector;
 
+class FileFd;
+
 // helper class that contains hash function name
 // and hash
 class HashString
@@ -67,6 +69,11 @@ class Hashes
    };
    inline bool Add(const char *Data) {return Add((unsigned char *)Data,strlen(Data));};
    bool AddFD(int Fd,unsigned long Size);
+   inline bool AddFD(FileFd &Fd,unsigned long Size = 0)
+   { return AddFD(Fd, Size, true, true, true, true); };
+   bool AddFD(FileFd &Fd, unsigned long Size, bool const addMD5,
+	      bool const addSHA1, bool const addSHA256, bool const addSHA512);
+
    inline bool Add(const unsigned char *Beg,const unsigned char *End) 
                   {return Add(Beg,End-Beg);};
 };

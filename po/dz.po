@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt_po.pot\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-06-12 15:48+0200\n"
+"POT-Creation-Date: 2014-09-16 13:43+0200\n"
 "PO-Revision-Date: 2006-09-19 09:49+0530\n"
 "Last-Translator: Kinley Tshering <gasepkuenden2k3@hotmail.com>\n"
 "Language-Team: Dzongkha <pgeyleg@dit.gov.bt>\n"
@@ -1813,13 +1813,13 @@ msgstr "%s་གི་དོན་ལུ་རྒྱུད་དུང་འད�
 msgid "Read error from %s process"
 msgstr "%s་ལས་སྦྱོར་ནང་ལས་འཛོལ་བ་ཚུ་ལྷག"
 
-#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:43
+#: methods/bzip2.cc:141 methods/bzip2.cc:150 methods/copy.cc:60
 #: methods/gzip.cc:93 methods/gzip.cc:102 methods/rred.cc:486
 #: methods/rred.cc:495
 msgid "Failed to stat"
 msgstr "ངོ་བཤུས་འབད་ནི་ལུ་འཐུས་ཤོར་བྱུང་ཡོད།"
 
-#: methods/bzip2.cc:147 methods/copy.cc:80 methods/gzip.cc:99
+#: methods/bzip2.cc:147 methods/copy.cc:105 methods/gzip.cc:99
 #: methods/rred.cc:492
 msgid "Failed to set modification time"
 msgstr "ཆུ་ཚོད་ལེགས་བཅོས་གཞི་སྒྲིག་འབཐ་ནི་ལུ་འཐུས་ཤོར་བྱུང་ཡོད།"
@@ -2902,42 +2902,42 @@ msgstr "%s (%s -> %s)བསྐྱར་མིང་བཏགས་ནི་འ�
 msgid "MD5Sum mismatch"
 msgstr "ཨེམ་ཌི་༥་ ཁྱོན་བསྡོམས་མ་མཐུན་པ།"
 
-#: apt-pkg/acquire-item.cc:746 apt-pkg/acquire-item.cc:1574
-#: apt-pkg/acquire-item.cc:1717
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
+#: apt-pkg/acquire-item.cc:1772
 #, fuzzy
 msgid "Hash Sum mismatch"
 msgstr "ཨེམ་ཌི་༥་ ཁྱོན་བསྡོམས་མ་མཐུན་པ།"
 
-#: apt-pkg/acquire-item.cc:1244
+#: apt-pkg/acquire-item.cc:1299
 msgid "There is no public key available for the following key IDs:\n"
 msgstr "འོག་གི་ ཨའི་ཌི་་ ལྡེ་མིག་ཚུ་གི་དོན་ལུ་མི་དམང་གི་ལྡེ་མིག་འདི་འཐོབ་མི་ཚུགས་པས:\n"
 
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1281
+#: apt-pkg/acquire-item.cc:1336
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1302
+#: apt-pkg/acquire-item.cc:1357
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1328
+#: apt-pkg/acquire-item.cc:1383
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
 "updated and the previous index files will be used. GPG error: %s: %s\n"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1337
+#: apt-pkg/acquire-item.cc:1392
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1365
+#: apt-pkg/acquire-item.cc:1420
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -2946,7 +2946,7 @@ msgstr ""
 " %s་ཐུམ་སྒྲིལ་གི་དོན་ལུ་ང་་གི་ཡིག་སྣོད་ཅིག་ག་ཡོད་འཚོལ་མི་འཐོབ་པས། འདི་འབདཝ་ལས་ཁྱོད་ཀྱི་ལག་ཐོག་ལས་ "
 "འ་ནི་ཐུམ་སྒྲིལ་འདི་གི་དཀའ་ངལ་སེལ་དགོཔ་འདུག (arch འདི་བྱིག་སོངམ་ལས་བརྟེན།)"
 
-#: apt-pkg/acquire-item.cc:1424
+#: apt-pkg/acquire-item.cc:1479
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -2955,14 +2955,14 @@ msgstr ""
 " %s་ཐུམ་སྒྲིལ་གི་དོན་ལུ་ང་་གི་ཡིག་སྣོད་ཅིག་ག་ཡོད་འཚོལ་མི་འཐོབ་པས། འདི་འབདཝ་ལས་ཁྱོད་ཀྱི་ལག་ཐོག་ལས་ "
 "འ་ནི་ཐུམ་སྒྲིལ་འདི་གི་དཀའ་ངལ་སེལ་དགོཔ་འདུག "
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1534
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
 msgstr ""
 "ཐུམ་སྒྲིལ་ ཟུར་ཐོ་ཡིག་སྣོད་ཚུ་ངན་ཅན་འགྱོ་ནུག  ཡིག་སྣོད་ཀྱི་མིང་མིན་འདུག: %s་ཐུམ་སྒྲིལ་གྱི་དོན་ལུ་ས་སྒོ།"
 
-#: apt-pkg/acquire-item.cc:1566
+#: apt-pkg/acquire-item.cc:1621
 msgid "Size mismatch"
 msgstr "ཚད་མ་མཐུན།"
 
