@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt 0.8.0~pre1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-16 13:43+0200\n"
+"POT-Creation-Date: 2014-09-23 09:08+0200\n"
 "PO-Revision-Date: 2010-09-29 21:36+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -2950,29 +2950,29 @@ msgstr "việc thay đổi tên bị lỗi, %s (%s → %s)."
 msgid "MD5Sum mismatch"
 msgstr "Sai khớp MD5Sum (tổng kiểm)"
 
-#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
-#: apt-pkg/acquire-item.cc:1772
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1630
+#: apt-pkg/acquire-item.cc:1773
 msgid "Hash Sum mismatch"
 msgstr "Sai khớp tổng chuỗi duy nhất (hash sum)"
 
-#: apt-pkg/acquire-item.cc:1299
+#: apt-pkg/acquire-item.cc:1300
 msgid "There is no public key available for the following key IDs:\n"
 msgstr "Không có khóa công sẵn sàng cho những mã số khoá theo đây:\n"
 
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1336
+#: apt-pkg/acquire-item.cc:1337
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr "Tập tin phát hành đã hết hạn nên bỏ qua %s (không hợp lệ kể từ %s)"
 
-#: apt-pkg/acquire-item.cc:1357
+#: apt-pkg/acquire-item.cc:1358
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr "Bản phát hành xung đột: %s (mong đợi %s còn nhận %s)"
 
-#: apt-pkg/acquire-item.cc:1383
+#: apt-pkg/acquire-item.cc:1384
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
@@ -2982,12 +2982,12 @@ msgstr ""
 "Kho lưu chưa được cập nhật nên dùng những tập tin chỉ mục trước.\n"
 "Lỗi GPG: %s: %s\n"
 
-#: apt-pkg/acquire-item.cc:1392
+#: apt-pkg/acquire-item.cc:1393
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr "Lỗi GPG: %s: %s"
 
-#: apt-pkg/acquire-item.cc:1420
+#: apt-pkg/acquire-item.cc:1421
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -2996,7 +2996,7 @@ msgstr ""
 "Không tìm thấy tập tin liên quan đến gói %s. Có lẽ bạn cần phải tự sửa gói "
 "này, do thiếu kiến trúc."
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1480
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -3005,7 +3005,7 @@ msgstr ""
 "Không tìm thấy tập tin liên quan đến gói %s. Có lẽ bạn cần phải tự sửa gói "
 "này."
 
-#: apt-pkg/acquire-item.cc:1534
+#: apt-pkg/acquire-item.cc:1535
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
@@ -3013,7 +3013,7 @@ msgstr ""
 "Các tập tin chỉ mục của gói này bị hỏng. Không có trường Filename: (Tên tập "
 "tin:) cho gói %s."
 
-#: apt-pkg/acquire-item.cc:1621
+#: apt-pkg/acquire-item.cc:1622
 msgid "Size mismatch"
 msgstr "Sai khớp kích cỡ"
 

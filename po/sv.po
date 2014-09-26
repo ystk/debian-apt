@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-16 13:43+0200\n"
+"POT-Creation-Date: 2014-09-23 09:08+0200\n"
 "PO-Revision-Date: 2010-08-24 21:18+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <debian-l10n-swedish@debian.org>\n"
@@ -2934,29 +2934,29 @@ msgstr "namnbyte misslyckades, %s (%s -> %s)."
 msgid "MD5Sum mismatch"
 msgstr "MD5-kontrollsumman stämmer inte"
 
-#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
-#: apt-pkg/acquire-item.cc:1772
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1630
+#: apt-pkg/acquire-item.cc:1773
 msgid "Hash Sum mismatch"
 msgstr "Hash-kontrollsumman stämmer inte"
 
-#: apt-pkg/acquire-item.cc:1299
+#: apt-pkg/acquire-item.cc:1300
 msgid "There is no public key available for the following key IDs:\n"
 msgstr "Det finns ingen öppen nyckel tillgänglig för följande nyckel-id:n:\n"
 
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1336
+#: apt-pkg/acquire-item.cc:1337
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr "Release-filen har gått ut, ignorerar %s (ogiltig sedan %s)"
 
-#: apt-pkg/acquire-item.cc:1357
+#: apt-pkg/acquire-item.cc:1358
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr "Konflikt i distribution: %s (förväntade %s men fick %s)"
 
-#: apt-pkg/acquire-item.cc:1383
+#: apt-pkg/acquire-item.cc:1384
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
@@ -2966,12 +2966,12 @@ msgstr ""
 "uppdaterats och de tidigare indexfilerna kommer att användas. GPG-fel: %s: "
 "%s\n"
 
-#: apt-pkg/acquire-item.cc:1392
+#: apt-pkg/acquire-item.cc:1393
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr "GPG-fel: %s: %s"
 
-#: apt-pkg/acquire-item.cc:1420
+#: apt-pkg/acquire-item.cc:1421
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -2980,7 +2980,7 @@ msgstr ""
 "Jag kunde inte hitta någon fil för paketet %s. Detta kan betyda att du "
 "manuellt måste reparera detta paket (på grund av saknad arkitektur)."
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1480
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -2989,13 +2989,13 @@ msgstr ""
 "Jag kunde inte hitta någon fil för paketet %s. Detta kan betyda att du "
 "manuellt måste reparera detta paket."
 
-#: apt-pkg/acquire-item.cc:1534
+#: apt-pkg/acquire-item.cc:1535
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
 msgstr "Paketindexfilerna är skadede. Inget \"Filename:\"-fält för paketet %s."
 
-#: apt-pkg/acquire-item.cc:1621
+#: apt-pkg/acquire-item.cc:1622
 msgid "Size mismatch"
 msgstr "Storleken stämmer inte"
 

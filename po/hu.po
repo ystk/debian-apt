@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hu\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-16 13:43+0200\n"
+"POT-Creation-Date: 2014-09-23 09:08+0200\n"
 "PO-Revision-Date: 2008-05-11 14:49+0100\n"
 "Last-Translator: SZERVÁC Attila <sas@321.hu>\n"
 "Language-Team: Hungarian <debian-l10n-hungarian>\n"
@@ -2885,41 +2885,41 @@ msgstr "sikertelen átnevezés, %s (%s -> %s)."
 msgid "MD5Sum mismatch"
 msgstr "Az MD5Sum nem megfelelő"
 
-#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
-#: apt-pkg/acquire-item.cc:1772
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1630
+#: apt-pkg/acquire-item.cc:1773
 msgid "Hash Sum mismatch"
 msgstr "A Hash Sum nem megfelelő"
 
-#: apt-pkg/acquire-item.cc:1299
+#: apt-pkg/acquire-item.cc:1300
 msgid "There is no public key available for the following key IDs:\n"
 msgstr "Nincs elérhető nyilvános kulcs az alábbi kulcs azonosítókhoz:\n"
 
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1336
+#: apt-pkg/acquire-item.cc:1337
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1357
+#: apt-pkg/acquire-item.cc:1358
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1383
+#: apt-pkg/acquire-item.cc:1384
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
 "updated and the previous index files will be used. GPG error: %s: %s\n"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1392
+#: apt-pkg/acquire-item.cc:1393
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr ""
 
-#: apt-pkg/acquire-item.cc:1420
+#: apt-pkg/acquire-item.cc:1421
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -2928,7 +2928,7 @@ msgstr ""
 "Nem találtam egy fájlt a(z) %s csomaghoz. Ez azt jelentheti, hogy kézzel "
 "kell kijavítani a csomagot. (hiányzó arch. miatt)"
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1480
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -2937,14 +2937,14 @@ msgstr ""
 "Nem találtam egy fájlt a(z) %s csomaghoz. Ez azt jelentheti, hogy kézzel "
 "kell kijavítani a csomagot."
 
-#: apt-pkg/acquire-item.cc:1534
+#: apt-pkg/acquire-item.cc:1535
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
 msgstr ""
 "A csomagindex-fájlok megsérültek. Nincs Filename: mező a(z) %s csomaghoz."
 
-#: apt-pkg/acquire-item.cc:1621
+#: apt-pkg/acquire-item.cc:1622
 msgid "Size mismatch"
 msgstr "A méret nem megfelelő"
 

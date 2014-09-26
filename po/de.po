@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-16 13:43+0200\n"
+"POT-Creation-Date: 2014-09-23 09:08+0200\n"
 "PO-Revision-Date: 2010-11-15 21:42+0100\n"
 "Last-Translator: Holger Wansing <linux@wansing-online.de>\n"
 "Language-Team: Debian German <debian-l10n-german@lists.debian.org>\n"
@@ -2985,12 +2985,12 @@ msgstr "Umbenennen fehlgeschlagen, %s (%s -> %s)."
 msgid "MD5Sum mismatch"
 msgstr "MD5-Summe stimmt nicht überein"
 
-#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
-#: apt-pkg/acquire-item.cc:1772
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1630
+#: apt-pkg/acquire-item.cc:1773
 msgid "Hash Sum mismatch"
 msgstr "Hash-Summe stimmt nicht überein"
 
-#: apt-pkg/acquire-item.cc:1299
+#: apt-pkg/acquire-item.cc:1300
 msgid "There is no public key available for the following key IDs:\n"
 msgstr ""
 "Es gibt keine öffentlichen Schlüssel für die folgenden Schlüssel-IDs:\n"
@@ -2998,17 +2998,17 @@ msgstr ""
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1336
+#: apt-pkg/acquire-item.cc:1337
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr "Release-Datei abgelaufen, %s wird ignoriert (ungültig seit %s)"
 
-#: apt-pkg/acquire-item.cc:1357
+#: apt-pkg/acquire-item.cc:1358
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr "Konflikt bei Distribution: %s (%s erwartet, aber %s bekommen)"
 
-#: apt-pkg/acquire-item.cc:1383
+#: apt-pkg/acquire-item.cc:1384
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
@@ -3018,12 +3018,12 @@ msgstr ""
 "wurde nicht aktualisiert und die vorherigen Indexdateien werden verwendet. "
 "GPG-Fehler: %s: %s\n"
 
-#: apt-pkg/acquire-item.cc:1392
+#: apt-pkg/acquire-item.cc:1393
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr "GPG-Fehler: %s: %s"
 
-#: apt-pkg/acquire-item.cc:1420
+#: apt-pkg/acquire-item.cc:1421
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -3032,7 +3032,7 @@ msgstr ""
 "Es konnte keine Datei für Paket %s gefunden werden. Das könnte heißen, dass "
 "Sie dieses Paket von Hand korrigieren müssen (aufgrund fehlender Architektur)"
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1480
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -3041,14 +3041,14 @@ msgstr ""
 "Es konnte keine Datei für Paket %s gefunden werden. Das könnte heißen, dass "
 "Sie dieses Paket von Hand korrigieren müssen."
 
-#: apt-pkg/acquire-item.cc:1534
+#: apt-pkg/acquire-item.cc:1535
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
 msgstr ""
 "Die Paketindexdateien sind beschädigt: Kein Filename:-Feld für Paket %s."
 
-#: apt-pkg/acquire-item.cc:1621
+#: apt-pkg/acquire-item.cc:1622
 msgid "Size mismatch"
 msgstr "Größe stimmt nicht überein"
 

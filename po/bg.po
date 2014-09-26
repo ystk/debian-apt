@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt 0.7.21\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-16 13:43+0200\n"
+"POT-Creation-Date: 2014-09-23 09:08+0200\n"
 "PO-Revision-Date: 2010-08-27 22:33+0300\n"
 "Last-Translator: Damyan Ivanov <dmn@debian.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -2949,29 +2949,29 @@ msgstr "преименуването се провали, %s (%s -> %s)."
 msgid "MD5Sum mismatch"
 msgstr "Несъответствие на контролна сума MD5"
 
-#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1629
-#: apt-pkg/acquire-item.cc:1772
+#: apt-pkg/acquire-item.cc:774 apt-pkg/acquire-item.cc:1630
+#: apt-pkg/acquire-item.cc:1773
 msgid "Hash Sum mismatch"
 msgstr "Несъответствие на контролната сума"
 
-#: apt-pkg/acquire-item.cc:1299
+#: apt-pkg/acquire-item.cc:1300
 msgid "There is no public key available for the following key IDs:\n"
 msgstr "Няма налични публични ключове за следните идентификатори на ключове:\n"
 
 #. TRANSLATOR: The first %s is the URL of the bad Release file, the second is
 #. the time since then the file is invalid - formated in the same way as in
 #. the download progress display (e.g. 7d 3h 42min 1s)
-#: apt-pkg/acquire-item.cc:1336
+#: apt-pkg/acquire-item.cc:1337
 #, c-format
 msgid "Release file expired, ignoring %s (invalid since %s)"
 msgstr "Файлът %s вече не е валиден и ще бъде игнориран. (изтекъл е преди %s)"
 
-#: apt-pkg/acquire-item.cc:1357
+#: apt-pkg/acquire-item.cc:1358
 #, c-format
 msgid "Conflicting distribution: %s (expected %s but got %s)"
 msgstr "Конфликт в дистрибуцията: %s (очаквана: %s, намерена: %s)"
 
-#: apt-pkg/acquire-item.cc:1383
+#: apt-pkg/acquire-item.cc:1384
 #, c-format
 msgid ""
 "A error occurred during the signature verification. The repository is not "
@@ -2980,12 +2980,12 @@ msgstr ""
 "Грешка при проверка на цифровия подпис. Хранилището не е обновено и ще се "
 "използват старите индексни файлове. Грешка от GPG: %s: %s\n"
 
-#: apt-pkg/acquire-item.cc:1392
+#: apt-pkg/acquire-item.cc:1393
 #, c-format
 msgid "GPG error: %s: %s"
 msgstr "Грешка от GPG: %s: %s"
 
-#: apt-pkg/acquire-item.cc:1420
+#: apt-pkg/acquire-item.cc:1421
 #, c-format
 msgid ""
 "I wasn't able to locate a file for the %s package. This might mean you need "
@@ -2994,7 +2994,7 @@ msgstr ""
 "Неуспех при намирането на файл за пакет %s. Това може да означава, че трябва "
 "ръчно да оправите този пакет (поради пропусната архитектура)."
 
-#: apt-pkg/acquire-item.cc:1479
+#: apt-pkg/acquire-item.cc:1480
 #, c-format
 msgid ""
 "I wasn't able to locate file for the %s package. This might mean you need to "
@@ -3003,14 +3003,14 @@ msgstr ""
 "Неуспех при намирането на файл за пакет %s. Това може да означава, че трябва "
 "ръчно да оправите този пакет."
 
-#: apt-pkg/acquire-item.cc:1534
+#: apt-pkg/acquire-item.cc:1535
 #, c-format
 msgid ""
 "The package index files are corrupted. No Filename: field for package %s."
 msgstr ""
 "Индексните файлове на пакета са повредени. Няма поле Filename: за пакет %s."
 
-#: apt-pkg/acquire-item.cc:1621
+#: apt-pkg/acquire-item.cc:1622
 msgid "Size mismatch"
 msgstr "Несъответствие на размера"
 

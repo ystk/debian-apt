@@ -801,12 +801,6 @@ void pkgAcqIndex::Done(string Message,unsigned long Size,string Hash,
    string FileName = LookupTag(Message,"Alt-Filename");
    if (FileName.empty() == false)
    {
-      // The files timestamp matches
-      if (StringToBool(LookupTag(Message,"Alt-IMS-Hit"),false) == true)
-      {
-         ReverifyAfterIMS(FileName);
-         return;
-      }
       Decompression = true;
       Local = true;
       DestFile += ".decomp";
@@ -823,18 +817,26 @@ void pkgAcqIndex::Done(string Message,unsigned long Size,string Hash,
       ErrorText = "Method gave a blank filename";
    }
    
-   // The files timestamp matches
-   if (StringToBool(LookupTag(Message,"IMS-Hit"),false) == true)
-   {
-      ReverifyAfterIMS(FileName);
-      return;
-   }
-
    if (FileName == DestFile)
       Erase = true;
    else
       Local = true;
-   
+
+   // do not reverify cdrom sources as apt-cdrom may rewrite the Packages
+   // file when its doing the indexcopy
+   if (RealURI.substr(0,6) == "cdrom:" &&
+       StringToBool(LookupTag(Message,"IMS-Hit"),false) == true)
+      return;
+
+   // The files timestamp matches, re-verify hashes for non-local sources,
+   // decompress again to get hashes for local sources to ensure data is
+   // not staled
+   if (!Local && StringToBool(LookupTag(Message,"IMS-Hit"),false) == true)
+   {
+      ReverifyAfterIMS(FileName);
+      return;
+   }
+  
    string decompProg;
 
    // If we enable compressed indexes, queue for hash verification
@@ -888,9 +890,8 @@ string pkgAcqIndexTrans::Custom600Headers()
    string Final = _config->FindDir("Dir::State::lists");
    Final += URItoFileName(RealURI);
 
-   string compExt = flExtension(flNotDir(URI(Desc.URI).Path));
-   if (_config->FindB("Acquire::GzipIndexes",false) && compExt == "gz")
-      DestFile += ".gz";
+   if (_config->FindB("Acquire::GzipIndexes",false))
+      Final += ".gz";
 
    struct stat Buf;
    if (stat(Final.c_str(),&Buf) != 0)

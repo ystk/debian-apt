@@ -1,3 +1,23 @@
+apt (0.8.10.3+squeeze5) squeeze-lts; urgency=high
+
+  * SECURITY UPDATE:
+    - fix potential buffer overflow, thanks to the
+      Google Security Team (CVE-2014-6273)
+  * fix regression when Dir::state::lists is set to a relative
+    path (closes: 762160)
+  * fix regression when cdrom: sources got rewriten by apt-cdrom
+    add
+
+ -- Michael Vogt <mvo@debian.org>  Tue, 23 Sep 2014 08:54:46 +0200
+
+apt (0.8.10.3+squeeze4) squeeze-lts; urgency=high
+
+  * Fix regression from the previous upload when file:/// sources
+    are used and those are on a different partition than
+    the apt state directory
+
+ -- Michael Vogt <mvo@debian.org>  Thu, 18 Sep 2014 09:09:41 +0200
+
 apt (0.8.10.3+squeeze3) squeeze-lts; urgency=high
 
   * SECURITY UPDATE:

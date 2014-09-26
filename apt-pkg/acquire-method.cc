@@ -94,13 +94,11 @@ void pkgAcqMethod::Fail(string Err,bool Transient)
       if (*I == '\n') 
 	 *I = ' ';
    }
-   
-   char S[1024];
-   char *End = S;
+
    if (Queue != 0)
    {
-      End += snprintf(S,sizeof(S)-50,"400 URI Failure\nURI: %s\n"
-		      "Message: %s %s\n",Queue->Uri.c_str(), Err.c_str(), IP.c_str());
+      std::cout << "400 URI Failure\nURI: " << Queue->Uri << "\n"
+                << "Message: " << Err << " " << IP << "\n";
       // Dequeue
       FetchItem *Tmp = Queue;
       Queue = Queue->Next;
@@ -109,22 +107,17 @@ void pkgAcqMethod::Fail(string Err,bool Transient)
 	 QueueBack = Queue;
    }
    else
-   {
-      End += snprintf(S,sizeof(S)-50,"400 URI Failure\nURI: <UNKNOWN>\n"
-		      "Message: %s\n",Err.c_str());
-   }
+      std::cout << "400 URI Failure\nURI: <UNKNOWN>\nMessage: " << Err << "\n";
+
    if(FailReason.empty() == false)
-      End += snprintf(End,sizeof(S)-50 - (End - S),"FailReason: %s\n",FailReason.c_str());
+      std::cout << "FailReason: " << FailReason << "\n";
    if (UsedMirror.empty() == false)
-      End += snprintf(End,sizeof(S)-50 - (End - S),"UsedMirror: %s\n",UsedMirror.c_str());
-   // Set the transient flag 
+      std::cout << "UsedMirror: " << UsedMirror << "\n";
+   // Set the transient flag
    if (Transient == true)
-      strcat(S,"Transient-Failure: true\n\n");
-   else
-      strcat(S,"\n");
-   
-   if (write(STDOUT_FILENO,S,strlen(S)) != (signed)strlen(S))
-      exit(100);
+      std::cout << "Transient-Failure: true\n";
+
+   std::cout << "\n" << std::flush;
 }
 									/*}}}*/
 // AcqMethod::URIStart - Indicate a download is starting		/*{{{*/
@@ -416,16 +409,11 @@ void pkgAcqMethod::Log(const char *Format,...)
    va_list args;
    va_start(args,Format);
 
-   // sprintf the description
-   char S[1024];
-   unsigned int Len = snprintf(S,sizeof(S)-4,"101 Log\nURI: %s\n"
+   // fprintf the description
+   fprintf(stdout,"101 Log\nURI: %s\n"
 			       "Message: ",CurrentURI.c_str());
-
-   vsnprintf(S+Len,sizeof(S)-4-Len,Format,args);
-   strcat(S,"\n\n");
-   
-   if (write(STDOUT_FILENO,S,strlen(S)) != (signed)strlen(S))
-      exit(100);
+   vfprintf(stdout,Format,args);
+   std::cout << "\n\n" << std::flush;
 }
 									/*}}}*/
 // AcqMethod::Status - Send a status message				/*{{{*/
@@ -440,16 +428,11 @@ void pkgAcqMethod::Status(const char *Format,...)
    va_list args;
    va_start(args,Format);
 
-   // sprintf the description
-   char S[1024];
-   unsigned int Len = snprintf(S,sizeof(S)-4,"102 Status\nURI: %s\n"
-			       "Message: ",CurrentURI.c_str());
-
-   vsnprintf(S+Len,sizeof(S)-4-Len,Format,args);
-   strcat(S,"\n\n");
-   
-   if (write(STDOUT_FILENO,S,strlen(S)) != (signed)strlen(S))
-      exit(100);
+   // fprintf the description
+   fprintf(stdout, "102 Status\nURI: %s\n"
+           "Message: ",CurrentURI.c_str());
+   vfprintf(stdout,Format,args);
+   std::cout << "\n\n" << std::flush;
 }
 									/*}}}*/
 // AcqMethod::Redirect - Send a redirect message                       /*{{{*/

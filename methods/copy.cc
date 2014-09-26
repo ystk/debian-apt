@@ -52,7 +52,7 @@ void CopyMethod::CalculateHashes(FetchResult &Res)
 bool CopyMethod::Fetch(FetchItem *Itm)
 {
    URI Get = Itm->Uri;
-   string File = Get.Path;
+   string File = Get.Host + Get.Path; // To account for relative paths
 
    // Stat the file and send a start message
    struct stat Buf;
