@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-23 09:08+0200\n"
+"POT-Creation-Date: 2014-10-17 09:40+0200\n"
 "PO-Revision-Date: 2008-11-06 15:54+0700\n"
 "Last-Translator: Theppitak Karoonboonyanan <thep@linux.thai.net>\n"
 "Language-Team: Thai <thai-l10n@googlegroups.com>\n"
@@ -1940,7 +1940,7 @@ msgstr "หมดเวลารอเชื่อมต่อซ็อกเก
 msgid "Unable to accept connection"
 msgstr "ไม่สามารถรับการเชื่อมต่อ"
 
-#: methods/ftp.cc:869 methods/http.cc:1006 methods/rsh.cc:302
+#: methods/ftp.cc:869 methods/http.cc:1016 methods/rsh.cc:302
 msgid "Problem hashing file"
 msgstr "เกิดปัญหาขณะคำนวณค่าแฮชของแฟ้ม"
 
@@ -2079,59 +2079,59 @@ msgstr "เซิร์ฟเวอร์ HTTP ส่งข้อมูลส่
 msgid "The HTTP server sent an invalid Content-Length header"
 msgstr "เซิร์ฟเวอร์ HTTP ส่งข้อมูลส่วนหัว Content-Length มาไม่ถูกต้อง"
 
-#: methods/http.cc:615
+#: methods/http.cc:621
 msgid "The HTTP server sent an invalid Content-Range header"
 msgstr "เซิร์ฟเวอร์ HTTP ส่งข้อมูลส่วนหัว Content-Range มาไม่ถูกต้อง"
 
-#: methods/http.cc:617
+#: methods/http.cc:623
 msgid "This HTTP server has broken range support"
 msgstr "การสนับสนุน Content-Range ที่เซิร์ฟเวอร์ HTTP ผิดพลาด"
 
-#: methods/http.cc:641
+#: methods/http.cc:647
 msgid "Unknown date format"
 msgstr "พบรูปแบบวันที่ที่ไม่รู้จัก"
 
-#: methods/http.cc:799
+#: methods/http.cc:803
 msgid "Select failed"
 msgstr "select ไม่สำเร็จ"
 
-#: methods/http.cc:804
+#: methods/http.cc:808
 msgid "Connection timed out"
 msgstr "หมดเวลารอเชื่อมต่อ"
 
-#: methods/http.cc:827
+#: methods/http.cc:831
 msgid "Error writing to output file"
 msgstr "เกิดข้อผิดพลาดขณะเขียนลงแฟ้มผลลัพธ์"
 
-#: methods/http.cc:858
+#: methods/http.cc:862
 msgid "Error writing to file"
 msgstr "เกิดข้อผิดพลาดขณะเขียนลงแฟ้ม"
 
-#: methods/http.cc:886
+#: methods/http.cc:890
 msgid "Error writing to the file"
 msgstr "เกิดข้อผิดพลาดขณะเขียนลงแฟ้ม"
 
-#: methods/http.cc:900
+#: methods/http.cc:904
 msgid "Error reading from server. Remote end closed connection"
 msgstr "เกิดข้อผิดพลาดขณะอ่านข้อมูลจากเซิร์ฟเวอร์ ปลายทางอีกด้านหนึ่งปิดการเชื่อมต่อ"
 
-#: methods/http.cc:902
+#: methods/http.cc:906
 msgid "Error reading from server"
 msgstr "เกิดข้อผิดพลาดขณะอ่านข้อมูลจากเซิร์ฟเวอร์"
 
-#: methods/http.cc:991 apt-pkg/contrib/mmap.cc:281
+#: methods/http.cc:1001 apt-pkg/contrib/mmap.cc:281
 msgid "Failed to truncate file"
 msgstr "ไม่สามารถตัดท้ายแฟ้ม"
 
-#: methods/http.cc:1160
+#: methods/http.cc:1170
 msgid "Bad header data"
 msgstr "ข้อมูลส่วนหัวผิดพลาด"
 
-#: methods/http.cc:1177 methods/http.cc:1232
+#: methods/http.cc:1187 methods/http.cc:1242
 msgid "Connection failed"
 msgstr "เชื่อมต่อไม่สำเร็จ"
 
-#: methods/http.cc:1324
+#: methods/http.cc:1334
 msgid "Internal error"
 msgstr "ข้อผิดพลาดภายใน"
 

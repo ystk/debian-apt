@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-23 09:08+0200\n"
+"POT-Creation-Date: 2014-10-17 09:40+0200\n"
 "PO-Revision-Date: 2010-08-24 23:57+0100\n"
 "Last-Translator: Ivan Masár <helix84@centrum.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -1982,7 +1982,7 @@ msgstr "Uplynulo spojenie dátového socketu"
 msgid "Unable to accept connection"
 msgstr "Spojenie sa nedá prijať"
 
-#: methods/ftp.cc:869 methods/http.cc:1006 methods/rsh.cc:302
+#: methods/ftp.cc:869 methods/http.cc:1016 methods/rsh.cc:302
 msgid "Problem hashing file"
 msgstr "Problém s hašovaním súboru"
 
@@ -2122,59 +2122,59 @@ msgstr "HTTP server poslal neplatnú hlavičku odpovede"
 msgid "The HTTP server sent an invalid Content-Length header"
 msgstr "HTTP server poslal neplatnú hlavičku Content-Length"
 
-#: methods/http.cc:615
+#: methods/http.cc:621
 msgid "The HTTP server sent an invalid Content-Range header"
 msgstr "HTTP server poslal neplatnú hlavičku Content-Range"
 
-#: methods/http.cc:617
+#: methods/http.cc:623
 msgid "This HTTP server has broken range support"
 msgstr "Tento HTTP server má poškodenú podporu rozsahov"
 
-#: methods/http.cc:641
+#: methods/http.cc:647
 msgid "Unknown date format"
 msgstr "Neznámy formát dátumu"
 
-#: methods/http.cc:799
+#: methods/http.cc:803
 msgid "Select failed"
 msgstr "Výber zlyhal"
 
-#: methods/http.cc:804
+#: methods/http.cc:808
 msgid "Connection timed out"
 msgstr "Uplynul čas spojenia"
 
-#: methods/http.cc:827
+#: methods/http.cc:831
 msgid "Error writing to output file"
 msgstr "Chyba zápisu do výstupného súboru"
 
-#: methods/http.cc:858
+#: methods/http.cc:862
 msgid "Error writing to file"
 msgstr "Chyba zápisu do súboru"
 
-#: methods/http.cc:886
+#: methods/http.cc:890
 msgid "Error writing to the file"
 msgstr "Chyba zápisu do tohto súboru"
 
-#: methods/http.cc:900
+#: methods/http.cc:904
 msgid "Error reading from server. Remote end closed connection"
 msgstr "Chyba pri čítaní zo servera. Druhá strana ukončila spojenie"
 
-#: methods/http.cc:902
+#: methods/http.cc:906
 msgid "Error reading from server"
 msgstr "Chyba pri čítaní zo servera"
 
-#: methods/http.cc:991 apt-pkg/contrib/mmap.cc:281
+#: methods/http.cc:1001 apt-pkg/contrib/mmap.cc:281
 msgid "Failed to truncate file"
 msgstr "Nepodarilo sa skrátiť súbor"
 
-#: methods/http.cc:1160
+#: methods/http.cc:1170
 msgid "Bad header data"
 msgstr "Zlé dátové záhlavie"
 
-#: methods/http.cc:1177 methods/http.cc:1232
+#: methods/http.cc:1187 methods/http.cc:1242
 msgid "Connection failed"
 msgstr "Spojenie zlyhalo"
 
-#: methods/http.cc:1324
+#: methods/http.cc:1334
 msgid "Internal error"
 msgstr "Vnútorná chyba"
 

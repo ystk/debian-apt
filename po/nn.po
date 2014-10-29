@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt_nn\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-23 09:08+0200\n"
+"POT-Creation-Date: 2014-10-17 09:40+0200\n"
 "PO-Revision-Date: 2005-02-14 23:30+0100\n"
 "Last-Translator: Havard Korsvoll <korsvoll@skulelinux.no>\n"
 "Language-Team: Norwegian nynorsk <i18n-nn@lister.ping.uio.no>\n"
@@ -1969,7 +1969,7 @@ msgstr "Tidsavbrot på tilkopling til datasokkel"
 msgid "Unable to accept connection"
 msgstr "Klarte ikkje godta tilkoplinga"
 
-#: methods/ftp.cc:869 methods/http.cc:1006 methods/rsh.cc:302
+#: methods/ftp.cc:869 methods/http.cc:1016 methods/rsh.cc:302
 msgid "Problem hashing file"
 msgstr "Problem ved oppretting av nøkkel for fil"
 
@@ -2108,60 +2108,60 @@ msgstr "HTTP-tenaren sende eit ugyldig svarhovud"
 msgid "The HTTP server sent an invalid Content-Length header"
 msgstr "HTTP-tenaren sende eit ugyldig «Content-Length»-hovud"
 
-#: methods/http.cc:615
+#: methods/http.cc:621
 msgid "The HTTP server sent an invalid Content-Range header"
 msgstr "HTTP-tenaren sende eit ugyldig «Content-Range»-hovud"
 
-#: methods/http.cc:617
+#: methods/http.cc:623
 msgid "This HTTP server has broken range support"
 msgstr "Denne HTTP-tenaren har øydelagd støtte for område"
 
-#: methods/http.cc:641
+#: methods/http.cc:647
 msgid "Unknown date format"
 msgstr "Ukjend datoformat"
 
-#: methods/http.cc:799
+#: methods/http.cc:803
 msgid "Select failed"
 msgstr "Utvalet mislukkast"
 
-#: methods/http.cc:804
+#: methods/http.cc:808
 msgid "Connection timed out"
 msgstr "Tidsavbrot på sambandet"
 
-#: methods/http.cc:827
+#: methods/http.cc:831
 msgid "Error writing to output file"
 msgstr "Feil ved skriving til utfil"
 
-#: methods/http.cc:858
+#: methods/http.cc:862
 msgid "Error writing to file"
 msgstr "Feil ved skriving til fil"
 
-#: methods/http.cc:886
+#: methods/http.cc:890
 msgid "Error writing to the file"
 msgstr "Feil ved skriving til fila"
 
-#: methods/http.cc:900
+#: methods/http.cc:904
 msgid "Error reading from server. Remote end closed connection"
 msgstr "Feil ved lesing frå tenaren. Sambandet vart lukka i andre enden"
 
-#: methods/http.cc:902
+#: methods/http.cc:906
 msgid "Error reading from server"
 msgstr "Feil ved lesing frå tenaren"
 
-#: methods/http.cc:991 apt-pkg/contrib/mmap.cc:281
+#: methods/http.cc:1001 apt-pkg/contrib/mmap.cc:281
 #, fuzzy
 msgid "Failed to truncate file"
 msgstr "Klarte ikkje skriva fila %s"
 
-#: methods/http.cc:1160
+#: methods/http.cc:1170
 msgid "Bad header data"
 msgstr "Øydelagde hovuddata"
 
-#: methods/http.cc:1177 methods/http.cc:1232
+#: methods/http.cc:1187 methods/http.cc:1242
 msgid "Connection failed"
 msgstr "Sambandet mislukkast"
 
-#: methods/http.cc:1324
+#: methods/http.cc:1334
 msgid "Internal error"
 msgstr "Intern feil"
 

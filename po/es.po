@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt 0.8.10\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-23 09:08+0200\n"
+"POT-Creation-Date: 2014-10-17 09:40+0200\n"
 "PO-Revision-Date: 2011-01-24 11:47+0100\n"
 "Last-Translator: Javier Fernández-Sanguino Peña <jfs@debian.org>\n"
 "Language-Team: Debian Spanish <debian-l10n-spanish@lists.debian.org>\n"
@@ -2060,7 +2060,7 @@ msgstr "Expiró conexión a socket de datos"
 msgid "Unable to accept connection"
 msgstr "No pude aceptar la conexión"
 
-#: methods/ftp.cc:869 methods/http.cc:1006 methods/rsh.cc:302
+#: methods/ftp.cc:869 methods/http.cc:1016 methods/rsh.cc:302
 msgid "Problem hashing file"
 msgstr "Se produjo un problema al hacer un hash del archivo"
 
@@ -2203,59 +2203,59 @@ msgstr "El servidor de http envió una cabecera de respuesta inválida"
 msgid "The HTTP server sent an invalid Content-Length header"
 msgstr "El servidor de http envió una cabecera de Content-Length inválida"
 
-#: methods/http.cc:615
+#: methods/http.cc:621
 msgid "The HTTP server sent an invalid Content-Range header"
 msgstr "El servidor de http envió una cabecera de Content-Range inválida"
 
-#: methods/http.cc:617
+#: methods/http.cc:623
 msgid "This HTTP server has broken range support"
 msgstr "Éste servidor de http tiene el soporte de alcance roto"
 
-#: methods/http.cc:641
+#: methods/http.cc:647
 msgid "Unknown date format"
 msgstr "Formato de fecha desconocido"
 
-#: methods/http.cc:799
+#: methods/http.cc:803
 msgid "Select failed"
 msgstr "Falló la selección"
 
-#: methods/http.cc:804
+#: methods/http.cc:808
 msgid "Connection timed out"
 msgstr "Expiró la conexión"
 
-#: methods/http.cc:827
+#: methods/http.cc:831
 msgid "Error writing to output file"
 msgstr "Error escribiendo al archivo de salida"
 
-#: methods/http.cc:858
+#: methods/http.cc:862
 msgid "Error writing to file"
 msgstr "Error escribiendo a archivo"
 
-#: methods/http.cc:886
+#: methods/http.cc:890
 msgid "Error writing to the file"
 msgstr "Error escribiendo al archivo"
 
-#: methods/http.cc:900
+#: methods/http.cc:904
 msgid "Error reading from server. Remote end closed connection"
 msgstr "Error leyendo del servidor, el lado remoto cerró la conexión."
 
-#: methods/http.cc:902
+#: methods/http.cc:906
 msgid "Error reading from server"
 msgstr "Error leyendo del servidor"
 
-#: methods/http.cc:991 apt-pkg/contrib/mmap.cc:281
+#: methods/http.cc:1001 apt-pkg/contrib/mmap.cc:281
 msgid "Failed to truncate file"
 msgstr "Falló al truncar el archivo"
 
-#: methods/http.cc:1160
+#: methods/http.cc:1170
 msgid "Bad header data"
 msgstr "Mala cabecera Data"
 
-#: methods/http.cc:1177 methods/http.cc:1232
+#: methods/http.cc:1187 methods/http.cc:1242
 msgid "Connection failed"
 msgstr "Fallo la conexión"
 
-#: methods/http.cc:1324
+#: methods/http.cc:1334
 msgid "Internal error"
 msgstr "Error interno"
 

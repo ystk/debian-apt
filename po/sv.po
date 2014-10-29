@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-23 09:08+0200\n"
+"POT-Creation-Date: 2014-10-17 09:40+0200\n"
 "PO-Revision-Date: 2010-08-24 21:18+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <debian-l10n-swedish@debian.org>\n"
@@ -1994,7 +1994,7 @@ msgstr "Anslutet datauttag (socket) fick inte svar inom tidsgränsen"
 msgid "Unable to accept connection"
 msgstr "Kunde inte ta emot anslutningen"
 
-#: methods/ftp.cc:869 methods/http.cc:1006 methods/rsh.cc:302
+#: methods/ftp.cc:869 methods/http.cc:1016 methods/rsh.cc:302
 msgid "Problem hashing file"
 msgstr "Problem med att lägga filen till hashtabellen"
 
@@ -2141,59 +2141,59 @@ msgstr "Http-servern sände ett ogiltigt svarshuvud"
 msgid "The HTTP server sent an invalid Content-Length header"
 msgstr "Http-servern sände ett ogiltigt Content-Length-rubrik"
 
-#: methods/http.cc:615
+#: methods/http.cc:621
 msgid "The HTTP server sent an invalid Content-Range header"
 msgstr "Http-servern sände ett ogiltigt Content-Range-rubrik"
 
-#: methods/http.cc:617
+#: methods/http.cc:623
 msgid "This HTTP server has broken range support"
 msgstr "Den här http-serverns stöd för delvis hämtning fungerar inte"
 
-#: methods/http.cc:641
+#: methods/http.cc:647
 msgid "Unknown date format"
 msgstr "Okänt datumformat"
 
-#: methods/http.cc:799
+#: methods/http.cc:803
 msgid "Select failed"
 msgstr "\"Select\" misslyckades"
 
-#: methods/http.cc:804
+#: methods/http.cc:808
 msgid "Connection timed out"
 msgstr "Anslutningen överskred tidsgränsen"
 
-#: methods/http.cc:827
+#: methods/http.cc:831
 msgid "Error writing to output file"
 msgstr "Fel vid skrivning till utdatafil"
 
-#: methods/http.cc:858
+#: methods/http.cc:862
 msgid "Error writing to file"
 msgstr "Fel vid skrivning till fil"
 
-#: methods/http.cc:886
+#: methods/http.cc:890
 msgid "Error writing to the file"
 msgstr "Fel vid skrivning till filen"
 
-#: methods/http.cc:900
+#: methods/http.cc:904
 msgid "Error reading from server. Remote end closed connection"
 msgstr "Fel vid läsning från server: Andra änden stängde förbindelsen"
 
-#: methods/http.cc:902
+#: methods/http.cc:906
 msgid "Error reading from server"
 msgstr "Fel vid läsning från server"
 
-#: methods/http.cc:991 apt-pkg/contrib/mmap.cc:281
+#: methods/http.cc:1001 apt-pkg/contrib/mmap.cc:281
 msgid "Failed to truncate file"
 msgstr "Misslyckades med att kapa av filen"
 
-#: methods/http.cc:1160
+#: methods/http.cc:1170
 msgid "Bad header data"
 msgstr "Felaktiga data i huvud"
 
-#: methods/http.cc:1177 methods/http.cc:1232
+#: methods/http.cc:1187 methods/http.cc:1242
 msgid "Connection failed"
 msgstr "Anslutningen misslyckades"
 
-#: methods/http.cc:1324
+#: methods/http.cc:1334
 msgid "Internal error"
 msgstr "Internt fel"
 

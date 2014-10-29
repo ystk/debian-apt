@@ -595,7 +595,7 @@ bool ServerState::HeaderLine(string Line)
       // The length is already set from the Content-Range header
       if (StartPos != 0)
 	 return true;
-      
+
       if (sscanf(Val.c_str(),"%lu",&Size) != 1)
 	 return _error->Error(_("The HTTP server sent an invalid Content-Length header"));
       return true;
@@ -610,8 +610,14 @@ bool ServerState::HeaderLine(string Line)
    if (stringcasecmp(Tag,"Content-Range:") == 0)
    {
       HaveContent = true;
-      
-      if (sscanf(Val.c_str(),"bytes %lu-%*u/%lu",&StartPos,&Size) != 2)
+
+      // §14.16 says 'byte-range-resp-spec' should be a '*' in case of 416
+      if (Result == 416 && sscanf(Val.c_str(), "bytes */%lu",&Size) == 1)
+      {
+	 StartPos = 1; // ignore Content-Length, it would override Size
+	 HaveContent = false;
+      }
+      else if (sscanf(Val.c_str(),"bytes %lu-%*u/%lu",&StartPos,&Size) != 2)
 	 return _error->Error(_("The HTTP server sent an invalid Content-Range header"));
       if ((unsigned)StartPos > Size)
 	 return _error->Error(_("This HTTP server has broken range support"));
@@ -714,10 +720,8 @@ void HttpMethod::SendReq(FetchItem *Itm,CircleBuf &Out)
    if (stat(Itm->DestFile.c_str(),&SBuf) >= 0 && SBuf.st_size > 0)
    {
       // In this case we send an if-range query with a range header
-      std::string Tmp;
-      strprintf(Tmp,"Range: bytes=%li-\r\nIf-Range: %s\r\n",(long)SBuf.st_size - 1,
+      strprintf(Buf,"Range: bytes=%li-\r\nIf-Range: %s\r\n",(long)SBuf.st_size - 1,
 	      TimeRFC1123(SBuf.st_mtime).c_str());
-      Buf += Tmp;
       Req += Buf;
    }
    else
@@ -953,6 +957,12 @@ HttpMethod::DealWithHeaders(FetchResult &Res,ServerState *Srv)
          return TRY_AGAIN_OR_REDIRECT;
       }
       /* else pass through for error message */
+   }
+   else if (Srv->Result == 416 && FileExists(Queue->DestFile) == true &&
+	 unlink(Queue->DestFile.c_str()) == 0)
+   {
+      NextURI = Queue->Uri;
+      return TRY_AGAIN_OR_REDIRECT;
    }
  
    /* We have a reply we dont handle. This should indicate a perm server

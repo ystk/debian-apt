@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hu\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-23 09:08+0200\n"
+"POT-Creation-Date: 2014-10-17 09:40+0200\n"
 "PO-Revision-Date: 2008-05-11 14:49+0100\n"
 "Last-Translator: SZERVÁC Attila <sas@321.hu>\n"
 "Language-Team: Hungarian <debian-l10n-hungarian>\n"
@@ -1961,7 +1961,7 @@ msgstr "Az adat sockethez kapcsolódás túllépte az időt"
 msgid "Unable to accept connection"
 msgstr "Nem lehet elfogadni a kapcsolatot"
 
-#: methods/ftp.cc:869 methods/http.cc:1006 methods/rsh.cc:302
+#: methods/ftp.cc:869 methods/http.cc:1016 methods/rsh.cc:302
 msgid "Problem hashing file"
 msgstr "Probléma a fájl hash értékének meghatározásakor"
 
@@ -2101,60 +2101,60 @@ msgstr "A http kiszolgáló egy érvénytelen válaszfejlécet küldött"
 msgid "The HTTP server sent an invalid Content-Length header"
 msgstr "A http kiszolgáló egy érvénytelen Content-Length fejlécet küldött"
 
-#: methods/http.cc:615
+#: methods/http.cc:621
 msgid "The HTTP server sent an invalid Content-Range header"
 msgstr "A http kiszolgáló egy érvénytelen Content-Range fejlécet küldött"
 
-#: methods/http.cc:617
+#: methods/http.cc:623
 msgid "This HTTP server has broken range support"
 msgstr "Ez a http szerver támogatja a sérült tartományokat "
 
-#: methods/http.cc:641
+#: methods/http.cc:647
 msgid "Unknown date format"
 msgstr "Ismeretlen dátum formátum"
 
-#: methods/http.cc:799
+#: methods/http.cc:803
 msgid "Select failed"
 msgstr "Sikertelen kiválasztás"
 
-#: methods/http.cc:804
+#: methods/http.cc:808
 msgid "Connection timed out"
 msgstr "Időtúllépés a kapcsolatban"
 
-#: methods/http.cc:827
+#: methods/http.cc:831
 msgid "Error writing to output file"
 msgstr "Hiba a kimeneti fájl írásakor"
 
-#: methods/http.cc:858
+#: methods/http.cc:862
 msgid "Error writing to file"
 msgstr "Hiba fájl írásakor"
 
-#: methods/http.cc:886
+#: methods/http.cc:890
 msgid "Error writing to the file"
 msgstr "Hiba a fájl írásakor"
 
-#: methods/http.cc:900
+#: methods/http.cc:904
 msgid "Error reading from server. Remote end closed connection"
 msgstr "Hiba a kiszolgálóról olvasáskor, a túloldal lezárta a kapcsolatot"
 
-#: methods/http.cc:902
+#: methods/http.cc:906
 msgid "Error reading from server"
 msgstr "Hiba a kiszolgálóról olvasáskor"
 
-#: methods/http.cc:991 apt-pkg/contrib/mmap.cc:281
+#: methods/http.cc:1001 apt-pkg/contrib/mmap.cc:281
 #, fuzzy
 msgid "Failed to truncate file"
 msgstr "%s fájl írása sikertelen"
 
-#: methods/http.cc:1160
+#: methods/http.cc:1170
 msgid "Bad header data"
 msgstr "Rossz fejlécadat"
 
-#: methods/http.cc:1177 methods/http.cc:1232
+#: methods/http.cc:1187 methods/http.cc:1242
 msgid "Connection failed"
 msgstr "Sikertelen kapcsolódás"
 
-#: methods/http.cc:1324
+#: methods/http.cc:1334
 msgid "Internal error"
 msgstr "Belső hiba"
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-23 09:08+0200\n"
+"POT-Creation-Date: 2014-10-17 09:40+0200\n"
 "PO-Revision-Date: 2008-11-20 23:27+0530\n"
 "Last-Translator: Sampada <sampadanakhare@gmail.com>\n"
 "Language-Team: Marathi, janabhaaratii, C-DAC, Mumbai, India "
@@ -1956,7 +1956,7 @@ msgstr "डेटा सॉकेट जोडणी वेळेअभावी
 msgid "Unable to accept connection"
 msgstr "जोडणी स्विकारण्यास असमर्थ"
 
-#: methods/ftp.cc:869 methods/http.cc:1006 methods/rsh.cc:302
+#: methods/ftp.cc:869 methods/http.cc:1016 methods/rsh.cc:302
 msgid "Problem hashing file"
 msgstr "फाईल हॅश करण्यात त्रुटी"
 
@@ -2096,59 +2096,59 @@ msgstr "HTTP सर्व्हरने अवैध प्रत्त्य�
 msgid "The HTTP server sent an invalid Content-Length header"
 msgstr "HTTP सर्व्हरने अवैध मजकूर-लांबी शीर्षक पाठविले "
 
-#: methods/http.cc:615
+#: methods/http.cc:621
 msgid "The HTTP server sent an invalid Content-Range header"
 msgstr "HTTP सर्व्हरने अवैध मजकूर-विस्तार शीर्षक पाठविले"
 
-#: methods/http.cc:617
+#: methods/http.cc:623
 msgid "This HTTP server has broken range support"
 msgstr "HTTP सर्व्हरने विस्तार तांत्रिक मदत जोडली"
 
-#: methods/http.cc:641
+#: methods/http.cc:647
 msgid "Unknown date format"
 msgstr "अपरिचित दिनांक प्रकार/स्वरूप "
 
-#: methods/http.cc:799
+#: methods/http.cc:803
 msgid "Select failed"
 msgstr "चुकले/असमर्थ निवड करा"
 
-#: methods/http.cc:804
+#: methods/http.cc:808
 msgid "Connection timed out"
 msgstr "जोडणी वेळेअभावी तुटली"
 
-#: methods/http.cc:827
+#: methods/http.cc:831
 msgid "Error writing to output file"
 msgstr "निर्गत फाईल मध्ये लिहिताना त्रुटी/चूक"
 
-#: methods/http.cc:858
+#: methods/http.cc:862
 msgid "Error writing to file"
 msgstr "फाईल मध्ये लिहिण्यात चूक/त्रुटी"
 
-#: methods/http.cc:886
+#: methods/http.cc:890
 msgid "Error writing to the file"
 msgstr "फाईल मध्ये लिहिण्यात चूक/त्रुटी"
 
-#: methods/http.cc:900
+#: methods/http.cc:904
 msgid "Error reading from server. Remote end closed connection"
 msgstr "सर्व्हर मधून वाचण्यात चूक. लांब शेवट आणि बंद झालेली जोडणी"
 
-#: methods/http.cc:902
+#: methods/http.cc:906
 msgid "Error reading from server"
 msgstr "सर्व्हर मधून वाचण्यात चूक"
 
-#: methods/http.cc:991 apt-pkg/contrib/mmap.cc:281
+#: methods/http.cc:1001 apt-pkg/contrib/mmap.cc:281
 msgid "Failed to truncate file"
 msgstr "फाईल छोटी करणे असफल"
 
-#: methods/http.cc:1160
+#: methods/http.cc:1170
 msgid "Bad header data"
 msgstr "चुकीचा शीर्षक डाटा"
 
-#: methods/http.cc:1177 methods/http.cc:1232
+#: methods/http.cc:1187 methods/http.cc:1242
 msgid "Connection failed"
 msgstr "जोडणी अयशस्वी"
 
-#: methods/http.cc:1324
+#: methods/http.cc:1334
 msgid "Internal error"
 msgstr "अंतर्गत त्रुटी"
 

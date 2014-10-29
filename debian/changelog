@@ -1,3 +1,19 @@
+apt (0.8.10.3+squeeze7) squeeze-lts; urgency=medium
+
+  [ David Kalnischkies ]
+  * methods/http.cc:
+    - retry without partial data after a 416 response (closes: 710924)
+  
+ -- Michael Vogt <mvo@debian.org>  Fri, 17 Oct 2014 09:37:24 +0200
+
+apt (0.8.10.3+squeeze6) squeeze-lts; urgency=high
+
+  * methods/http.cc:
+    - fix regression when http range requests are used, thanks
+      to Steven McDonald
+
+ -- Michael Vogt <mvo@debian.org>  Mon, 13 Oct 2014 13:19:08 +0200
+
 apt (0.8.10.3+squeeze5) squeeze-lts; urgency=high
 
   * SECURITY UPDATE:

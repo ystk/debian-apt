@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt_po.pot\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-23 09:08+0200\n"
+"POT-Creation-Date: 2014-10-17 09:40+0200\n"
 "PO-Revision-Date: 2006-09-19 09:49+0530\n"
 "Last-Translator: Kinley Tshering <gasepkuenden2k3@hotmail.com>\n"
 "Language-Team: Dzongkha <pgeyleg@dit.gov.bt>\n"
@@ -1979,7 +1979,7 @@ msgstr "གནད་སྡུད་སོ་ཀེཊི་ མཐུད་ན�
 msgid "Unable to accept connection"
 msgstr "མཐུད་ལམ་འདི་དང་ལེན་འབད་མ་ཚུགས།"
 
-#: methods/ftp.cc:869 methods/http.cc:1006 methods/rsh.cc:302
+#: methods/ftp.cc:869 methods/http.cc:1016 methods/rsh.cc:302
 msgid "Problem hashing file"
 msgstr "ཡིག་སྣོད་ལུ་་དྲྭ་རྟགས་བཀལ་བའི་བསྒང་དཀའ་ངལ།"
 
@@ -2122,60 +2122,60 @@ msgstr "ཨེཆི་ཊི་ཊི་པི་ སར་བར་འདི�
 msgid "The HTTP server sent an invalid Content-Length header"
 msgstr "ཨེཆི་ཊི་ཊི་པི་སར་བར་འདི་གིས་ནུས་མེད་ནང་དོན་རིང་-ཚད་ཀྱི་མགོ་ཡིག་ཅིག་བཏང་ཡོད།"
 
-#: methods/http.cc:615
+#: methods/http.cc:621
 msgid "The HTTP server sent an invalid Content-Range header"
 msgstr "ཨེཆི་ཊི་ཊི་པི་ སར་བར་འདི་གིས་ ནུས་མེད་ ནང་དོན་-ཁྱབ་ཚད་ཀྱི་མགོ་ཡིག་ཅིག་བཏང་ཡོད།"
 
-#: methods/http.cc:617
+#: methods/http.cc:623
 msgid "This HTTP server has broken range support"
 msgstr "འ་ནི་ ཨེཆི་ཊི་ཊི་པི་ སར་བར་འདི་གིས་ ཁྱབ་ཚད་ཀྱི་རྒྱབ་སྐྱོར་དེ་ཆད་པ་བཟོ་བཏང་ནུག"
 
-#: methods/http.cc:641
+#: methods/http.cc:647
 msgid "Unknown date format"
 msgstr "མ་ཤེས་པའི་ཚེས་རྩ་སྒྲིག"
 
-#: methods/http.cc:799
+#: methods/http.cc:803
 msgid "Select failed"
 msgstr "སེལ་འཐུ་འཐུས་ཤོར་བྱུང་ཡོད།"
 
-#: methods/http.cc:804
+#: methods/http.cc:808
 msgid "Connection timed out"
 msgstr "མཐུད་ལམ་ངལ་མཚམས་འབད་ཡོད།"
 
-#: methods/http.cc:827
+#: methods/http.cc:831
 msgid "Error writing to output file"
 msgstr "ཨའུཊི་པུཊི་ཡིག་སྣོད་ལུ་འབྲིཝ་ད་འཛོལ་བ།"
 
-#: methods/http.cc:858
+#: methods/http.cc:862
 msgid "Error writing to file"
 msgstr "ཡིག་སྣོད་ལུ་འབྲིཝ་ད་འཛོལ་བ།"
 
-#: methods/http.cc:886
+#: methods/http.cc:890
 msgid "Error writing to the file"
 msgstr "ཡིག་སྣོད་འདི་ལུ་འབྲིཝ་ད་འཛོལ་བ།"
 
-#: methods/http.cc:900
+#: methods/http.cc:904
 msgid "Error reading from server. Remote end closed connection"
 msgstr "སར་བར་ནང་ལས་ལྷག་པའི་བསྒང་འཛོལ་བ། ཐག་རིང་མཇུག་གི་མཐུད་ལམ་དེ་ཁ་བསྡམས།"
 
-#: methods/http.cc:902
+#: methods/http.cc:906
 msgid "Error reading from server"
 msgstr "སར་བར་ནང་ལས་ལྷག་པའི་བསྒང་འཛོལ་བ།"
 
-#: methods/http.cc:991 apt-pkg/contrib/mmap.cc:281
+#: methods/http.cc:1001 apt-pkg/contrib/mmap.cc:281
 #, fuzzy
 msgid "Failed to truncate file"
 msgstr "%s་ཡིག་སྣོད་འདི་འབྲི་ནི་ལུ་འཐུས་ཤོར་བྱུང་ཡོད།"
 
-#: methods/http.cc:1160
+#: methods/http.cc:1170
 msgid "Bad header data"
 msgstr "མགོ་ཡིག་གནད་སྡུད་བྱང་ཉེས།"
 
-#: methods/http.cc:1177 methods/http.cc:1232
+#: methods/http.cc:1187 methods/http.cc:1242
 msgid "Connection failed"
 msgstr "བཐུད་ལམ་འཐུས་ཤོར་བྱུང་ཡོད།"
 
-#: methods/http.cc:1324
+#: methods/http.cc:1334
 msgid "Internal error"
 msgstr "ནང་འཁོད་འཛོལ་བ།"
 
