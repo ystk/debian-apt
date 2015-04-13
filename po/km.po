@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: apt_po_km\n"
 "Report-Msgid-Bugs-To: APT Development Team <deity@lists.debian.org>\n"
-"POT-Creation-Date: 2014-07-10 12:36+0200\n"
+"POT-Creation-Date: 2015-02-23 07:07-0500\n"
 "PO-Revision-Date: 2006-10-10 09:48+0700\n"
 "Last-Translator: Khoem Sokhem <khoemsokhem@khmeros.info>\n"
 "Language-Team: Khmer <support@khmeros.info>\n"
@@ -103,67 +103,67 @@ msgstr "ទំហំ​សរុប​ដែល​ទុក​សម្រាប
 msgid "Package file %s is out of sync."
 msgstr "ឯកសារ​កញ្ចប់ %s នៅ​ខាងក្រៅ​ការ​ធ្វើសមកាលកម្ម ។"
 
-#: cmdline/apt-cache.cc:584 cmdline/apt-cache.cc:1441
-#: cmdline/apt-cache.cc:1443 cmdline/apt-cache.cc:1520 cmdline/apt-mark.cc:59
+#: cmdline/apt-cache.cc:584 cmdline/apt-cache.cc:1442
+#: cmdline/apt-cache.cc:1444 cmdline/apt-cache.cc:1521 cmdline/apt-mark.cc:59
 #: cmdline/apt-mark.cc:106 cmdline/apt-mark.cc:232
 #: apt-private/private-show.cc:171 apt-private/private-show.cc:173
 msgid "No packages found"
 msgstr "រក​កញ្ចប់​មិន​ឃើញ"
 
-#: cmdline/apt-cache.cc:1254
+#: cmdline/apt-cache.cc:1254 apt-private/private-search.cc:41
 #, fuzzy
 msgid "You must give at least one search pattern"
 msgstr "អ្នក​ត្រូវ​តែ​ផ្ដល់​លំនាំ​មួយ​ដែល​ពិត​ប្រាកដ"
 
-#: cmdline/apt-cache.cc:1420
+#: cmdline/apt-cache.cc:1421
 msgid "This command is deprecated. Please use 'apt-mark showauto' instead."
 msgstr ""
 
-#: cmdline/apt-cache.cc:1515 apt-pkg/cacheset.cc:596
+#: cmdline/apt-cache.cc:1516 apt-pkg/cacheset.cc:596
 #, c-format
 msgid "Unable to locate package %s"
 msgstr "មិន​អាច​កំណត់​ទីតាំង​កញ្ចប់ %s បានឡើយ"
 
-#: cmdline/apt-cache.cc:1545
+#: cmdline/apt-cache.cc:1546
 msgid "Package files:"
 msgstr "ឯកសារ​កញ្ចប់ ៖"
 
-#: cmdline/apt-cache.cc:1552 cmdline/apt-cache.cc:1643
+#: cmdline/apt-cache.cc:1553 cmdline/apt-cache.cc:1644
 msgid "Cache is out of sync, can't x-ref a package file"
 msgstr "ឃ្លាំង​សម្ងាត់​ឋិតនៅ​ក្រៅ​ការ​ធ្វើ​សមកាល​កម្ម ដែលមិន​អាច x-ref ឯកសារ​កញ្ចប់​បាន​ទេ"
 
 #. Show any packages have explicit pins
-#: cmdline/apt-cache.cc:1566
+#: cmdline/apt-cache.cc:1567
 msgid "Pinned packages:"
 msgstr "កញ្ចប់​ដែល​បាន​ខ្ទាស់ ៖"
 
-#: cmdline/apt-cache.cc:1578 cmdline/apt-cache.cc:1623
+#: cmdline/apt-cache.cc:1579 cmdline/apt-cache.cc:1624
 msgid "(not found)"
 msgstr "(រក​មិន​ឃើញ)"
 
-#: cmdline/apt-cache.cc:1586
+#: cmdline/apt-cache.cc:1587
 msgid "  Installed: "
 msgstr "  បាន​ដំឡើង ៖ "
 
-#: cmdline/apt-cache.cc:1587
+#: cmdline/apt-cache.cc:1588
 msgid "  Candidate: "
 msgstr "  សាកល្បង ៖ "
 
-#: cmdline/apt-cache.cc:1605 cmdline/apt-cache.cc:1613
+#: cmdline/apt-cache.cc:1606 cmdline/apt-cache.cc:1614
 msgid "(none)"
 msgstr "(គ្មាន)"
 
-#: cmdline/apt-cache.cc:1620
+#: cmdline/apt-cache.cc:1621
 msgid "  Package pin: "
 msgstr "  ខ្ទាស់​កញ្ចប់ ៖ "
 
 #. Show the priority tables
-#: cmdline/apt-cache.cc:1629
+#: cmdline/apt-cache.cc:1630
 msgid "  Version table:"
 msgstr "  តារាង​កំណែ ៖"
 
-#: cmdline/apt-cache.cc:1742 cmdline/apt-cdrom.cc:207 cmdline/apt-config.cc:83
-#: cmdline/apt-get.cc:1586 cmdline/apt-helper.cc:59 cmdline/apt-mark.cc:388
+#: cmdline/apt-cache.cc:1743 cmdline/apt-cdrom.cc:207 cmdline/apt-config.cc:83
+#: cmdline/apt-get.cc:1591 cmdline/apt-helper.cc:84 cmdline/apt-mark.cc:388
 #: cmdline/apt.cc:42 cmdline/apt-extracttemplates.cc:217
 #: ftparchive/apt-ftparchive.cc:620 cmdline/apt-internal-solver.cc:45
 #: cmdline/apt-sortpkgs.cc:147
@@ -171,7 +171,7 @@ msgstr "  តារាង​កំណែ ៖"
 msgid "%s %s for %s compiled on %s %s\n"
 msgstr "%s %s សម្រាប់ %s %s បាន​ចងក្រងនៅលើ​%s %s\n"
 
-#: cmdline/apt-cache.cc:1749
+#: cmdline/apt-cache.cc:1750
 #, fuzzy
 msgid ""
 "Usage: apt-cache [options] command\n"
@@ -361,7 +361,7 @@ msgstr "មិន​អាច​ចាក់​សោ​ថត​ទាញ​យ
 msgid "Must specify at least one package to fetch source for"
 msgstr "យ៉ាងហោចណាស់​ត្រូវ​​បញ្ជាក់​​កញ្ចប់​មួយ ​ដើម្បី​ទៅ​​ប្រមូល​យក​ប្រភព​សម្រាប់"
 
-#: cmdline/apt-get.cc:766 cmdline/apt-get.cc:1066
+#: cmdline/apt-get.cc:766 cmdline/apt-get.cc:1071
 #, c-format
 msgid "Unable to find a source package for %s"
 msgstr "មិន​អាច​រក​កញ្ចប់ប្រភព​​សម្រាប់ %s បានឡើយ"
@@ -381,114 +381,114 @@ msgid ""
 "to retrieve the latest (possibly unreleased) updates to the package.\n"
 msgstr ""
 
-#: cmdline/apt-get.cc:843
+#: cmdline/apt-get.cc:839
 #, c-format
 msgid "Skipping already downloaded file '%s'\n"
 msgstr "កំពុង​រំលង​ឯកសារ​ដែល​បាន​ទាញយក​រួច​ '%s'\n"
 
-#: cmdline/apt-get.cc:869 cmdline/apt-get.cc:872
+#: cmdline/apt-get.cc:873 cmdline/apt-get.cc:876
 #: apt-private/private-install.cc:187 apt-private/private-install.cc:190
 #, c-format
 msgid "Couldn't determine free space in %s"
 msgstr "មិន​អាច​កំណត់​ទំហំ​ទំនេរ​ក្នុង​ %s បានឡើយ"
 
-#: cmdline/apt-get.cc:882
+#: cmdline/apt-get.cc:886
 #, c-format
 msgid "You don't have enough free space in %s"
 msgstr "អ្នក​ពុំ​មាន​ទំហំ​ទំនេរ​គ្រប់គ្រាន់​ទេ​នៅក្នុង​ %s ឡើយ"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement strings, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:891
+#: cmdline/apt-get.cc:895
 #, c-format
 msgid "Need to get %sB/%sB of source archives.\n"
 msgstr "ត្រូវការ​យក​ %sB/%sB នៃ​ប័ណ្ណសារ​ប្រភព ។\n"
 
 #. TRANSLATOR: The required space between number and unit is already included
 #. in the replacement string, so %sB will be correctly translate in e.g. 1,5 MB
-#: cmdline/apt-get.cc:896
+#: cmdline/apt-get.cc:900
 #, c-format
 msgid "Need to get %sB of source archives.\n"
 msgstr "ត្រូវការ​យក​ %sB នៃ​ប័ណ្ណសារ​ប្រភព​ ។\n"
 
-#: cmdline/apt-get.cc:902
+#: cmdline/apt-get.cc:906
 #, c-format
 msgid "Fetch source %s\n"
 msgstr "ទៅប្រមូល​ប្រភព​ %s\n"
 
-#: cmdline/apt-get.cc:920
+#: cmdline/apt-get.cc:924
 msgid "Failed to fetch some archives."
 msgstr "បរាជ័យ​ក្នុងការទៅប្រមូលយក​ប័ណ្ណសារ​មួយចំនួន ។"
 
-#: cmdline/apt-get.cc:925 apt-private/private-install.cc:314
+#: cmdline/apt-get.cc:929 apt-private/private-install.cc:314
 msgid "Download complete and in download only mode"
 msgstr "បានបញ្ចប់ការទាញ​យក​ ហើយ​តែ​ក្នុង​របៀប​​ទាញ​យក​ប៉ុណ្ណោះ"
 
-#: cmdline/apt-get.cc:950
+#: cmdline/apt-get.cc:954
 #, c-format
 msgid "Skipping unpack of already unpacked source in %s\n"
 msgstr "កំពុង​រំលង​ការស្រាយ​នៃប្រភព​ដែលបានស្រាយរួច​នៅក្នុង %s\n"
 
-#: cmdline/apt-get.cc:962
+#: cmdline/apt-get.cc:967
 #, c-format
 msgid "Unpack command '%s' failed.\n"
 msgstr "ពាក្យ​បញ្ជា​ស្រាយ '%s' បាន​បរាជ័យ​ ។\n"
 
-#: cmdline/apt-get.cc:963
+#: cmdline/apt-get.cc:968
 #, c-format
 msgid "Check if the 'dpkg-dev' package is installed.\n"
 msgstr "ពិនិត្យ​ប្រសិន​បើកញ្ចប់ 'dpkg-dev' មិន​ទាន់​បាន​ដំឡើង​ ។\n"
 
-#: cmdline/apt-get.cc:991
+#: cmdline/apt-get.cc:996
 #, c-format
 msgid "Build command '%s' failed.\n"
 msgstr "សាងសង​ពាក្យ​បញ្ជា​ '%s' បានបរាជ័យ​ ។\n"
 
-#: cmdline/apt-get.cc:1010
+#: cmdline/apt-get.cc:1015
 msgid "Child process failed"
 msgstr "ដំណើរ​ការ​កូន​បាន​បរាជ័យ​"
 
-#: cmdline/apt-get.cc:1029
+#: cmdline/apt-get.cc:1034
 msgid "Must specify at least one package to check builddeps for"
 msgstr "ត្រូវតែ​បញ្ជាក់​យ៉ាងហោចណាស់​មួយកញ្ចប់ដើម្បីពិនិត្យ builddeps សម្រាប់"
 
-#: cmdline/apt-get.cc:1054
+#: cmdline/apt-get.cc:1059
 #, c-format
 msgid ""
 "No architecture information available for %s. See apt.conf(5) APT::"
 "Architectures for setup"
 msgstr ""
 
-#: cmdline/apt-get.cc:1078 cmdline/apt-get.cc:1081
+#: cmdline/apt-get.cc:1083 cmdline/apt-get.cc:1086
 #, c-format
 msgid "Unable to get build-dependency information for %s"
 msgstr "មិន​អាច​សាងសង់​​ព័ត៌មាន​ភាពអស្រ័យ​សម្រាប់ %s"
 
-#: cmdline/apt-get.cc:1101
+#: cmdline/apt-get.cc:1106
 #, c-format
 msgid "%s has no build depends.\n"
 msgstr "%s មិនមានភាពអាស្រ័យ​ស្ថាបនាឡើយ​ ។\n"
 
-#: cmdline/apt-get.cc:1271
+#: cmdline/apt-get.cc:1276
 #, fuzzy, c-format
 msgid ""
 "%s dependency for %s can't be satisfied because %s is not allowed on '%s' "
 "packages"
 msgstr "%s ភាពអស្រ័យ​សម្រាប់​ %s មិន​អាច​ធ្វើ​ឲ្យ​ពេញចិត្ត​ ព្រោះ​រក​​ %s កញ្ចប់​មិន​ឃើញ​ "
 
-#: cmdline/apt-get.cc:1289
+#: cmdline/apt-get.cc:1294
 #, c-format
 msgid ""
 "%s dependency for %s cannot be satisfied because the package %s cannot be "
 "found"
 msgstr "%s ភាពអស្រ័យ​សម្រាប់​ %s មិន​អាច​ធ្វើ​ឲ្យ​ពេញចិត្ត​ ព្រោះ​រក​​ %s កញ្ចប់​មិន​ឃើញ​ "
 
-#: cmdline/apt-get.cc:1312
+#: cmdline/apt-get.cc:1317
 #, c-format
 msgid "Failed to satisfy %s dependency for %s: Installed package %s is too new"
 msgstr "បរាជ័យ​ក្នុងការ​តម្រូវចិត្តភាពអាស្រ័យ %s សម្រាប់ %s ៖ កញ្ចប់ %s ដែលបានដំឡើង គឺថ្មីពេក"
 
-#: cmdline/apt-get.cc:1351
+#: cmdline/apt-get.cc:1356
 #, fuzzy, c-format
 msgid ""
 "%s dependency for %s cannot be satisfied because candidate version of "
@@ -497,37 +497,37 @@ msgstr ""
 "ភាពអាស្រ័យ %s សម្រាប់ %s មិនអាច​តម្រូវចិត្តបានទេ ព្រោះ មិនមាន​កំណែ​នៃកញ្ចប់ %s ដែលអាច​តម្រូវចិត្ត​"
 "តម្រូវការ​កំណែបានឡើយ"
 
-#: cmdline/apt-get.cc:1357
+#: cmdline/apt-get.cc:1362
 #, fuzzy, c-format
 msgid ""
 "%s dependency for %s cannot be satisfied because package %s has no candidate "
 "version"
 msgstr "%s ភាពអស្រ័យ​សម្រាប់​ %s មិន​អាច​ធ្វើ​ឲ្យ​ពេញចិត្ត​ ព្រោះ​រក​​ %s កញ្ចប់​មិន​ឃើញ​ "
 
-#: cmdline/apt-get.cc:1380
+#: cmdline/apt-get.cc:1385
 #, c-format
 msgid "Failed to satisfy %s dependency for %s: %s"
 msgstr "បរាជ័យ​ក្នុងការ​តម្រូវចិត្តភាពអាស្រ័យ %s សម្រាប់ %s: %s"
 
-#: cmdline/apt-get.cc:1395
+#: cmdline/apt-get.cc:1400
 #, c-format
 msgid "Build-dependencies for %s could not be satisfied."
 msgstr "ភាពអាស្រ័យ​ដែល​បង្កើត​ %s មិន​អាច​បំពេញ​សេចក្ដី​ត្រូវការ​បាន​ទេ ។"
 
-#: cmdline/apt-get.cc:1400
+#: cmdline/apt-get.cc:1405
 msgid "Failed to process build dependencies"
 msgstr "បាន​បរាជ័យ​ក្នុង​ការ​ដំណើរ​​ការ​បង្កើត​ភាព​អាស្រ័យ"
 
-#: cmdline/apt-get.cc:1493 cmdline/apt-get.cc:1505
+#: cmdline/apt-get.cc:1498 cmdline/apt-get.cc:1510
 #, fuzzy, c-format
 msgid "Changelog for %s (%s)"
 msgstr "កំពុង​តភ្ជាប់​ទៅ​កាន់​ %s (%s)"
 
-#: cmdline/apt-get.cc:1591
+#: cmdline/apt-get.cc:1596
 msgid "Supported modules:"
 msgstr "ម៉ូឌុល​ដែល​គាំទ្រ ៖ "
 
-#: cmdline/apt-get.cc:1632
+#: cmdline/apt-get.cc:1637
 #, fuzzy
 msgid ""
 "Usage: apt-get [options] command\n"
@@ -612,16 +612,20 @@ msgstr ""
 "pages for more information and options.\n"
 "                       This APT has Super Cow Powers.\n"
 
-#: cmdline/apt-helper.cc:35
+#: cmdline/apt-helper.cc:36
+msgid "Need one URL as argument"
+msgstr ""
+
+#: cmdline/apt-helper.cc:49
 #, fuzzy
 msgid "Must specify at least one pair url/filename"
 msgstr "យ៉ាងហោចណាស់​ត្រូវ​​បញ្ជាក់​​កញ្ចប់​មួយ ​ដើម្បី​ទៅ​​ប្រមូល​យក​ប្រភព​សម្រាប់"
 
-#: cmdline/apt-helper.cc:53
+#: cmdline/apt-helper.cc:73 cmdline/apt-helper.cc:77
 msgid "Download Failed"
 msgstr ""
 
-#: cmdline/apt-helper.cc:66
+#: cmdline/apt-helper.cc:91
 msgid ""
 "Usage: apt-helper [options] command\n"
 "       apt-helper [options] download-file uri target-path\n"
@@ -630,6 +634,7 @@ msgid ""
 "\n"
 "Commands:\n"
 "   download-file - download the given uri to the target-path\n"
+"   auto-detect-proxy - detect proxy using apt.conf\n"
 "\n"
 "                       This APT helper has Super Meep Powers.\n"
 msgstr ""
@@ -659,8 +664,9 @@ msgstr "%s ជាកំណែ​ដែលថ្មីបំផុតរួចទ
 msgid "%s was already not hold.\n"
 msgstr "%s ជាកំណែ​ដែលថ្មីបំផុតរួចទៅហើយ ។\n"
 
-#: cmdline/apt-mark.cc:258 cmdline/apt-mark.cc:339 apt-pkg/deb/dpkgpm.cc:1202
+#: cmdline/apt-mark.cc:258 cmdline/apt-mark.cc:339
 #: apt-pkg/contrib/fileutl.cc:812 apt-pkg/contrib/gpgv.cc:219
+#: apt-pkg/deb/dpkgpm.cc:1317
 #, c-format
 msgid "Waited for %s but it wasn't there"
 msgstr "រង់ចាំប់​ %s ប៉ុន្តែ ​វា​មិន​នៅទីនោះ"
@@ -754,16 +760,16 @@ msgstr "មិនអាចអាន់ម៉ោន ស៊ីឌី​-រ៉ូ�
 msgid "Disk not found."
 msgstr "រក​ថាសមិ​ន​ឃើញ​ ។"
 
-#: methods/cdrom.cc:262 methods/file.cc:83 methods/rsh.cc:278
+#: methods/cdrom.cc:262 methods/file.cc:83 methods/rsh.cc:281
 msgid "File not found"
 msgstr "រកឯកសារ​មិន​ឃើញ​"
 
-#: methods/copy.cc:47 methods/gzip.cc:117 methods/rred.cc:598
+#: methods/copy.cc:61 methods/gzip.cc:117 methods/rred.cc:598
 #: methods/rred.cc:608
 msgid "Failed to stat"
 msgstr "បរាជ័យ​ក្នុងការថ្លែង"
 
-#: methods/copy.cc:83 methods/gzip.cc:124 methods/rred.cc:605
+#: methods/copy.cc:105 methods/gzip.cc:124 methods/rred.cc:605
 msgid "Failed to set modification time"
 msgstr "បរាជ័យក្នុងការកំណត់​ពេលវេលា​ការកែប្រែ​"
 
@@ -816,7 +822,7 @@ msgstr "ពាក្យ​បញ្ជា​ស្គ្រីប​ចូល​
 msgid "TYPE failed, server said: %s"
 msgstr "TYPE បានបរាជ័យ​ ម៉ាស៊ីន​បម្រើ​បាននិយាយ​ ៖ %s"
 
-#: methods/ftp.cc:344 methods/ftp.cc:456 methods/rsh.cc:195 methods/rsh.cc:240
+#: methods/ftp.cc:344 methods/ftp.cc:456 methods/rsh.cc:195 methods/rsh.cc:243
 msgid "Connection timeout"
 msgstr "អស់ពេល​ក្នុងការតភ្ជាប់​"
 
@@ -838,7 +844,7 @@ msgstr "ឆ្លើយតប​សតិ​បណ្តោះអាសន្ន
 msgid "Protocol corruption"
 msgstr "ការបង្ខូច​ពិធីការ​"
 
-#: methods/ftp.cc:462 methods/rsh.cc:246 apt-pkg/contrib/fileutl.cc:872
+#: methods/ftp.cc:462 methods/rsh.cc:249 apt-pkg/contrib/fileutl.cc:872
 #: apt-pkg/contrib/fileutl.cc:1598 apt-pkg/contrib/fileutl.cc:1607
 #: apt-pkg/contrib/fileutl.cc:1612 apt-pkg/contrib/fileutl.cc:1614
 #: apt-pkg/contrib/fileutl.cc:1639
@@ -899,7 +905,7 @@ msgstr "ការតភ្ជាប់​រន្ធ​​ទិន្នន័
 msgid "Unable to accept connection"
 msgstr "មិនអាច​ទទួលយក​ការតភ្ជាប់​បានឡើយ"
 
-#: methods/ftp.cc:877 methods/server.cc:352 methods/rsh.cc:316
+#: methods/ftp.cc:877 methods/server.cc:357 methods/rsh.cc:319
 msgid "Problem hashing file"
 msgstr "បញ្ហា​ធ្វើឲ្យខូច​ឯកសារ"
 
@@ -908,7 +914,7 @@ msgstr "បញ្ហា​ធ្វើឲ្យខូច​ឯកសារ"
 msgid "Unable to fetch file, server said '%s'"
 msgstr "មិន​អាច​ទៅ​ប្រមូល​យក​ឯកសារ​បានឡើយ ម៉ាស៊ីន​បម្រើ​បាន​និយាយ​ '%s'"
 
-#: methods/ftp.cc:905 methods/rsh.cc:335
+#: methods/ftp.cc:905 methods/rsh.cc:338
 msgid "Data socket timed out"
 msgstr "រន្ធ​ទិន្នន័យ​បាន​អស់​ពេល​"
 
@@ -958,7 +964,7 @@ msgstr "មិន​អាច​តភ្ជាប់​ទៅកាន់​ %s
 
 #. We say this mainly because the pause here is for the
 #. ssh connection that is still going
-#: methods/connect.cc:154 methods/rsh.cc:439
+#: methods/connect.cc:154 methods/rsh.cc:442
 #, c-format
 msgid "Connecting to %s"
 msgstr "កំពុង​តភ្ជាប់​ទៅកាន់ %s"
@@ -1028,317 +1034,76 @@ msgstr "ហត្ថលេខា​ខាងក្រោម​មិន​អា
 msgid "Empty files can't be valid archives"
 msgstr ""
 
-#: methods/http.cc:509
+#: methods/http.cc:513
 msgid "Error writing to the file"
 msgstr "កំហុសក្នុងការ​សរសេរ​ទៅកាន់​ឯកសារ"
 
-#: methods/http.cc:523
+#: methods/http.cc:527
 msgid "Error reading from server. Remote end closed connection"
 msgstr "កំហុស​ក្នុងការ​អាន​ពី​ម៉ាស៊ីនបម្រើ ។ ការបញ្ចប់​ពីចម្ងាយ​បានបិទការតភ្ជាប់"
 
-#: methods/http.cc:525
+#: methods/http.cc:529
 msgid "Error reading from server"
 msgstr "កំហុស​ក្នុងការអាន​ពី​ម៉ាស៊ីន​បម្រើ"
 
-#: methods/http.cc:561
+#: methods/http.cc:565
 msgid "Error writing to file"
 msgstr "កំហុស​ក្នុងការ​សរសេរទៅកាន់​ឯកសារ"
 
-#: methods/http.cc:621
+#: methods/http.cc:625
 msgid "Select failed"
 msgstr "ជ្រើស​បាន​បរាជ័យ​"
 
-#: methods/http.cc:626
+#: methods/http.cc:630
 msgid "Connection timed out"
 msgstr "ការតភ្ជាប់​បាន​អស់ពេល​"
 
-#: methods/http.cc:649
+#: methods/http.cc:653
 msgid "Error writing to output file"
 msgstr "កំហុស​ក្នុងការ​សរសេរទៅកាន់​ឯកសារលទ្ធផល"
 
-#: methods/server.cc:51
+#: methods/server.cc:52
 msgid "Waiting for headers"
 msgstr "កំពុង​រង់ចាំ​បឋមកថា"
 
-#: methods/server.cc:109
+#: methods/server.cc:111
 msgid "Bad header line"
 msgstr "ជួរ​បឋមកថា​ខូច​"
 
-#: methods/server.cc:134 methods/server.cc:141
+#: methods/server.cc:136 methods/server.cc:143
 msgid "The HTTP server sent an invalid reply header"
 msgstr "ម៉ាស៊ីន​បម្រើ​ HTTP បានផ្ញើបឋមកថាចម្លើយតបមិនត្រឹមត្រូវ"
 
-#: methods/server.cc:171
+#: methods/server.cc:173
 msgid "The HTTP server sent an invalid Content-Length header"
 msgstr "ម៉ាស៊ីន​បម្រើ​ HTTP បានផ្ញើ​​បឋមកថាប្រវែង​​​មាតិកា​មិនត្រឹមត្រូវ​"
 
-#: methods/server.cc:194
+#: methods/server.cc:193
 msgid "The HTTP server sent an invalid Content-Range header"
 msgstr "ម៉ាស៊ីន​បម្រើ​ HTTP បានផ្ញើ​បឋមកថា​ជួរ​មាតិកា​មិន​ត្រឹមត្រូវ​"
 
-#: methods/server.cc:196
+#: methods/server.cc:195
 msgid "This HTTP server has broken range support"
 msgstr "ម៉ាស៊ីន​បម្រើ HTTP នេះបាន​ខូច​​​ជួរ​គាំទ្រ​"
 
-#: methods/server.cc:220
+#: methods/server.cc:219
 msgid "Unknown date format"
 msgstr "មិនស្គាល់​ទ្រង់ទ្រាយ​កាលបរិច្ឆេទ"
 
-#: methods/server.cc:489
+#: methods/server.cc:494
 msgid "Bad header data"
 msgstr "ទិន្នន័យ​បឋមកថា​ខូច"
 
-#: methods/server.cc:506 methods/server.cc:562
+#: methods/server.cc:511 methods/server.cc:567
 msgid "Connection failed"
 msgstr "ការតភ្ជាប់​បាន​បរាជ័យ​"
 
-#: methods/server.cc:654
+#: methods/server.cc:659
 msgid "Internal error"
 msgstr "កំហុស​ខាង​ក្នុង​"
 
-#: apt-private/private-upgrade.cc:25
-msgid "Calculating upgrade... "
-msgstr "កំពុង​គណនា​ការ​ធ្វើ​ឲ្យ​ប្រសើរ... "
-
-#: apt-private/private-upgrade.cc:28
-msgid "Done"
-msgstr "ធ្វើរួច​"
-
-#: apt-private/private-cacheset.cc:35 apt-private/private-search.cc:47
+#: apt-private/private-cacheset.cc:37 apt-private/private-search.cc:65
 msgid "Sorting"
-msgstr ""
-
-#: apt-private/private-list.cc:131
-msgid "Listing"
-msgstr ""
-
-#: apt-private/private-list.cc:164
-#, c-format
-msgid "There is %i additional version. Please use the '-a' switch to see it"
-msgid_plural ""
-"There are %i additional versions. Please use the '-a' switch to see them."
-msgstr[0] ""
-msgstr[1] ""
-
-#: apt-private/private-cachefile.cc:93
-msgid "Correcting dependencies..."
-msgstr "កំពុង​កែ​ភាពអាស្រ័យ​..."
-
-#: apt-private/private-cachefile.cc:96
-msgid " failed."
-msgstr " បាន​បរាជ័យ ។"
-
-#: apt-private/private-cachefile.cc:99
-msgid "Unable to correct dependencies"
-msgstr "មិន​អាច​កែ​ភាព​អាស្រ័យ​បានឡើយ​"
-
-#: apt-private/private-cachefile.cc:102
-msgid "Unable to minimize the upgrade set"
-msgstr "មិនអាច​បង្រួម​ការ​កំណត់​ភាព​ប្រសើរ​​បាន​ឡើយ​"
-
-#: apt-private/private-cachefile.cc:104
-msgid " Done"
-msgstr " ធ្វើ​រួច"
-
-#: apt-private/private-cachefile.cc:108
-msgid "You might want to run 'apt-get -f install' to correct these."
-msgstr "អ្នក​ប្រហែល​ជា​ចង់រត់ 'apt-get -f install' ដើម្បី​កែ​វា​​ទាំងនេះ​ហើយ ។"
-
-#: apt-private/private-cachefile.cc:111
-msgid "Unmet dependencies. Try using -f."
-msgstr "ភាព​អាស្រ័យ​ដែល​ខុស​គ្នា ។ ព្យាយាម​ការ​ប្រើ -f ។"
-
-#: apt-private/private-output.cc:103 apt-private/private-show.cc:84
-#: apt-private/private-show.cc:89
-msgid "unknown"
-msgstr ""
-
-#: apt-private/private-output.cc:234
-#, fuzzy, c-format
-msgid "[installed,upgradable to: %s]"
-msgstr " [បានដំឡើង​]"
-
-#: apt-private/private-output.cc:238
-#, fuzzy
-msgid "[installed,local]"
-msgstr " [បានដំឡើង​]"
-
-#: apt-private/private-output.cc:241
-msgid "[installed,auto-removable]"
-msgstr ""
-
-#: apt-private/private-output.cc:243
-#, fuzzy
-msgid "[installed,automatic]"
-msgstr " [បានដំឡើង​]"
-
-#: apt-private/private-output.cc:245
-#, fuzzy
-msgid "[installed]"
-msgstr " [បានដំឡើង​]"
-
-#: apt-private/private-output.cc:249
-#, c-format
-msgid "[upgradable from: %s]"
-msgstr ""
-
-#: apt-private/private-output.cc:253
-msgid "[residual-config]"
-msgstr ""
-
-#: apt-private/private-output.cc:435
-#, c-format
-msgid "but %s is installed"
-msgstr "ប៉ុន្តែ​ %s ត្រូវ​បាន​ដំឡើង​"
-
-#: apt-private/private-output.cc:437
-#, c-format
-msgid "but %s is to be installed"
-msgstr "ប៉ុន្តែ​ %s នឹង​ត្រូវ​បាន​ដំឡើ​ង"
-
-#: apt-private/private-output.cc:444
-msgid "but it is not installable"
-msgstr "ប៉ុន្តែ​​វា​មិន​អាច​ដំឡើង​បាន​ទេ​"
-
-#: apt-private/private-output.cc:446
-msgid "but it is a virtual package"
-msgstr "ប៉ុន្តែ​​វា​ជា​កញ្ចប់​និម្មិត​"
-
-#: apt-private/private-output.cc:449
-msgid "but it is not installed"
-msgstr "ប៉ុន្តែ​វា​មិន​បាន​ដំឡើង​ទេ​"
-
-#: apt-private/private-output.cc:449
-msgid "but it is not going to be installed"
-msgstr "ប៉ុន្តែ វា​នឹង​មិន​ត្រូវ​បាន​ដំឡើង​ទេ"
-
-#: apt-private/private-output.cc:454
-msgid " or"
-msgstr " ឬ"
-
-#: apt-private/private-output.cc:468 apt-private/private-output.cc:480
-msgid "The following packages have unmet dependencies:"
-msgstr "កញ្ចប់​ខាងក្រោម​មាន​ភាពអាស្រ័យ​ដែល​ខុស​គ្នា ៖"
-
-#: apt-private/private-output.cc:503
-msgid "The following NEW packages will be installed:"
-msgstr "កញ្ចប់​ថ្មី​ខាងក្រោម​នឹង​ត្រូវ​បាន​ដំឡើង​ ៖"
-
-#: apt-private/private-output.cc:529
-msgid "The following packages will be REMOVED:"
-msgstr "កញ្ចប់​ខាងក្រោម​នឹងត្រូវ​បាន​យកចេញ ៖"
-
-#: apt-private/private-output.cc:551
-msgid "The following packages have been kept back:"
-msgstr "​កញ្ចប់​ខាង​ក្រោម​ត្រូវ​បាន​យក​ត្រឡប់​មក​វិញ ៖"
-
-#: apt-private/private-output.cc:572
-msgid "The following packages will be upgraded:"
-msgstr "កញ្ចប់​ខាងក្រោម​នឹង​​ត្រូវ​បាន​​ធ្វើ​ឲ្យប្រសើ​ឡើង ៖"
-
-#: apt-private/private-output.cc:593
-msgid "The following packages will be DOWNGRADED:"
-msgstr "កញ្ចប់​ខាងក្រោម​នឹង​​ត្រូវ​បាន​បន្ទាប ៖"
-
-#: apt-private/private-output.cc:613
-msgid "The following held packages will be changed:"
-msgstr "កញ្ចប់​រង់ចាំ​ខាងក្រោម​នឹង​ត្រូវ​​បានផ្លាស់​​ប្តូរ​ ៖"
-
-#: apt-private/private-output.cc:668
-#, c-format
-msgid "%s (due to %s) "
-msgstr "%s (ដោយ​សារតែ​ %s) "
-
-#: apt-private/private-output.cc:676
-msgid ""
-"WARNING: The following essential packages will be removed.\n"
-"This should NOT be done unless you know exactly what you are doing!"
-msgstr ""
-"ព្រមាន​ ៖ កញ្ចប់ដែល​ចាំបាច់​ខាងក្រោម​នឹង​ត្រូវ​បាន​យកចេញ ។\n"
-"ការយកចេញ​នេះ​មិន​ត្រូវ​បានធ្វើ​ទេ​លុះត្រា​តែ​អ្នកដឹង​ថា​​អ្នក​កំពុង​ធ្វើ​អ្វីឲ្យប្រាកដ !"
-
-#: apt-private/private-output.cc:707
-#, c-format
-msgid "%lu upgraded, %lu newly installed, "
-msgstr "%lu ត្រូវ​បាន​ធ្វើ​ឲ្យ​ប្រសើរ %lu ត្រូវ​បានដំឡើង​ថ្មី "
-
-#: apt-private/private-output.cc:711
-#, c-format
-msgid "%lu reinstalled, "
-msgstr "%lu ត្រូវ​បាន​ដំឡើង​ឡើង​វិញ "
-
-#: apt-private/private-output.cc:713
-#, c-format
-msgid "%lu downgraded, "
-msgstr "%lu ​ត្រូវបានបន្ទាប់ "
-
-#: apt-private/private-output.cc:715
-#, c-format
-msgid "%lu to remove and %lu not upgraded.\n"
-msgstr "%lu ដែលត្រូវ​យក​ចេញ​ ហើយ​ %lu មិន​​បាន​ធ្វើ​ឲ្យ​ប្រសើរឡើយ ។\n"
-
-#: apt-private/private-output.cc:719
-#, c-format
-msgid "%lu not fully installed or removed.\n"
-msgstr "%lu មិន​បាន​ដំឡើង​ ឬ យក​ចេញបានគ្រប់ជ្រុងជ្រោយ​ឡើយ​ ។\n"
-
-#. TRANSLATOR: Yes/No question help-text: defaulting to Y[es]
-#. e.g. "Do you want to continue? [Y/n] "
-#. The user has to answer with an input matching the
-#. YESEXPR/NOEXPR defined in your l10n.
-#: apt-private/private-output.cc:741
-msgid "[Y/n]"
-msgstr ""
-
-#. TRANSLATOR: Yes/No question help-text: defaulting to N[o]
-#. e.g. "Should this file be removed? [y/N] "
-#. The user has to answer with an input matching the
-#. YESEXPR/NOEXPR defined in your l10n.
-#: apt-private/private-output.cc:747
-msgid "[y/N]"
-msgstr ""
-
-#. TRANSLATOR: "Yes" answer printed for a yes/no question if --assume-yes is set
-#: apt-private/private-output.cc:758
-msgid "Y"
-msgstr "Y"
-
-#. TRANSLATOR: "No" answer printed for a yes/no question if --assume-no is set
-#: apt-private/private-output.cc:764
-msgid "N"
-msgstr ""
-
-#: apt-private/private-output.cc:786 apt-pkg/cachefilter.cc:35
-#, c-format
-msgid "Regex compilation error - %s"
-msgstr "Regex កំហុស​ការចងក្រង​ - %s"
-
-#: apt-private/private-update.cc:31
-msgid "The update command takes no arguments"
-msgstr "ពាក្យ​បញ្ជា​ដែលធ្វើ​ឲ្យ​ទាន់​សម័យ​គ្មាន​អាគុយម៉ង់​ទេ"
-
-#: apt-private/private-update.cc:90
-#, c-format
-msgid "%i package can be upgraded. Run 'apt list --upgradable' to see it.\n"
-msgid_plural ""
-"%i packages can be upgraded. Run 'apt list --upgradable' to see them.\n"
-msgstr[0] ""
-msgstr[1] ""
-
-#: apt-private/private-update.cc:94
-msgid "All packages are up to date."
-msgstr ""
-
-#: apt-private/private-show.cc:156
-#, c-format
-msgid "There is %i additional record. Please use the '-a' switch to see it"
-msgid_plural ""
-"There are %i additional records. Please use the '-a' switch to see them."
-msgstr[0] ""
-msgstr[1] ""
-
-#: apt-private/private-show.cc:163
-msgid "not a real package (virtual)"
 msgstr ""
 
 #: apt-private/private-install.cc:82
@@ -1595,6 +1360,239 @@ msgstr "មិនទាន់បានដំឡើង​កញ្ចប់​ %s
 msgid "Package '%s' is not installed, so not removed\n"
 msgstr "មិនទាន់បានដំឡើង​កញ្ចប់​ %s ទេ​ ដូច្នេះ មិន​បាន​យកចេញឡើយ \n"
 
+#: apt-private/private-list.cc:129
+msgid "Listing"
+msgstr ""
+
+#: apt-private/private-list.cc:159
+#, c-format
+msgid "There is %i additional version. Please use the '-a' switch to see it"
+msgid_plural ""
+"There are %i additional versions. Please use the '-a' switch to see them."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apt-private/private-cachefile.cc:93
+msgid "Correcting dependencies..."
+msgstr "កំពុង​កែ​ភាពអាស្រ័យ​..."
+
+#: apt-private/private-cachefile.cc:96
+msgid " failed."
+msgstr " បាន​បរាជ័យ ។"
+
+#: apt-private/private-cachefile.cc:99
+msgid "Unable to correct dependencies"
+msgstr "មិន​អាច​កែ​ភាព​អាស្រ័យ​បានឡើយ​"
+
+#: apt-private/private-cachefile.cc:102
+msgid "Unable to minimize the upgrade set"
+msgstr "មិនអាច​បង្រួម​ការ​កំណត់​ភាព​ប្រសើរ​​បាន​ឡើយ​"
+
+#: apt-private/private-cachefile.cc:104
+msgid " Done"
+msgstr " ធ្វើ​រួច"
+
+#: apt-private/private-cachefile.cc:108
+msgid "You might want to run 'apt-get -f install' to correct these."
+msgstr "អ្នក​ប្រហែល​ជា​ចង់រត់ 'apt-get -f install' ដើម្បី​កែ​វា​​ទាំងនេះ​ហើយ ។"
+
+#: apt-private/private-cachefile.cc:111
+msgid "Unmet dependencies. Try using -f."
+msgstr "ភាព​អាស្រ័យ​ដែល​ខុស​គ្នា ។ ព្យាយាម​ការ​ប្រើ -f ។"
+
+#: apt-private/private-output.cc:103 apt-private/private-show.cc:84
+#: apt-private/private-show.cc:89
+msgid "unknown"
+msgstr ""
+
+#: apt-private/private-output.cc:265
+#, fuzzy, c-format
+msgid "[installed,upgradable to: %s]"
+msgstr " [បានដំឡើង​]"
+
+#: apt-private/private-output.cc:268
+#, fuzzy
+msgid "[installed,local]"
+msgstr " [បានដំឡើង​]"
+
+#: apt-private/private-output.cc:270
+msgid "[installed,auto-removable]"
+msgstr ""
+
+#: apt-private/private-output.cc:272
+#, fuzzy
+msgid "[installed,automatic]"
+msgstr " [បានដំឡើង​]"
+
+#: apt-private/private-output.cc:274
+#, fuzzy
+msgid "[installed]"
+msgstr " [បានដំឡើង​]"
+
+#: apt-private/private-output.cc:277
+#, c-format
+msgid "[upgradable from: %s]"
+msgstr ""
+
+#: apt-private/private-output.cc:281
+msgid "[residual-config]"
+msgstr ""
+
+#: apt-private/private-output.cc:455
+#, c-format
+msgid "but %s is installed"
+msgstr "ប៉ុន្តែ​ %s ត្រូវ​បាន​ដំឡើង​"
+
+#: apt-private/private-output.cc:457
+#, c-format
+msgid "but %s is to be installed"
+msgstr "ប៉ុន្តែ​ %s នឹង​ត្រូវ​បាន​ដំឡើ​ង"
+
+#: apt-private/private-output.cc:464
+msgid "but it is not installable"
+msgstr "ប៉ុន្តែ​​វា​មិន​អាច​ដំឡើង​បាន​ទេ​"
+
+#: apt-private/private-output.cc:466
+msgid "but it is a virtual package"
+msgstr "ប៉ុន្តែ​​វា​ជា​កញ្ចប់​និម្មិត​"
+
+#: apt-private/private-output.cc:469
+msgid "but it is not installed"
+msgstr "ប៉ុន្តែ​វា​មិន​បាន​ដំឡើង​ទេ​"
+
+#: apt-private/private-output.cc:469
+msgid "but it is not going to be installed"
+msgstr "ប៉ុន្តែ វា​នឹង​មិន​ត្រូវ​បាន​ដំឡើង​ទេ"
+
+#: apt-private/private-output.cc:474
+msgid " or"
+msgstr " ឬ"
+
+#: apt-private/private-output.cc:488 apt-private/private-output.cc:500
+msgid "The following packages have unmet dependencies:"
+msgstr "កញ្ចប់​ខាងក្រោម​មាន​ភាពអាស្រ័យ​ដែល​ខុស​គ្នា ៖"
+
+#: apt-private/private-output.cc:523
+msgid "The following NEW packages will be installed:"
+msgstr "កញ្ចប់​ថ្មី​ខាងក្រោម​នឹង​ត្រូវ​បាន​ដំឡើង​ ៖"
+
+#: apt-private/private-output.cc:549
+msgid "The following packages will be REMOVED:"
+msgstr "កញ្ចប់​ខាងក្រោម​នឹងត្រូវ​បាន​យកចេញ ៖"
+
+#: apt-private/private-output.cc:571
+msgid "The following packages have been kept back:"
+msgstr "​កញ្ចប់​ខាង​ក្រោម​ត្រូវ​បាន​យក​ត្រឡប់​មក​វិញ ៖"
+
+#: apt-private/private-output.cc:592
+msgid "The following packages will be upgraded:"
+msgstr "កញ្ចប់​ខាងក្រោម​នឹង​​ត្រូវ​បាន​​ធ្វើ​ឲ្យប្រសើ​ឡើង ៖"
+
+#: apt-private/private-output.cc:613
+msgid "The following packages will be DOWNGRADED:"
+msgstr "កញ្ចប់​ខាងក្រោម​នឹង​​ត្រូវ​បាន​បន្ទាប ៖"
+
+#: apt-private/private-output.cc:633
+msgid "The following held packages will be changed:"
+msgstr "កញ្ចប់​រង់ចាំ​ខាងក្រោម​នឹង​ត្រូវ​​បានផ្លាស់​​ប្តូរ​ ៖"
+
+#: apt-private/private-output.cc:688
+#, c-format
+msgid "%s (due to %s) "
+msgstr "%s (ដោយ​សារតែ​ %s) "
+
+#: apt-private/private-output.cc:696
+msgid ""
+"WARNING: The following essential packages will be removed.\n"
+"This should NOT be done unless you know exactly what you are doing!"
+msgstr ""
+"ព្រមាន​ ៖ កញ្ចប់ដែល​ចាំបាច់​ខាងក្រោម​នឹង​ត្រូវ​បាន​យកចេញ ។\n"
+"ការយកចេញ​នេះ​មិន​ត្រូវ​បានធ្វើ​ទេ​លុះត្រា​តែ​អ្នកដឹង​ថា​​អ្នក​កំពុង​ធ្វើ​អ្វីឲ្យប្រាកដ !"
+
+#: apt-private/private-output.cc:727
+#, c-format
+msgid "%lu upgraded, %lu newly installed, "
+msgstr "%lu ត្រូវ​បាន​ធ្វើ​ឲ្យ​ប្រសើរ %lu ត្រូវ​បានដំឡើង​ថ្មី "
+
+#: apt-private/private-output.cc:731
+#, c-format
+msgid "%lu reinstalled, "
+msgstr "%lu ត្រូវ​បាន​ដំឡើង​ឡើង​វិញ "
+
+#: apt-private/private-output.cc:733
+#, c-format
+msgid "%lu downgraded, "
+msgstr "%lu ​ត្រូវបានបន្ទាប់ "
+
+#: apt-private/private-output.cc:735
+#, c-format
+msgid "%lu to remove and %lu not upgraded.\n"
+msgstr "%lu ដែលត្រូវ​យក​ចេញ​ ហើយ​ %lu មិន​​បាន​ធ្វើ​ឲ្យ​ប្រសើរឡើយ ។\n"
+
+#: apt-private/private-output.cc:739
+#, c-format
+msgid "%lu not fully installed or removed.\n"
+msgstr "%lu មិន​បាន​ដំឡើង​ ឬ យក​ចេញបានគ្រប់ជ្រុងជ្រោយ​ឡើយ​ ។\n"
+
+#. TRANSLATOR: Yes/No question help-text: defaulting to Y[es]
+#. e.g. "Do you want to continue? [Y/n] "
+#. The user has to answer with an input matching the
+#. YESEXPR/NOEXPR defined in your l10n.
+#: apt-private/private-output.cc:761
+msgid "[Y/n]"
+msgstr ""
+
+#. TRANSLATOR: Yes/No question help-text: defaulting to N[o]
+#. e.g. "Should this file be removed? [y/N] "
+#. The user has to answer with an input matching the
+#. YESEXPR/NOEXPR defined in your l10n.
+#: apt-private/private-output.cc:767
+msgid "[y/N]"
+msgstr ""
+
+#. TRANSLATOR: "Yes" answer printed for a yes/no question if --assume-yes is set
+#: apt-private/private-output.cc:778
+msgid "Y"
+msgstr "Y"
+
+#. TRANSLATOR: "No" answer printed for a yes/no question if --assume-no is set
+#: apt-private/private-output.cc:784
+msgid "N"
+msgstr ""
+
+#: apt-private/private-output.cc:806 apt-pkg/cachefilter.cc:35
+#, c-format
+msgid "Regex compilation error - %s"
+msgstr "Regex កំហុស​ការចងក្រង​ - %s"
+
+#: apt-private/private-update.cc:31
+msgid "The update command takes no arguments"
+msgstr "ពាក្យ​បញ្ជា​ដែលធ្វើ​ឲ្យ​ទាន់​សម័យ​គ្មាន​អាគុយម៉ង់​ទេ"
+
+#: apt-private/private-update.cc:97
+#, c-format
+msgid "%i package can be upgraded. Run 'apt list --upgradable' to see it.\n"
+msgid_plural ""
+"%i packages can be upgraded. Run 'apt list --upgradable' to see them.\n"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apt-private/private-update.cc:101
+msgid "All packages are up to date."
+msgstr ""
+
+#: apt-private/private-show.cc:156
+#, c-format
+msgid "There is %i additional record. Please use the '-a' switch to see it"
+msgid_plural ""
+"There are %i additional records. Please use the '-a' switch to see them."
+msgstr[0] ""
+msgstr[1] ""
+
+#: apt-private/private-show.cc:163
+msgid "not a real package (virtual)"
+msgstr ""
+
 #: apt-private/private-main.cc:32
 msgid ""
 "NOTE: This is only a simulation!\n"
@@ -1635,9 +1633,17 @@ msgstr "បរាជ័យ​ក្នុង​ការ​ប្តូរ​ឈ
 msgid "Your '%s' file changed, please run 'apt-get update'."
 msgstr ""
 
-#: apt-private/private-search.cc:51
+#: apt-private/private-search.cc:69
 msgid "Full Text Search"
 msgstr ""
+
+#: apt-private/private-upgrade.cc:25
+msgid "Calculating upgrade... "
+msgstr "កំពុង​គណនា​ការ​ធ្វើ​ឲ្យ​ប្រសើរ... "
+
+#: apt-private/private-upgrade.cc:28
+msgid "Done"
+msgstr "ធ្វើរួច​"
 
 #: apt-private/acqprogress.cc:66
 msgid "Hit "
@@ -1678,8 +1684,8 @@ msgstr ""
 
 #. Only warn if there are no sources.list.d.
 #. Only warn if there is no sources.list file.
-#: methods/mirror.cc:95 apt-inst/extract.cc:471 apt-pkg/clean.cc:43
-#: apt-pkg/init.cc:103 apt-pkg/init.cc:111 apt-pkg/acquire.cc:494
+#: methods/mirror.cc:95 apt-inst/extract.cc:471 apt-pkg/init.cc:103
+#: apt-pkg/init.cc:111 apt-pkg/clean.cc:43 apt-pkg/acquire.cc:494
 #: apt-pkg/policy.cc:381 apt-pkg/sourcelist.cc:280 apt-pkg/sourcelist.cc:286
 #: apt-pkg/contrib/fileutl.cc:368 apt-pkg/contrib/fileutl.cc:481
 #: apt-pkg/contrib/cdromutl.cc:205
@@ -1723,7 +1729,7 @@ msgstr ""
 msgid "Failed to create IPC pipe to subprocess"
 msgstr "បរាជ័យ​ក្នុង​ការ​បង្កើត​បំពង់​ IPC សម្រាប់​ដំណើរ​ការ​រង​"
 
-#: methods/rsh.cc:343
+#: methods/rsh.cc:346
 msgid "Connection closed prematurely"
 msgstr "បាន​បិទ​ការ​តភ្ជាប់​មុន​ពេល"
 
@@ -1928,16 +1934,6 @@ msgstr "Tar ឆេកសាំ​បាន​បរាជ័យ ប័ណ្ណ�
 msgid "Unknown TAR header type %u, member %s"
 msgstr "មិន​ស្គាល់​ប្រភេទ​បឋមកថា​ TAR  %u ដែលជា​សមាជិក​ %s"
 
-#: apt-pkg/clean.cc:39 apt-pkg/acquire.cc:490
-#, fuzzy, c-format
-msgid "Clean of %s is not supported"
-msgstr "ប្រភេទ​ឯកសារ​លិបិក្រម​ '%s' មិនត្រូវ​បាន​គាំទ្រ​"
-
-#: apt-pkg/clean.cc:64
-#, c-format
-msgid "Unable to stat %s."
-msgstr "មិនអាច​ថ្លែង %s បានឡើយ ។"
-
 #: apt-pkg/install-progress.cc:57
 #, c-format
 msgid "Progress: [%3i%%]"
@@ -1985,26 +1981,6 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Hash mismatch for: %s"
 msgstr "MD5Sum មិន​ផ្គួផ្គង​"
-
-#: apt-pkg/acquire-worker.cc:116
-#, c-format
-msgid "The method driver %s could not be found."
-msgstr "មិនអាច​រកឃើញ​កម្មវិធី​បញ្ជា​វិធីសាស្ត្រ %s ឡើយ ។"
-
-#: apt-pkg/acquire-worker.cc:118
-#, fuzzy, c-format
-msgid "Is the package %s installed?"
-msgstr "ពិនិត្យ​ប្រសិន​បើកញ្ចប់ 'dpkg-dev' មិន​ទាន់​បាន​ដំឡើង​ ។\n"
-
-#: apt-pkg/acquire-worker.cc:169
-#, c-format
-msgid "Method %s did not start correctly"
-msgstr "វិធីសាស្ត្រ​ %s មិន​អាច​ចាប់​ផ្តើម​ត្រឹមត្រូវ​ទេ​"
-
-#: apt-pkg/acquire-worker.cc:455
-#, c-format
-msgid "Please insert the disc labeled: '%s' in the drive '%s' and press enter."
-msgstr "សូម​បញ្ចូល​ស្លាក​ឌីស​ ៖ '%s' ក្នុង​ដ្រាយ​ '%s' ហើយ​សង្កត់​ចូល ។"
 
 #: apt-pkg/cachefile.cc:94
 msgid "The package lists or status file could not be parsed or opened."
@@ -2100,10 +2076,147 @@ msgstr "ស្រេចចិត្ត"
 msgid "extra"
 msgstr "បន្ថែម"
 
+#: apt-pkg/acquire-worker.cc:116
+#, c-format
+msgid "The method driver %s could not be found."
+msgstr "មិនអាច​រកឃើញ​កម្មវិធី​បញ្ជា​វិធីសាស្ត្រ %s ឡើយ ។"
+
+#: apt-pkg/acquire-worker.cc:118
+#, fuzzy, c-format
+msgid "Is the package %s installed?"
+msgstr "ពិនិត្យ​ប្រសិន​បើកញ្ចប់ 'dpkg-dev' មិន​ទាន់​បាន​ដំឡើង​ ។\n"
+
+#: apt-pkg/acquire-worker.cc:169
+#, c-format
+msgid "Method %s did not start correctly"
+msgstr "វិធីសាស្ត្រ​ %s មិន​អាច​ចាប់​ផ្តើម​ត្រឹមត្រូវ​ទេ​"
+
+#: apt-pkg/acquire-worker.cc:455
+#, c-format
+msgid "Please insert the disc labeled: '%s' in the drive '%s' and press enter."
+msgstr "សូម​បញ្ចូល​ស្លាក​ឌីស​ ៖ '%s' ក្នុង​ដ្រាយ​ '%s' ហើយ​សង្កត់​ចូល ។"
+
 #: apt-pkg/pkgrecords.cc:38
 #, c-format
 msgid "Index file type '%s' is not supported"
 msgstr "ប្រភេទ​ឯកសារ​លិបិក្រម​ '%s' មិនត្រូវ​បាន​គាំទ្រ​"
+
+#: apt-pkg/depcache.cc:138 apt-pkg/depcache.cc:167
+msgid "Building dependency tree"
+msgstr "កំពុងស្ថាបនា​មែកធាងភាពអាស្រ័យ"
+
+#: apt-pkg/depcache.cc:139
+msgid "Candidate versions"
+msgstr "កំណែ​សាកល្បង​"
+
+#: apt-pkg/depcache.cc:168
+msgid "Dependency generation"
+msgstr "ការបង្កើត​ភាពអាស្រ័យ​"
+
+#: apt-pkg/depcache.cc:188 apt-pkg/depcache.cc:221 apt-pkg/depcache.cc:225
+#, fuzzy
+msgid "Reading state information"
+msgstr "បញ្ចូល​​ព័ត៌មាន​ដែលមាន​ចូល​គ្នា"
+
+#: apt-pkg/depcache.cc:250
+#, fuzzy, c-format
+msgid "Failed to open StateFile %s"
+msgstr "បរាជ័យ​ក្នុង​ការ​បើក %s"
+
+#: apt-pkg/depcache.cc:256
+#, fuzzy, c-format
+msgid "Failed to write temporary StateFile %s"
+msgstr "បរាជ័យ​ក្នុងការ​សរសេរ​ឯកសារ %s"
+
+#: apt-pkg/acquire-item.cc:148 apt-pkg/contrib/fileutl.cc:2047
+#, c-format
+msgid "rename failed, %s (%s -> %s)."
+msgstr "ប្តូរ​ឈ្មោះ​បានបរាជ័យ​, %s (%s -> %s) ។"
+
+#: apt-pkg/acquire-item.cc:163
+#, fuzzy
+msgid "Hash Sum mismatch"
+msgstr "MD5Sum មិន​ផ្គួផ្គង​"
+
+#: apt-pkg/acquire-item.cc:168
+msgid "Size mismatch"
+msgstr "ទំហំ​មិនបាន​ផ្គួផ្គង​"
+
+#: apt-pkg/acquire-item.cc:173
+#, fuzzy
+msgid "Invalid file format"
+msgstr "ប្រតិបត្តិការ​មិន​ត្រឹមត្រូវ​ %s"
+
+#: apt-pkg/acquire-item.cc:1640
+#, c-format
+msgid ""
+"Unable to find expected entry '%s' in Release file (Wrong sources.list entry "
+"or malformed file)"
+msgstr ""
+
+#: apt-pkg/acquire-item.cc:1656
+#, fuzzy, c-format
+msgid "Unable to find hash sum for '%s' in Release file"
+msgstr "មិនអាច​ញែក​ឯកសារកញ្ចប់ %s (1) បានឡើយ"
+
+#: apt-pkg/acquire-item.cc:1698
+msgid "There is no public key available for the following key IDs:\n"
+msgstr "គ្មាន​កូនសោ​សាធារណៈ​អាច​រក​បាន​ក្នុងកូនសោ IDs ខាងក្រោម​នេះទេ ៖\n"
+
+#: apt-pkg/acquire-item.cc:1736
+#, c-format
+msgid ""
+"Release file for %s is expired (invalid since %s). Updates for this "
+"repository will not be applied."
+msgstr ""
+
+#: apt-pkg/acquire-item.cc:1758
+#, c-format
+msgid "Conflicting distribution: %s (expected %s but got %s)"
+msgstr ""
+
+#: apt-pkg/acquire-item.cc:1788
+#, c-format
+msgid ""
+"An error occurred during the signature verification. The repository is not "
+"updated and the previous index files will be used. GPG error: %s: %s\n"
+msgstr ""
+
+#. Invalid signature file, reject (LP: #346386) (Closes: #627642)
+#: apt-pkg/acquire-item.cc:1798 apt-pkg/acquire-item.cc:1803
+#, c-format
+msgid "GPG error: %s: %s"
+msgstr ""
+
+#: apt-pkg/acquire-item.cc:1926
+#, c-format
+msgid ""
+"I wasn't able to locate a file for the %s package. This might mean you need "
+"to manually fix this package. (due to missing arch)"
+msgstr ""
+"ខ្ញុំ​មិន​អាច​រកទីតាំង​ឯកសារ​សម្រាប់​កញ្ចប់ %s បាន​ទេ ។ ​មាន​ន័យ​ថា​អ្នក​ត្រូវការ​ជួសជុល​កញ្ចប់​នេះ​ដោយ​ដៃ ។ "
+"(ដោយសារ​​បាត់​ស្ថាបត្យកម្ម)"
+
+#: apt-pkg/acquire-item.cc:1992
+#, c-format
+msgid "Can't find a source to download version '%s' of '%s'"
+msgstr ""
+
+#: apt-pkg/acquire-item.cc:2050
+#, c-format
+msgid ""
+"The package index files are corrupted. No Filename: field for package %s."
+msgstr "កញ្ចប់​ឯកសារ​លិបិក្រម​ត្រូវ​បាន​ខូច ។ គ្មាន​ឈ្មោះ​ឯកសារ ៖ វាល​សម្រាប់​កញ្ចប់នេះ​ទេ​ %s ។"
+
+#: apt-pkg/clean.cc:39 apt-pkg/acquire.cc:490
+#, fuzzy, c-format
+msgid "Clean of %s is not supported"
+msgstr "ប្រភេទ​ឯកសារ​លិបិក្រម​ '%s' មិនត្រូវ​បាន​គាំទ្រ​"
+
+#: apt-pkg/clean.cc:64
+#, c-format
+msgid "Unable to stat %s."
+msgstr "មិនអាច​ថ្លែង %s បានឡើយ ។"
 
 #: apt-pkg/pkgcachegen.cc:93
 msgid "Cache has an incompatible versioning system"
@@ -2169,106 +2282,6 @@ msgstr "មិន​អាច​សរសេរ​ទៅ %s"
 msgid "IO Error saving source cache"
 msgstr "IO កំហុសក្នុងការររក្សាទុក​ឃ្លាំង​សម្ងាត់​ប្រភព​"
 
-#: apt-pkg/edsp.cc:52 apt-pkg/edsp.cc:78
-msgid "Send scenario to solver"
-msgstr ""
-
-#: apt-pkg/edsp.cc:241
-msgid "Send request to solver"
-msgstr ""
-
-#: apt-pkg/edsp.cc:320
-msgid "Prepare for receiving solution"
-msgstr ""
-
-#: apt-pkg/edsp.cc:327
-msgid "External solver failed without a proper error message"
-msgstr ""
-
-#: apt-pkg/edsp.cc:619 apt-pkg/edsp.cc:622 apt-pkg/edsp.cc:627
-msgid "Execute external solver"
-msgstr ""
-
-#: apt-pkg/acquire-item.cc:148 apt-pkg/contrib/fileutl.cc:2047
-#, c-format
-msgid "rename failed, %s (%s -> %s)."
-msgstr "ប្តូរ​ឈ្មោះ​បានបរាជ័យ​, %s (%s -> %s) ។"
-
-#: apt-pkg/acquire-item.cc:163
-#, fuzzy
-msgid "Hash Sum mismatch"
-msgstr "MD5Sum មិន​ផ្គួផ្គង​"
-
-#: apt-pkg/acquire-item.cc:168
-msgid "Size mismatch"
-msgstr "ទំហំ​មិនបាន​ផ្គួផ្គង​"
-
-#: apt-pkg/acquire-item.cc:173
-#, fuzzy
-msgid "Invalid file format"
-msgstr "ប្រតិបត្តិការ​មិន​ត្រឹមត្រូវ​ %s"
-
-#: apt-pkg/acquire-item.cc:1573
-#, c-format
-msgid ""
-"Unable to find expected entry '%s' in Release file (Wrong sources.list entry "
-"or malformed file)"
-msgstr ""
-
-#: apt-pkg/acquire-item.cc:1589
-#, fuzzy, c-format
-msgid "Unable to find hash sum for '%s' in Release file"
-msgstr "មិនអាច​ញែក​ឯកសារកញ្ចប់ %s (1) បានឡើយ"
-
-#: apt-pkg/acquire-item.cc:1631
-msgid "There is no public key available for the following key IDs:\n"
-msgstr "គ្មាន​កូនសោ​សាធារណៈ​អាច​រក​បាន​ក្នុងកូនសោ IDs ខាងក្រោម​នេះទេ ៖\n"
-
-#: apt-pkg/acquire-item.cc:1669
-#, c-format
-msgid ""
-"Release file for %s is expired (invalid since %s). Updates for this "
-"repository will not be applied."
-msgstr ""
-
-#: apt-pkg/acquire-item.cc:1691
-#, c-format
-msgid "Conflicting distribution: %s (expected %s but got %s)"
-msgstr ""
-
-#: apt-pkg/acquire-item.cc:1721
-#, c-format
-msgid ""
-"An error occurred during the signature verification. The repository is not "
-"updated and the previous index files will be used. GPG error: %s: %s\n"
-msgstr ""
-
-#. Invalid signature file, reject (LP: #346386) (Closes: #627642)
-#: apt-pkg/acquire-item.cc:1731 apt-pkg/acquire-item.cc:1736
-#, c-format
-msgid "GPG error: %s: %s"
-msgstr ""
-
-#: apt-pkg/acquire-item.cc:1859
-#, c-format
-msgid ""
-"I wasn't able to locate a file for the %s package. This might mean you need "
-"to manually fix this package. (due to missing arch)"
-msgstr ""
-"ខ្ញុំ​មិន​អាច​រកទីតាំង​ឯកសារ​សម្រាប់​កញ្ចប់ %s បាន​ទេ ។ ​មាន​ន័យ​ថា​អ្នក​ត្រូវការ​ជួសជុល​កញ្ចប់​នេះ​ដោយ​ដៃ ។ "
-"(ដោយសារ​​បាត់​ស្ថាបត្យកម្ម)"
-
-#: apt-pkg/acquire-item.cc:1925
-#, c-format
-msgid "Can't find a source to download version '%s' of '%s'"
-msgstr ""
-
-#: apt-pkg/acquire-item.cc:1983
-#, c-format
-msgid ""
-"The package index files are corrupted. No Filename: field for package %s."
-msgstr "កញ្ចប់​ឯកសារ​លិបិក្រម​ត្រូវ​បាន​ខូច ។ គ្មាន​ឈ្មោះ​ឯកសារ ៖ វាល​សម្រាប់​កញ្ចប់នេះ​ទេ​ %s ។"
-
 #: apt-pkg/vendorlist.cc:85
 #, c-format
 msgid "Vendor block %s contains no fingerprint"
@@ -2309,7 +2322,7 @@ msgid ""
 msgstr ""
 "ឯកសារ​លិបិក្រម​មួយ​ចំនួន​បាន​បរាជ័យ​ក្នុង​ការ​​ទាញ​យក ​ពួកវាត្រូវបាន​មិន​អើពើ​ ឬ ប្រើ​​ឯកសារ​ចាស់​ជំនួសវិញ ​​។"
 
-#: apt-pkg/srcrecords.cc:52
+#: apt-pkg/srcrecords.cc:53
 msgid "You must put some 'source' URIs in your sources.list"
 msgstr "អ្នកត្រូវតែដាក់ 'ប្រភព' URIs មួយចំនួន​នៅក្នុង sources.list របស់អ្នក"
 
@@ -2334,19 +2347,19 @@ msgstr "មិន​បាន​យល់​ពី​ប្រភេទ​ម្
 msgid "No priority (or zero) specified for pin"
 msgstr "គ្មាន​អទិភាព (ឬ សូន្យ​) បានបញ្ជាក់​សម្រាប់​ម្ជុល​ទេ"
 
-#: apt-pkg/packagemanager.cc:303 apt-pkg/packagemanager.cc:910
+#: apt-pkg/packagemanager.cc:303 apt-pkg/packagemanager.cc:957
 #, c-format
 msgid ""
 "Could not perform immediate configuration on '%s'. Please see man 5 apt.conf "
 "under APT::Immediate-Configure for details. (%d)"
 msgstr ""
 
-#: apt-pkg/packagemanager.cc:503 apt-pkg/packagemanager.cc:533
+#: apt-pkg/packagemanager.cc:550 apt-pkg/packagemanager.cc:580
 #, fuzzy, c-format
 msgid "Could not configure '%s'. "
 msgstr "មិន​អាច​បើក​ឯកសារ​ %s បានឡើយ"
 
-#: apt-pkg/packagemanager.cc:583
+#: apt-pkg/packagemanager.cc:630
 #, c-format
 msgid ""
 "This installation run will require temporarily removing the essential "
@@ -2454,32 +2467,25 @@ msgstr ""
 msgid "Unable to correct problems, you have held broken packages."
 msgstr "មិន​អាច​កែ​បញ្ហាបានទេេ អ្កបានទុក​កញ្ចប់​ដែល​ខូច ។។"
 
-#: apt-pkg/depcache.cc:138 apt-pkg/depcache.cc:167
-msgid "Building dependency tree"
-msgstr "កំពុងស្ថាបនា​មែកធាងភាពអាស្រ័យ"
+#: apt-pkg/edsp.cc:52 apt-pkg/edsp.cc:78
+msgid "Send scenario to solver"
+msgstr ""
 
-#: apt-pkg/depcache.cc:139
-msgid "Candidate versions"
-msgstr "កំណែ​សាកល្បង​"
+#: apt-pkg/edsp.cc:241
+msgid "Send request to solver"
+msgstr ""
 
-#: apt-pkg/depcache.cc:168
-msgid "Dependency generation"
-msgstr "ការបង្កើត​ភាពអាស្រ័យ​"
+#: apt-pkg/edsp.cc:320
+msgid "Prepare for receiving solution"
+msgstr ""
 
-#: apt-pkg/depcache.cc:188 apt-pkg/depcache.cc:221 apt-pkg/depcache.cc:225
-#, fuzzy
-msgid "Reading state information"
-msgstr "បញ្ចូល​​ព័ត៌មាន​ដែលមាន​ចូល​គ្នា"
+#: apt-pkg/edsp.cc:327
+msgid "External solver failed without a proper error message"
+msgstr ""
 
-#: apt-pkg/depcache.cc:250
-#, fuzzy, c-format
-msgid "Failed to open StateFile %s"
-msgstr "បរាជ័យ​ក្នុង​ការ​បើក %s"
-
-#: apt-pkg/depcache.cc:256
-#, fuzzy, c-format
-msgid "Failed to write temporary StateFile %s"
-msgstr "បរាជ័យ​ក្នុងការ​សរសេរ​ឯកសារ %s"
+#: apt-pkg/edsp.cc:619 apt-pkg/edsp.cc:622 apt-pkg/edsp.cc:627
+msgid "Execute external solver"
+msgstr ""
 
 #: apt-pkg/tagfile.cc:140
 #, c-format
@@ -2490,58 +2496,6 @@ msgstr "មិនអាច​ញែក​ឯកសារកញ្ចប់ %s (1
 #, c-format
 msgid "Unable to parse package file %s (2)"
 msgstr "មិនអាច​ញែក​ឯកសារកញ្ចប់​ %s (2) បានឡើយ"
-
-#: apt-pkg/cacheset.cc:489
-#, c-format
-msgid "Release '%s' for '%s' was not found"
-msgstr "រក​មិន​ឃើញ​ការ​ចេញ​ផ្សាយ​ '%s' សម្រាប់​ '%s' ឡើយ"
-
-#: apt-pkg/cacheset.cc:492
-#, c-format
-msgid "Version '%s' for '%s' was not found"
-msgstr "រក​មិន​ឃើញ​កំណែ​ '%s' សម្រាប់ '%s'"
-
-#: apt-pkg/cacheset.cc:603
-#, fuzzy, c-format
-msgid "Couldn't find task '%s'"
-msgstr "មិន​អាច​រក​កញ្ចប់ %s បានទេ"
-
-#: apt-pkg/cacheset.cc:609
-#, fuzzy, c-format
-msgid "Couldn't find any package by regex '%s'"
-msgstr "មិន​អាច​រក​កញ្ចប់ %s បានទេ"
-
-#: apt-pkg/cacheset.cc:615
-#, fuzzy, c-format
-msgid "Couldn't find any package by glob '%s'"
-msgstr "មិន​អាច​រក​កញ្ចប់ %s បានទេ"
-
-#: apt-pkg/cacheset.cc:626
-#, c-format
-msgid "Can't select versions from package '%s' as it is purely virtual"
-msgstr ""
-
-#: apt-pkg/cacheset.cc:633 apt-pkg/cacheset.cc:640
-#, c-format
-msgid ""
-"Can't select installed nor candidate version from package '%s' as it has "
-"neither of them"
-msgstr ""
-
-#: apt-pkg/cacheset.cc:647
-#, c-format
-msgid "Can't select newest version from package '%s' as it is purely virtual"
-msgstr ""
-
-#: apt-pkg/cacheset.cc:655
-#, c-format
-msgid "Can't select candidate version from package %s as it has no candidate"
-msgstr ""
-
-#: apt-pkg/cacheset.cc:663
-#, c-format
-msgid "Can't select installed version from package %s as it is not installed"
-msgstr ""
 
 #: apt-pkg/indexrecords.cc:78
 #, fuzzy, c-format
@@ -2643,195 +2597,83 @@ msgstr "ប្រភេទ​ '%s' មិន​ស្គាល់នៅលើប
 msgid "Type '%s' is not known on stanza %u in source list %s"
 msgstr "ប្រភេទ​ '%s' មិន​ស្គាល់នៅលើបន្ទាត់​ %u ក្នុង​បញ្ជី​ប្រភព​ %s ឡើយ"
 
-#: apt-pkg/deb/dpkgpm.cc:95
+#: apt-pkg/cacheset.cc:489
+#, c-format
+msgid "Release '%s' for '%s' was not found"
+msgstr "រក​មិន​ឃើញ​ការ​ចេញ​ផ្សាយ​ '%s' សម្រាប់​ '%s' ឡើយ"
+
+#: apt-pkg/cacheset.cc:492
+#, c-format
+msgid "Version '%s' for '%s' was not found"
+msgstr "រក​មិន​ឃើញ​កំណែ​ '%s' សម្រាប់ '%s'"
+
+#: apt-pkg/cacheset.cc:603
 #, fuzzy, c-format
-msgid "Installing %s"
-msgstr "បាន​ដំឡើង %s"
+msgid "Couldn't find task '%s'"
+msgstr "មិន​អាច​រក​កញ្ចប់ %s បានទេ"
 
-#: apt-pkg/deb/dpkgpm.cc:96 apt-pkg/deb/dpkgpm.cc:996
-#, c-format
-msgid "Configuring %s"
-msgstr "កំពុង​កំណត់​រចនា​សម្ព័ន្ធ %s"
-
-#: apt-pkg/deb/dpkgpm.cc:97 apt-pkg/deb/dpkgpm.cc:1003
-#, c-format
-msgid "Removing %s"
-msgstr "កំពុង​យក %s ចេញ"
-
-#: apt-pkg/deb/dpkgpm.cc:98
+#: apt-pkg/cacheset.cc:609
 #, fuzzy, c-format
-msgid "Completely removing %s"
-msgstr "បាន​យក %s ចេញ​ទាំង​ស្រុង"
+msgid "Couldn't find any package by regex '%s'"
+msgstr "មិន​អាច​រក​កញ្ចប់ %s បានទេ"
 
-#: apt-pkg/deb/dpkgpm.cc:99
-#, c-format
-msgid "Noting disappearance of %s"
-msgstr ""
-
-#: apt-pkg/deb/dpkgpm.cc:100
-#, c-format
-msgid "Running post-installation trigger %s"
-msgstr ""
-
-#. FIXME: use a better string after freeze
-#: apt-pkg/deb/dpkgpm.cc:827
+#: apt-pkg/cacheset.cc:615
 #, fuzzy, c-format
-msgid "Directory '%s' missing"
-msgstr "រាយបញ្ជី​ថត​ %spartial គឺ​បាត់បង់​ ។"
+msgid "Couldn't find any package by glob '%s'"
+msgstr "មិន​អាច​រក​កញ្ចប់ %s បានទេ"
 
-#: apt-pkg/deb/dpkgpm.cc:842 apt-pkg/deb/dpkgpm.cc:864
-#, fuzzy, c-format
-msgid "Could not open file '%s'"
-msgstr "មិន​អាច​បើក​ឯកសារ​ %s បានឡើយ"
-
-#: apt-pkg/deb/dpkgpm.cc:989
+#: apt-pkg/cacheset.cc:626
 #, c-format
-msgid "Preparing %s"
-msgstr "កំពុងរៀបចំ​ %s"
-
-#: apt-pkg/deb/dpkgpm.cc:990
-#, c-format
-msgid "Unpacking %s"
-msgstr "កំពុង​ស្រាយ %s"
-
-#: apt-pkg/deb/dpkgpm.cc:995
-#, c-format
-msgid "Preparing to configure %s"
-msgstr "កំពុងរៀបចំ​កំណត់រចនាសម្ព័ន្ធ %s"
-
-#: apt-pkg/deb/dpkgpm.cc:997
-#, c-format
-msgid "Installed %s"
-msgstr "បាន​ដំឡើង %s"
-
-#: apt-pkg/deb/dpkgpm.cc:1002
-#, c-format
-msgid "Preparing for removal of %s"
-msgstr "កំពុងរៀបចំដើម្បី​ការយក​ចេញ​នៃ %s"
-
-#: apt-pkg/deb/dpkgpm.cc:1004
-#, c-format
-msgid "Removed %s"
-msgstr "បាន​យក %s ចេញ"
-
-#: apt-pkg/deb/dpkgpm.cc:1009
-#, c-format
-msgid "Preparing to completely remove %s"
-msgstr "កំពុង​រៀបចំ​យក %s ចេញ​ទាំង​ស្រុង"
-
-#: apt-pkg/deb/dpkgpm.cc:1010
-#, c-format
-msgid "Completely removed %s"
-msgstr "បាន​យក %s ចេញ​ទាំង​ស្រុង"
-
-#: apt-pkg/deb/dpkgpm.cc:1066
-msgid "ioctl(TIOCGWINSZ) failed"
+msgid "Can't select versions from package '%s' as it is purely virtual"
 msgstr ""
 
-#: apt-pkg/deb/dpkgpm.cc:1069 apt-pkg/deb/dpkgpm.cc:1090
-#, fuzzy, c-format
-msgid "Can not write log (%s)"
-msgstr "មិន​អាច​សរសេរ​ទៅ %s"
-
-#: apt-pkg/deb/dpkgpm.cc:1069
-msgid "Is /dev/pts mounted?"
-msgstr ""
-
-#: apt-pkg/deb/dpkgpm.cc:1090
-msgid "Is stdout a terminal?"
-msgstr ""
-
-#: apt-pkg/deb/dpkgpm.cc:1569
-msgid "Operation was interrupted before it could finish"
-msgstr ""
-
-#: apt-pkg/deb/dpkgpm.cc:1631
-msgid "No apport report written because MaxReports is reached already"
-msgstr ""
-
-#. check if its not a follow up error
-#: apt-pkg/deb/dpkgpm.cc:1636
-msgid "dependency problems - leaving unconfigured"
-msgstr ""
-
-#: apt-pkg/deb/dpkgpm.cc:1638
-msgid ""
-"No apport report written because the error message indicates its a followup "
-"error from a previous failure."
-msgstr ""
-
-#: apt-pkg/deb/dpkgpm.cc:1644
-msgid ""
-"No apport report written because the error message indicates a disk full "
-"error"
-msgstr ""
-
-#: apt-pkg/deb/dpkgpm.cc:1651
-msgid ""
-"No apport report written because the error message indicates a out of memory "
-"error"
-msgstr ""
-
-#: apt-pkg/deb/dpkgpm.cc:1658 apt-pkg/deb/dpkgpm.cc:1664
-msgid ""
-"No apport report written because the error message indicates an issue on the "
-"local system"
-msgstr ""
-
-#: apt-pkg/deb/dpkgpm.cc:1685
-msgid ""
-"No apport report written because the error message indicates a dpkg I/O error"
-msgstr ""
-
-#: apt-pkg/deb/debsystem.cc:91
+#: apt-pkg/cacheset.cc:633 apt-pkg/cacheset.cc:640
 #, c-format
 msgid ""
-"Unable to lock the administration directory (%s), is another process using "
-"it?"
+"Can't select installed nor candidate version from package '%s' as it has "
+"neither of them"
 msgstr ""
 
-#: apt-pkg/deb/debsystem.cc:94
-#, fuzzy, c-format
-msgid "Unable to lock the administration directory (%s), are you root?"
-msgstr "មិន​អាច​ចាក់​សោ​ថត​បញ្ជីបានឡើយ"
-
-#. TRANSLATORS: the %s contains the recovery command, usually
-#. dpkg --configure -a
-#: apt-pkg/deb/debsystem.cc:110
+#: apt-pkg/cacheset.cc:647
 #, c-format
-msgid ""
-"dpkg was interrupted, you must manually run '%s' to correct the problem. "
+msgid "Can't select newest version from package '%s' as it is purely virtual"
 msgstr ""
 
-#: apt-pkg/deb/debsystem.cc:128
-msgid "Not locked"
+#: apt-pkg/cacheset.cc:655
+#, c-format
+msgid "Can't select candidate version from package %s as it has no candidate"
+msgstr ""
+
+#: apt-pkg/cacheset.cc:663
+#, c-format
+msgid "Can't select installed version from package %s as it is not installed"
 msgstr ""
 
 #. d means days, h means hours, min means minutes, s means seconds
-#: apt-pkg/contrib/strutl.cc:406
+#: apt-pkg/contrib/strutl.cc:418
 #, c-format
 msgid "%lid %lih %limin %lis"
 msgstr ""
 
 #. h means hours, min means minutes, s means seconds
-#: apt-pkg/contrib/strutl.cc:413
+#: apt-pkg/contrib/strutl.cc:425
 #, c-format
 msgid "%lih %limin %lis"
 msgstr ""
 
 #. min means minutes, s means seconds
-#: apt-pkg/contrib/strutl.cc:420
+#: apt-pkg/contrib/strutl.cc:432
 #, c-format
 msgid "%limin %lis"
 msgstr ""
 
 #. s means seconds
-#: apt-pkg/contrib/strutl.cc:425
+#: apt-pkg/contrib/strutl.cc:437
 #, c-format
 msgid "%lis"
 msgstr ""
 
-#: apt-pkg/contrib/strutl.cc:1243
+#: apt-pkg/contrib/strutl.cc:1258
 #, c-format
 msgid "Selection %s not found"
 msgstr "ជម្រើស​ %s រក​មិន​ឃើញ​ឡើយ"
@@ -3092,51 +2934,207 @@ msgstr "កំហុស​វាក្យសម្ពន្ធ %s:%u ៖ សា
 msgid "No keyring installed in %s."
 msgstr "កំពុង​បោះបង់​ការ​ដំឡើង​ ។"
 
-#: apt-pkg/contrib/cmndline.cc:121
+#: apt-pkg/contrib/cmndline.cc:124
 #, c-format
 msgid "Command line option '%c' [from %s] is not known."
 msgstr "ជម្រើស​បន្ទាត់​ពាក្យបញ្ជា '%c' [from %s] មិនស្គាល់ឡើយ ។"
 
-#: apt-pkg/contrib/cmndline.cc:146 apt-pkg/contrib/cmndline.cc:155
-#: apt-pkg/contrib/cmndline.cc:163
+#: apt-pkg/contrib/cmndline.cc:149 apt-pkg/contrib/cmndline.cc:158
+#: apt-pkg/contrib/cmndline.cc:166
 #, c-format
 msgid "Command line option %s is not understood"
 msgstr "មិនយល់​ពី​ជម្រើស​បន្ទាត់​ពាក្យ​បញ្ជា %s ឡើយ"
 
-#: apt-pkg/contrib/cmndline.cc:168
+#: apt-pkg/contrib/cmndline.cc:171
 #, c-format
 msgid "Command line option %s is not boolean"
 msgstr "ជម្រើស​បន្ទាត់ពាក្យ​បញ្ជា​ %s មិនមែនជាប៊ូលីនទេ"
 
-#: apt-pkg/contrib/cmndline.cc:209 apt-pkg/contrib/cmndline.cc:230
+#: apt-pkg/contrib/cmndline.cc:212 apt-pkg/contrib/cmndline.cc:233
 #, c-format
 msgid "Option %s requires an argument."
 msgstr "ជម្រើស​ %s ត្រូវការ​អាគុយម៉ង់មួយ ។"
 
-#: apt-pkg/contrib/cmndline.cc:243 apt-pkg/contrib/cmndline.cc:249
+#: apt-pkg/contrib/cmndline.cc:246 apt-pkg/contrib/cmndline.cc:252
 #, c-format
 msgid "Option %s: Configuration item specification must have an =<val>."
 msgstr "ជម្រើស %s ៖ ការបញ្ជាក់​ធាតុ​កំណត់រចនាសម្ព័ន្ធត្រូវតែមាន =<val> មួយ ។"
 
-#: apt-pkg/contrib/cmndline.cc:278
+#: apt-pkg/contrib/cmndline.cc:281
 #, c-format
 msgid "Option %s requires an integer argument, not '%s'"
 msgstr "ជម្រើស​ %s ត្រូវ​ការ​អាគុយម៉ង់​ចំនួន​គត់​ មិន​មែន​ '%s'"
 
-#: apt-pkg/contrib/cmndline.cc:309
+#: apt-pkg/contrib/cmndline.cc:312
 #, c-format
 msgid "Option '%s' is too long"
 msgstr "ជម្រើស​ '%s' វែងពេក"
 
-#: apt-pkg/contrib/cmndline.cc:341
+#: apt-pkg/contrib/cmndline.cc:344
 #, c-format
 msgid "Sense %s is not understood, try true or false."
 msgstr "មិនបានយល់អំពី​ការស្គាល់​ %s ឡើយ សូមព្យាយមយក​ ពិត​ ​​​ឫ មិន​ពិត ។"
 
-#: apt-pkg/contrib/cmndline.cc:391
+#: apt-pkg/contrib/cmndline.cc:394
 #, c-format
 msgid "Invalid operation %s"
 msgstr "ប្រតិបត្តិការ​មិន​ត្រឹមត្រូវ​ %s"
+
+#: apt-pkg/deb/dpkgpm.cc:112
+#, fuzzy, c-format
+msgid "Installing %s"
+msgstr "បាន​ដំឡើង %s"
+
+#: apt-pkg/deb/dpkgpm.cc:113 apt-pkg/deb/dpkgpm.cc:1016
+#, c-format
+msgid "Configuring %s"
+msgstr "កំពុង​កំណត់​រចនា​សម្ព័ន្ធ %s"
+
+#: apt-pkg/deb/dpkgpm.cc:114 apt-pkg/deb/dpkgpm.cc:1023
+#, c-format
+msgid "Removing %s"
+msgstr "កំពុង​យក %s ចេញ"
+
+#: apt-pkg/deb/dpkgpm.cc:115
+#, fuzzy, c-format
+msgid "Completely removing %s"
+msgstr "បាន​យក %s ចេញ​ទាំង​ស្រុង"
+
+#: apt-pkg/deb/dpkgpm.cc:116
+#, c-format
+msgid "Noting disappearance of %s"
+msgstr ""
+
+#: apt-pkg/deb/dpkgpm.cc:117
+#, c-format
+msgid "Running post-installation trigger %s"
+msgstr ""
+
+#. FIXME: use a better string after freeze
+#: apt-pkg/deb/dpkgpm.cc:847
+#, fuzzy, c-format
+msgid "Directory '%s' missing"
+msgstr "រាយបញ្ជី​ថត​ %spartial គឺ​បាត់បង់​ ។"
+
+#: apt-pkg/deb/dpkgpm.cc:862 apt-pkg/deb/dpkgpm.cc:884
+#, fuzzy, c-format
+msgid "Could not open file '%s'"
+msgstr "មិន​អាច​បើក​ឯកសារ​ %s បានឡើយ"
+
+#: apt-pkg/deb/dpkgpm.cc:1009
+#, c-format
+msgid "Preparing %s"
+msgstr "កំពុងរៀបចំ​ %s"
+
+#: apt-pkg/deb/dpkgpm.cc:1010
+#, c-format
+msgid "Unpacking %s"
+msgstr "កំពុង​ស្រាយ %s"
+
+#: apt-pkg/deb/dpkgpm.cc:1015
+#, c-format
+msgid "Preparing to configure %s"
+msgstr "កំពុងរៀបចំ​កំណត់រចនាសម្ព័ន្ធ %s"
+
+#: apt-pkg/deb/dpkgpm.cc:1017
+#, c-format
+msgid "Installed %s"
+msgstr "បាន​ដំឡើង %s"
+
+#: apt-pkg/deb/dpkgpm.cc:1022
+#, c-format
+msgid "Preparing for removal of %s"
+msgstr "កំពុងរៀបចំដើម្បី​ការយក​ចេញ​នៃ %s"
+
+#: apt-pkg/deb/dpkgpm.cc:1024
+#, c-format
+msgid "Removed %s"
+msgstr "បាន​យក %s ចេញ"
+
+#: apt-pkg/deb/dpkgpm.cc:1029
+#, c-format
+msgid "Preparing to completely remove %s"
+msgstr "កំពុង​រៀបចំ​យក %s ចេញ​ទាំង​ស្រុង"
+
+#: apt-pkg/deb/dpkgpm.cc:1030
+#, c-format
+msgid "Completely removed %s"
+msgstr "បាន​យក %s ចេញ​ទាំង​ស្រុង"
+
+#: apt-pkg/deb/dpkgpm.cc:1091 apt-pkg/deb/dpkgpm.cc:1179
+#, fuzzy, c-format
+msgid "Can not write log (%s)"
+msgstr "មិន​អាច​សរសេរ​ទៅ %s"
+
+#: apt-pkg/deb/dpkgpm.cc:1091 apt-pkg/deb/dpkgpm.cc:1179
+msgid "Is /dev/pts mounted?"
+msgstr ""
+
+#: apt-pkg/deb/dpkgpm.cc:1670
+msgid "Operation was interrupted before it could finish"
+msgstr ""
+
+#: apt-pkg/deb/dpkgpm.cc:1732
+msgid "No apport report written because MaxReports is reached already"
+msgstr ""
+
+#. check if its not a follow up error
+#: apt-pkg/deb/dpkgpm.cc:1737
+msgid "dependency problems - leaving unconfigured"
+msgstr ""
+
+#: apt-pkg/deb/dpkgpm.cc:1739
+msgid ""
+"No apport report written because the error message indicates its a followup "
+"error from a previous failure."
+msgstr ""
+
+#: apt-pkg/deb/dpkgpm.cc:1745
+msgid ""
+"No apport report written because the error message indicates a disk full "
+"error"
+msgstr ""
+
+#: apt-pkg/deb/dpkgpm.cc:1752
+msgid ""
+"No apport report written because the error message indicates a out of memory "
+"error"
+msgstr ""
+
+#: apt-pkg/deb/dpkgpm.cc:1759 apt-pkg/deb/dpkgpm.cc:1765
+msgid ""
+"No apport report written because the error message indicates an issue on the "
+"local system"
+msgstr ""
+
+#: apt-pkg/deb/dpkgpm.cc:1787
+msgid ""
+"No apport report written because the error message indicates a dpkg I/O error"
+msgstr ""
+
+#: apt-pkg/deb/debsystem.cc:91
+#, c-format
+msgid ""
+"Unable to lock the administration directory (%s), is another process using "
+"it?"
+msgstr ""
+
+#: apt-pkg/deb/debsystem.cc:94
+#, fuzzy, c-format
+msgid "Unable to lock the administration directory (%s), are you root?"
+msgstr "មិន​អាច​ចាក់​សោ​ថត​បញ្ជីបានឡើយ"
+
+#. TRANSLATORS: the %s contains the recovery command, usually
+#. dpkg --configure -a
+#: apt-pkg/deb/debsystem.cc:110
+#, c-format
+msgid ""
+"dpkg was interrupted, you must manually run '%s' to correct the problem. "
+msgstr ""
+
+#: apt-pkg/deb/debsystem.cc:128
+msgid "Not locked"
+msgstr ""
 
 #: cmdline/apt-extracttemplates.cc:224
 msgid ""
@@ -3276,11 +3274,11 @@ msgstr ""
 "  -c=?  អាន​ឯកសារ​ការកំណត់​រចនាសម្ព័ន្ធ​នេះ​\n"
 "  -o=?  កំណត់​ជម្រើស​ការ​កំណត់​រចនា​សម្ព័ន្ធ​តាម​ចិត្ត"
 
-#: ftparchive/apt-ftparchive.cc:841
+#: ftparchive/apt-ftparchive.cc:822
 msgid "No selections matched"
 msgstr "គ្មាន​ការ​ជ្រើស​​ដែល​ផ្គួផ្គង​"
 
-#: ftparchive/apt-ftparchive.cc:919
+#: ftparchive/apt-ftparchive.cc:907
 #, c-format
 msgid "Some files are missing in the package file group `%s'"
 msgstr "ឯកសារ​មួយ​ចំនួន​បាត់បងពី​ក្រុម​ឯកសារ​កញ្ចប់​ `%s'"
@@ -3387,22 +3385,22 @@ msgstr " DeLink កំណត់​នៃ​ការ​វាយ %sB ។\n"
 msgid "Archive had no package field"
 msgstr "ប័ណ្ណសារ​គ្មាន​វាល​កញ្ចប់​"
 
-#: ftparchive/writer.cc:425 ftparchive/writer.cc:692
+#: ftparchive/writer.cc:425 ftparchive/writer.cc:684
 #, c-format
 msgid "  %s has no override entry\n"
 msgstr "  %s គ្មាន​ធាតុធាតុបញ្ចូល​​បដិសេធឡើយ\n"
 
-#: ftparchive/writer.cc:493 ftparchive/writer.cc:848
+#: ftparchive/writer.cc:493 ftparchive/writer.cc:840
 #, c-format
 msgid "  %s maintainer is %s not %s\n"
 msgstr "  អ្នក​ថែទាំ %s គឺ %s មិនមែន​ %s\n"
 
-#: ftparchive/writer.cc:706
+#: ftparchive/writer.cc:698
 #, c-format
 msgid "  %s has no source override entry\n"
 msgstr "  %s គ្មាន​ធាតុ​បដិសេធ​ប្រភព\n"
 
-#: ftparchive/writer.cc:710
+#: ftparchive/writer.cc:702
 #, c-format
 msgid "  %s has no binary override entry either\n"
 msgstr "  %s គ្មាន​ធាតុប​ដិសេធគោល​ពីរ​ដែរ\n"

@@ -663,10 +663,11 @@ void pkgDepCache::Update(OpProgress *Prog)
 {   
    iUsrSize = 0;
    iDownloadSize = 0;
-   iDelCount = 0;
    iInstCount = 0;
+   iDelCount = 0;
    iKeepCount = 0;
    iBrokenCount = 0;
+   iPolicyBrokenCount = 0;
    iBadCount = 0;
 
    // Perform the depends pass
@@ -1225,7 +1226,7 @@ bool pkgDepCache::MarkInstall(PkgIterator const &Pkg,bool AutoInst,
 	       continue;
 	    }
 	    // now check if we should consider it a automatic dependency or not
-	    if(InstPkg->CurrentVer == 0 && Pkg->Section != 0 && ConfigValueInSubTree("APT::Never-MarkAuto-Sections", Pkg.Section()))
+	    if(InstPkg->CurrentVer == 0 && InstVer->Section != 0 && ConfigValueInSubTree("APT::Never-MarkAuto-Sections", InstVer.Section()))
 	    {
 	       if(DebugAutoInstall == true)
 		  std::clog << OutputInDepth(Depth) << "Setting NOT as auto-installed (direct "

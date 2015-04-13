@@ -20,6 +20,7 @@
 #include <apt-pkg/configuration.h>
 #include <apt-pkg/macros.h>
 #include <apt-pkg/strutl.h>
+#include <apt-pkg/proxy.h>
 
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -58,6 +59,9 @@ HttpsMethod::parse_header(void *buffer, size_t size, size_t nmemb, void *userp)
       {
          me->Server->Result = 200;
 	 me->Server->StartPos = me->Server->Size;
+	 // the actual size is not important for https as curl will deal with it
+	 // by itself and e.g. doesn't bother us with transport-encoding…
+	 me->Server->JunkSize = std::numeric_limits<unsigned long long>::max();
       }
       else
 	 me->Server->StartPos = 0;
@@ -75,18 +79,27 @@ size_t
 HttpsMethod::write_data(void *buffer, size_t size, size_t nmemb, void *userp)
 {
    HttpsMethod *me = (HttpsMethod *)userp;
+   size_t buffer_size = size * nmemb;
+   // we don't need to count the junk here, just drop anything we get as
+   // we don't always know how long it would be, e.g. in chunked encoding.
+   if (me->Server->JunkSize != 0)
+      return buffer_size;
 
-   if (me->Res.Size == 0)
+   if (me->ReceivedData == false)
+   {
       me->URIStart(me->Res);
-   if(me->File->Write(buffer, size*nmemb) != true)
+      me->ReceivedData = true;
+   }
+
+   if(me->File->Write(buffer, buffer_size) != true)
       return false;
 
-   return size*nmemb;
+   return buffer_size;
 }
 
 int
 HttpsMethod::progress_callback(void *clientp, double dltotal, double /*dlnow*/,
-			      double /*ultotal*/, double /*ulnow*/)
+                             double /*ultotal*/, double /*ulnow*/)
 {
    HttpsMethod *me = (HttpsMethod *)clientp;
    if(dltotal > 0 && me->Res.Size == 0) {
@@ -106,6 +119,9 @@ HttpsServerState::HttpsServerState(URI Srv,HttpsMethod * /*Owner*/) : ServerStat
 void HttpsMethod::SetupProxy()  					/*{{{*/
 {
    URI ServerName = Queue->Uri;
+
+   // Determine the proxy setting
+   AutoDetectProxy(ServerName);
 
    // Curl should never read proxy settings from the environment, as
    // we determine which proxy to use.  Do this for consistency among
@@ -167,6 +183,7 @@ bool HttpsMethod::Fetch(FetchItem *Itm)
    char curl_errorstr[CURL_ERROR_SIZE];
    URI Uri = Itm->Uri;
    string remotehost = Uri.Host;
+   ReceivedData = false;
 
    // TODO:
    //       - http::Pipeline-Depth

@@ -34,7 +34,8 @@ struct ServerState
    char Code[360];
 
    // These are some statistics from the last parsed header lines
-   unsigned long long Size;
+   unsigned long long Size; // size of the usable content (aka: the file)
+   unsigned long long JunkSize; // size of junk content (aka: server error pages)
    unsigned long long StartPos;
    time_t Date;
    bool HaveContent;
@@ -68,10 +69,10 @@ struct ServerState
       RUN_HEADERS_PARSE_ERROR
    };
    /** \brief Get the headers before the data */
-   RunHeadersResult RunHeaders(FileFd * const File);
+   RunHeadersResult RunHeaders(FileFd * const File, const std::string &Uri);
 
    bool Comp(URI Other) const {return Other.Host == ServerName.Host && Other.Port == ServerName.Port;};
-   virtual void Reset() {Major = 0; Minor = 0; Result = 0; Code[0] = '\0'; Size = 0;
+   virtual void Reset() {Major = 0; Minor = 0; Result = 0; Code[0] = '\0'; Size = 0; JunkSize = 0;
 		 StartPos = 0; Encoding = Closes; time(&Date); HaveContent = false;
 		 State = Header; Persistent = false; Pipeline = true;};
    virtual bool WriteResponse(std::string const &Data) = 0;

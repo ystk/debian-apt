@@ -70,6 +70,8 @@ static bool addArgumentsAPTCache(std::vector<CommandLine::Args> &Args, char cons
    else
       return false;
 
+   bool const found_something = Args.empty() == false;
+
    // FIXME: move to the correct command(s)
    addArg('g', "generate", "APT::Cache::Generate", 0);
    addArg('t', "target-release", "APT::Default-Release", CommandLine::HasArg);
@@ -77,7 +79,8 @@ static bool addArgumentsAPTCache(std::vector<CommandLine::Args> &Args, char cons
 
    addArg('p', "pkg-cache", "Dir::Cache::pkgcache", CommandLine::HasArg);
    addArg('s', "src-cache", "Dir::Cache::srcpkgcache", CommandLine::HasArg);
-   return true;
+
+   return found_something;
 }
 									/*}}}*/
 static bool addArgumentsAPTCDROM(std::vector<CommandLine::Args> &Args, char const * const Cmd)/*{{{*/
@@ -163,7 +166,7 @@ static bool addArgumentsAPTGet(std::vector<CommandLine::Args> &Args, char const 
 
    if (CmdMatches("install", "remove", "purge", "upgrade", "dist-upgrade",
 	    "deselect-upgrade", "autoremove", "clean", "autoclean", "check",
-	    "build-dep", "full-upgrade"))
+	    "build-dep", "full-upgrade", "source"))
    {
       addArg('s', "simulate", "APT::Get::Simulate", 0);
       addArg('s', "just-print", "APT::Get::Simulate", 0);
@@ -171,6 +174,8 @@ static bool addArgumentsAPTGet(std::vector<CommandLine::Args> &Args, char const 
       addArg('s', "dry-run", "APT::Get::Simulate", 0);
       addArg('s', "no-act", "APT::Get::Simulate", 0);
    }
+
+   bool const found_something = Args.empty() == false;
 
    // FIXME: move to the correct command(s)
    addArg('d',"download-only","APT::Get::Download-Only",0);
@@ -197,7 +202,7 @@ static bool addArgumentsAPTGet(std::vector<CommandLine::Args> &Args, char const 
    addArg(0,"install-suggests","APT::Install-Suggests",CommandLine::Boolean);
    addArg(0,"fix-policy","APT::Get::Fix-Policy-Broken",0);
 
-   return true;
+   return found_something;
 }
 									/*}}}*/
 static bool addArgumentsAPTMark(std::vector<CommandLine::Args> &Args, char const * const Cmd)/*{{{*/
