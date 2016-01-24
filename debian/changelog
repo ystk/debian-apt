@@ -1,3 +1,19 @@
+apt (1.0.9.8.2) jessie; urgency=medium
+
+  [ David Kalnischkies ]
+  * hide first pdiff merge failure debug message (Closes: 793444)
+  * mark again deps of pkgs in APT::Never-MarkAuto-Sections as manual.
+    Thanks to Raphaël Hertzog and Adam Conrad for detailed reports and initial patches
+    (Closes: 793360) (LP: 1479207)
+
+  [ Julian Andres Klode ]
+  * Do not parse Status fields from remote sources
+
+  [ Michael Vogt ]
+  * Use xgettext --no-location in make update-pot
+
+ -- Julian Andres Klode <jak@debian.org>  Tue, 15 Sep 2015 16:48:35 +0200
+
 apt (1.0.9.8.1) stable; urgency=medium
 
   [ David Kalnischkies ]

@@ -15,7 +15,7 @@ SUBDIR=po
 include ../buildlib/defaults.mak
 
 CATALOGS := $(addsuffix .gmo, $(shell sed -e '/^\#/ d' -e '/^$$/ d' LINGUAS | tr '\n' ' '))
-DOMAINS := $(notdir $(wildcard $(PO_DOMAINS)/*))
+DOMAINS := $(sort $(notdir $(wildcard $(PO_DOMAINS)/*)))
 POTFILES := $(addsuffix .pot,$(addprefix $(PO)/,$(DOMAINS)))
 
 # Construct a list of all mo files for all domains under $(PO_DOMAINS)
@@ -37,9 +37,10 @@ $(POTFILES) : $(PO)/%.pot :
 	cmp --silent $(PO)/domains/$*/sh.pot.tmp $(PO)/domains/$*/sh.pot || \
 		mv $(PO)/domains/$*/sh.pot.tmp $(PO)/domains/$*/sh.pot
 # From C/C++ source
-	cat $(PO)/domains/$*/*.srclist > $(PO)/POTFILES_$*.in
+	cat $(PO)/domains/$*/*.srclist | sort > $(PO)/POTFILES_$*.in
 	$(XGETTEXT) --default-domain=$* --directory=$(BASE) \
 	  --add-comments --foreign --keyword=_ --keyword=N_ \
+          --no-location \
 	  --keyword=P_:1,2 \
 	  --files-from=$(PO)/POTFILES_$*.in -o $(PO)/domains/$*/c.pot.tmp
 	cmp --silent $(PO)/domains/$*/c.pot.tmp $(PO)/domains/$*/c.pot || \
