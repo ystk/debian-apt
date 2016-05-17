@@ -162,11 +162,11 @@
      <listitem><para>Local trust database of archive keys.</para></listitem>
      </varlistentry>
 
-     <varlistentry><term><filename>/usr/share/keyrings/debian-archive-keyring.gpg</filename></term>
+     <varlistentry><term><filename>/usr/share/keyrings/skerlet-archive-keyring.gpg</filename></term>
      <listitem><para>Keyring of Debian archive trusted keys.</para></listitem>
      </varlistentry>
 
-     <varlistentry><term><filename>/usr/share/keyrings/debian-archive-removed-keys.gpg</filename></term>
+     <varlistentry><term><filename>/usr/share/keyrings/skerlet-archive-removed-keys.gpg</filename></term>
      <listitem><para>Keyring of Debian archive removed trusted keys.</para></listitem>
      </varlistentry>
 
