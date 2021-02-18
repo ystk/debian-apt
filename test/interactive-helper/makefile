@@ -45,3 +45,9 @@ SLIBS = -lapt-pkg -lpthread
 LIB_MAKES = apt-pkg/makefile
 SOURCE = aptwebserver.cc
 include $(PROGRAM_H)
+
+# Program for creating test debs for cve
+PROGRAM=createdeb-cve-2020-27350
+SLIBS = -lapt-pkg
+SOURCE = createdeb-cve-2020-27350.cc
+include $(PROGRAM_H)
